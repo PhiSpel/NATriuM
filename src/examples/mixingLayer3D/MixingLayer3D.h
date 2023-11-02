@@ -88,11 +88,41 @@ namespace natrium {
         virtual void transform(Mesh<3>&) {}
         virtual bool isCartesian() {return true;}
 
+        /**
+	    * @short function to generate the unstructured mesh grid
+	    */
+	    struct UnstructuredGridFunc {
+	    	double m_length;
+		    double m_height;
+    		double m_width;
+	    	double m_gridDensity;
+		    UnstructuredGridFunc(double length, double height, double width, double gridDensity = 0.8) :
+				m_length(length), m_height(height), m_width(width), m_gridDensity(gridDensity) {
+		    }
+		    double trans(const double y) const {
+                double new_y = (2*y);
+                new_y *= M_PI;
+                new_y = -m_gridDensity*sin(new_y)/(2*M_PI);
+                new_y += y;
+                return new_y*m_height;
+		    }
+		    dealii::Point<3> operator()(const dealii::Point<3> &in) const {
+			    return dealii::Point<3>(m_length * in(0), trans(in(1)),
+					m_width * in(2));
+		    }
+	    };
+        virtual void transform(Mesh<3>& mesh) {
+		    // transform grid to unstructured grid
+		    dealii::GridTools::transform(
+				UnstructuredGridFunc(lx, ly, lz, m_gridDensity), mesh);
+	    }
+
     private:
         /// speed of sound
         double m_U;
         double lx, ly, lz;
         size_t m_refinementLevel;
+	    double m_gridDensity;
 
         /**
          * @short create triangulation for couette flow

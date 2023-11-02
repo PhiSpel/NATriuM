@@ -213,6 +213,7 @@ int main(int argc, char** argv) {
 
     boost::shared_ptr<ProblemDescription<3> > mixingLayer =
             boost::make_shared<MixingLayer3D>(viscosity, refinement_level, meshname, randuscaling, randuname, U * uscaling);
+    MixingLayer3D::UnstructuredGridFunc trafo(mixingLayer.lx, mixingLayer.lx, mixingLayer.lx);
     /////////////////////////////////////////////////
     // run solver
     //////////////////////////////////////////////////

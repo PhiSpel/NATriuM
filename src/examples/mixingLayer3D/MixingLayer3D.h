@@ -97,11 +97,19 @@ namespace natrium {
             }
             double trans(const double y) const {
                 double y_norm = y / m_height;
-                double y_new_norm = std::tan(y_norm); // std::asin(y_norm); // std::tan(std::tan(std::tan(y_norm)));
+//                if (std::abs(y_norm) < 0.5) return y;
+//                int sign = 1;
+//                if (y_norm < 0) {
+//                    sign = -1;
+//                    y_norm = std::abs(y_norm);
+//                }
+//                double y_new_norm = std::exp(y_norm - 0.5) + 0.5; //std::tan(y_norm); // std::asin(y_norm); // std::tan(std::tan(std::tan(y_norm)));
+                double y_new_norm = std::tan(y_norm);
                 double y_new = m_height * y_new_norm;//; std::pow(y_norm, 5); // // std::tan(std::tan(std::tan(y_norm)));
 //                if (is_MPI_rank_0()) cout << "y_norm = " << y << "/" << m_height << " = " << y_norm
 //                    << " -> y_new_norm = tan(tan(" << y_norm << ")) = " << y_new_norm
 //                    << " -> y_new = " << y_new_norm << "*" << m_height << " = " << y_new << endl;
+//                return y_new * sign;
                 return y_new;
             }
             dealii::Point<3> operator()(const dealii::Point<3> &in) const {

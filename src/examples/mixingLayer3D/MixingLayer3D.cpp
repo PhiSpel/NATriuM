@@ -9,6 +9,10 @@
 
 #include "natrium/boundaries/PeriodicBoundary.h"
 #include "natrium/boundaries/SLEquilibriumBoundary.h"
+#include "natrium/boundaries/DoNothingBoundary.h"
+#include "natrium/boundaries/SLFirstOrderBounceBack.h"
+#include "natrium/boundaries/ThermalBounceBack.h"
+#include "natrium/boundaries/VelocityNeqBounceBack.h"
 #include <random>
 #include <ctime>
 #include <algorithm>
@@ -34,8 +38,8 @@ double shearlayerthickness = 0.093;
 
 namespace natrium {
 
-MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, string meshname, double randu_scaling, string randuname, double U) :
-ProblemDescription<3>(makeGrid(meshname), viscosity, 1), m_U(U), m_refinementLevel(refinementLevel) {
+MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, string meshname, double randu_scaling, string randuname, double U, double T, string bc) :
+ProblemDescription<3>(makeGrid(meshname), viscosity, 1), m_U(U), m_refinementLevel(refinementLevel), m_initialT(T), m_bc(bc) {
     // **** Recommendations for CPU use ****
 	/*LOG(BASIC) << "-------------------------------------------------------------" << endl;
 	LOG(BASIC) << "**** Recommendations for CPU use ****" << endl;
@@ -184,7 +188,7 @@ double MixingLayer3D::InitialDensity::value(const dealii::Point<3>& x, const uns
 }
 double MixingLayer3D::InitialTemperature::value(const dealii::Point<3>& x, const unsigned int component) const {
     assert(component == 0);
-    return 1.0;
+    return this->m_flow->m_initialT;
 }
 
 /**
@@ -324,8 +328,29 @@ boost::shared_ptr<BoundaryCollection<3> > MixingLayer3D::makeBoundaries() {
     minusVector[2]=0.0;
 
     // set boundaries on top and bottom to move forward / backward
-    boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<3> >(2, plusVector));  // or DO_NOTHING_BC
-    boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<3> >(3, minusVector));
+    if (m_bc == "EQ_BC") {
+        boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<3> >(2, plusVector, m_initialT));
+        boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<3> >(3, minusVector, m_initialT));
+    }
+    else if (m_bc == "DN_BC") {
+        boundaries->addBoundary(boost::make_shared<DoNothingBoundary<3> >(2));
+        boundaries->addBoundary(boost::make_shared<DoNothingBoundary<3> >(3));
+    }
+    else if (m_bc == "FOBB_BC") {
+        boundaries->addBoundary(boost::make_shared<SLFirstOrderBounceBack<3> >(2));
+        boundaries->addBoundary(boost::make_shared<SLFirstOrderBounceBack<3> >(3));
+    }
+    else if (m_bc == "ThBB_BC") {
+        boundaries->addBoundary(boost::make_shared<ThermalBounceBack<3> >(2, plusVector, m_initialT));
+        boundaries->addBoundary(boost::make_shared<ThermalBounceBack<3> >(3, minusVector, m_initialT));
+    }
+    else if (m_bc == "VNeq_BC") {
+        boundaries->addBoundary(boost::make_shared<VelocityNeqBounceBack<3> >(2, plusVector));
+        boundaries->addBoundary(boost::make_shared<VelocityNeqBounceBack<3> >(3, minusVector));
+    }
+    else if (m_bc == "PP_BC") {
+        boundaries->addBoundary(boost::make_shared<PeriodicBoundary<3> >(2, 3, 1, getMesh()));
+    }
 
     // set a boundary between 0 and 1, and 4 and 5, with direction 0 (x) and 2 (z), respectively
     boundaries->addBoundary(boost::make_shared<PeriodicBoundary<3> >(0, 1, 0, getMesh()));

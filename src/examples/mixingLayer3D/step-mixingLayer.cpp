@@ -52,6 +52,9 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("nstats", "output stats every nstats steps", 20);
     parser.setArgument<string>("meshname", "name of the mesh file (shearlayer_*.txt)", "final_small");
     parser.setArgument<string>("randuname", "name of the initial velocity file (random_u_*.txt)", "k048_half");
+    parser.setArgument<string>("bc", "Boundary condition. Choose between 'EQ_BC' (equilibrium), 'DN_BC' (do nothing),"
+                                     "'FOBB_BC' (First Order Bounce Back),'ThBB_BC' (Thermal Bounce Back), 'VNeq_BC' (Velocity Non-Equilibrium Bounce Back),"
+                                     "'PP_BC' (Periodic - meh)", "EQ_BC");
     parser.setArgument<int>("order", "order of finite elements", 3);
     parser.setArgument<int>("ref-level", "Refinement level of the computation grid.", 0);
     parser.setArgument<int>("grid-repetitions",
@@ -65,6 +68,11 @@ int main(int argc, char** argv) {
     }
     auto meshname = parser.getArgument<string>("meshname");
     auto randuname = parser.getArgument<string>("randuname");
+    auto bc = parser.getArgument<string>("bc");
+    if ((bc != "DN_BC") and (bc != "EQ_BC") and (bc != "FOBB_BC") and (bc != "ThBB_BC") and (bc != "VNeq_BC") and (bc != "PP_BC")) {
+        if (is_MPI_rank_0()) LOG(BASIC) << "Invalid boundary condition option! Fallback to default (EQ_BC)." << endl << endl;
+        bc = "EQ_BC";
+    }
     double randuscaling = parser.getArgument<double>("randuscaling");
     double uscaling = parser.getArgument<double>("uscaling");
     double Re = parser.getArgument<int>("Re");
@@ -98,7 +106,7 @@ int main(int argc, char** argv) {
     const double cs = U / Ma;
 
     // chose scaling so that the right Ma-number is achieved
-    const double reference_temperature = 0.85;
+    const double reference_temperature = parser.getArgument<double>("ref-temp");
     const double gamma = 1.4;
     const double scaling = sqrt(3) * U / (Ma*sqrt(gamma*reference_temperature));
 //    const double scaling = sqrt(3) * cs; // choose different? -> stencil larger/smaller -> from turb. channel
@@ -107,13 +115,14 @@ int main(int argc, char** argv) {
     boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
     if (restart > 0) configuration->setRestartAtIteration(restart);
     configuration->setUserInteraction(false);
-//    configuration->setOutputCheckpointInterval(nout*100);
+    configuration->setOutputCheckpointInterval(nout*100);
     configuration->setOutputSolutionInterval(nout);
     configuration->setSimulationEndTime(time);
     configuration->setOutputGlobalTurbulenceStatistics(true);
     configuration->setOutputCompressibleTurbulenceStatistics(true);
     configuration->setOutputShearLayerStatistics(true);
     configuration->setOutputShearLayerInterval(parser.getArgument<int>("nstats"));
+    configuration->setMachNumber(Ma);
     configuration->setStencilScaling(scaling);
     configuration->setStencil(Stencil_D3Q45);
     configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
@@ -139,7 +148,8 @@ int main(int argc, char** argv) {
                 << "-p" << configuration->getSedgOrderOfFiniteElement()
                 << "-mesh" << meshname
                 << "-randu" << randuname << "x" << floor(randuscaling*1000)/1000
-                << "-uscale" << uscaling;
+                << "-uscale" << uscaling
+                << "-refT" << reference_temperature << "_" << bc;
 //        dirName << "-coll" << static_cast<int>(configuration->getCollisionScheme())
 //                << "-sl" << static_cast<int>(configuration->getAdvectionScheme())
         if (configuration->getAdvectionScheme() != SEMI_LAGRANGIAN)
@@ -212,7 +222,7 @@ int main(int argc, char** argv) {
 //                        << endl
 
     boost::shared_ptr<ProblemDescription<3> > mixingLayer =
-            boost::make_shared<MixingLayer3D>(viscosity, refinement_level, meshname, randuscaling, randuname, U * uscaling);
+            boost::make_shared<MixingLayer3D>(viscosity, refinement_level, meshname, randuscaling, randuname, U * uscaling, reference_temperature, bc);
     MixingLayer3D::UnstructuredGridFunc trafo(mixingLayer.lx, mixingLayer.lx, mixingLayer.lx);
     /////////////////////////////////////////////////
     // run solver

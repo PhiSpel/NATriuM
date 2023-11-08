@@ -48,28 +48,29 @@ public:
         struct tm* ltm = localtime(&m_tstart3);
         m_tstart2 = string(asctime(ltm));
 
-
         bool checkpointExists = applyCheckpointToG();
 
-            m_temperature.reinit(this->getAdvectionOperator()->getLocallyOwnedDofs(),
-                                 this->getAdvectionOperator()->getLocallyRelevantDofs(),
-                                 MPI_COMM_WORLD);
-            m_tmpTemperature.reinit(this->getAdvectionOperator()->getLocallyOwnedDofs(),
-                                    MPI_COMM_WORLD);
-            if (configuration->isOutputCompressibleTurbulenceStatistics()) {
-                m_compressibleTurbulenceStats = boost::make_shared<CompressibleTurbulenceStats<dim> >(*this);
-            }
-            this->m_maskShockSensor.reinit(this->getAdvectionOperator()->getLocallyOwnedDofs(),
-                                           this->getAdvectionOperator()->getLocallyRelevantDofs(),
-                                           MPI_COMM_WORLD);
+        m_temperature.reinit(this->getAdvectionOperator()->getLocallyOwnedDofs(),
+                             this->getAdvectionOperator()->getLocallyRelevantDofs(),
+                             MPI_COMM_WORLD);
+        m_tmpTemperature.reinit(this->getAdvectionOperator()->getLocallyOwnedDofs(),
+                                MPI_COMM_WORLD);
+        if (configuration->isOutputCompressibleTurbulenceStatistics()) {
+            m_compressibleTurbulenceStats = boost::make_shared<CompressibleTurbulenceStats<dim> >(*this);
+        }
+        this->m_maskShockSensor.reinit(this->getAdvectionOperator()->getLocallyOwnedDofs(),
+                                       this->getAdvectionOperator()->getLocallyRelevantDofs(),
+                                       MPI_COMM_WORLD);
 
-        if(!checkpointExists) {           distributed_vector writeable_temperature;
+        if(!checkpointExists) {
+            distributed_vector writeable_temperature;
             // In this case, the density function fulfills the same purpose for the temperature
             CFDSolverUtilities::getWriteableDensity(writeable_temperature, m_temperature,
                                                     this->getAdvectionOperator()->getLocallyOwnedDofs());
             this->applyInitialTemperatures(writeable_temperature, this->getSupportPoints());
             CFDSolverUtilities::applyWriteableDensity(writeable_temperature, m_temperature);
             LOG(BASIC) << "Speed of Sound Square: " << this->m_stencil->getSpeedOfSoundSquare() << endl;
+            LOG(BASIC) << "Mach compressible:     " << this->m_configuration->getMachNumber() << endl << endl;
 
             m_g.reinit(this->m_stencil->getQ(),
                        this->getAdvectionOperator()->getLocallyOwnedDofs(),
@@ -363,29 +364,28 @@ void compressibleFilter() {
 	const distributed_vector& getTemperature() const {
 		return m_temperature;
 	}
-		void calculateTemperature()
-		{
-			std::vector<distributed_vector> writeable_u;
-			distributed_vector writeable_rho;
-			distributed_vector writeable_T;
-			distributed_vector temporary;
-			CFDSolverUtilities::getWriteableVelocity(writeable_u, this->getVelocity(),
-					this->getAdvectionOperator()->getLocallyOwnedDofs());
-			CFDSolverUtilities::getWriteableDensity(writeable_rho, this->getDensity(),
-					this->getAdvectionOperator()->getLocallyOwnedDofs());
+    void calculateTemperature() {
+        std::vector<distributed_vector> writeable_u;
+        distributed_vector writeable_rho;
+        distributed_vector writeable_T;
+        distributed_vector temporary;
+        CFDSolverUtilities::getWriteableVelocity(writeable_u, this->getVelocity(),
+                this->getAdvectionOperator()->getLocallyOwnedDofs());
+        CFDSolverUtilities::getWriteableDensity(writeable_rho, this->getDensity(),
+                this->getAdvectionOperator()->getLocallyOwnedDofs());
 
-			CFDSolverUtilities::getWriteableDensity(writeable_T, m_temperature,
-					this->getAdvectionOperator()->getLocallyOwnedDofs());
-			size_t Q = this->getStencil()->getQ();
-			writeable_T = 0;
+        CFDSolverUtilities::getWriteableDensity(writeable_T, m_temperature,
+                this->getAdvectionOperator()->getLocallyOwnedDofs());
+        size_t Q = this->getStencil()->getQ();
+        writeable_T = 0;
 
-			for (size_t i = 0; i < Q; i++) {
-					//writeable_T.add(m_f.at(i));
-					for (size_t j = 0; j < dim; j++) {
-						writeable_T.add(this->getStencil()->getDirection(i)(j), this->getStencil()->getDirection(i)(j));
-					}
-				}
-		}
+        for (size_t i = 0; i < Q; i++) {
+            //writeable_T.add(m_f.at(i));
+            for (size_t j = 0; j < dim; j++) {
+                writeable_T.add(this->getStencil()->getDirection(i)(j), this->getStencil()->getDirection(i)(j));
+            }
+        }
+    }
 
 /*	inline distributed_vector& getWriteableTemperature(distributed_vector& writeable, const distributed_vector& member, const dealii::IndexSet& locally_owned){
 		TimerOutput::Scope timer_section(Timing::getTimer(), "Copy vectors");
@@ -475,11 +475,11 @@ void compressibleFilter() {
                     time_t estimated_end = start + tobedone_time;
                     struct tm * ltm2 = localtime(&estimated_end);
                     //                struct tm * ltm1 = localtime(&start);
-                    LOG(DETAILED) << ":Finished " << int(100.0/factor * 1000) / 1000 << " % based on " << base << ". Estimated end: " << string(asctime(ltm2));
+                    LOG(DETAILED) << ":Finished " << int(100.0/factor * 10000) / 10000 << " % based on " << base << ". Estimated end: " << string(asctime(ltm2));
                     time_t server_max = this->m_configuration->getServerEndTime();
                     time_t estimated_server_end = start + server_max;
                     struct tm * ltm3 = localtime(&estimated_server_end);
-                    LOG(DETAILED) << ":::::::Server-time left: " << secs_to_stream(server_max - done_time) << " s.      Estimated server-end: " << string(asctime(ltm3));
+                    LOG(DETAILED) << ":::::::Server-time left: " << secs_to_stream(server_max - done_time) << ".   Estimated server-end: " << string(asctime(ltm3));
 //                    LOG(DETAILED) << "Server time: " << clock()/CLOCKS_PER_SEC << endl;
 //                    LOG(DETAILED) << "Calculated done_time: " << done_time << endl;
 //                    LOG(DETAILED) << "Calculated tobedone_t " << tobedone_time << endl;
@@ -600,7 +600,9 @@ void compressibleFilter() {
             checkpointG.write(*(this->m_problemDescription->getMesh()), m_g,
                              *(this->m_advectionOperator->getDoFHandler()), checkpoint_status);
         } /*if checkpoint interval*/
-        LOG(DETAILED) << "Total runtime: " << secs_to_stream(int(clock()/CLOCKS_PER_SEC)) << ". Server-end had been set to " << secs_to_stream(this->m_configuration->getServerEndTime()) << endl;
+        if (is_final) {
+            LOG(DETAILED) << "Total runtime: " << secs_to_stream(int(clock()/CLOCKS_PER_SEC)) << ". Server-end had been set to " << secs_to_stream(this->m_configuration->getServerEndTime()) << endl;
+        }
     }
 
     void applyShockSensor() {

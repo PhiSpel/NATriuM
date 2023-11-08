@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     parser.setArgument<double>("gamma", "Heat capacity ratio. Should be 1.4", 1.4);
     parser.setArgument<double>("ref-temp", "Reference temperature. Should be between 0.85 and 1 (lower may be more stable).", 1);
     parser.setArgument<double>("lx", "Half length in x-direction (multiples of deltaTheta0)", 150);
-    parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 75);
+    parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 50);
     parser.setArgument<double>("lz", "Half length in z-direction (multiples of deltaTheta0)", 40);
     parser.setArgument<int>("nout", "output vtk every nout steps", 2000);
     parser.setArgument<int>("nstats", "output stats every nstats steps", 20);
@@ -65,9 +65,9 @@ int main(int argc, char** argv) {
                             "to produce grids with refinements that are not powers of two.", 1);
     parser.setArgument<int>("restart", "Restart at iteration ...", 0);
     parser.setArgument<int>("server-end", "Maximum server time [s]", 82800);
-    parser.setArgument<int>("rep-x", "Number of repetitions in x-direction (to refine the grid in steps that are not 2^N).", 5);
-    parser.setArgument<int>("rep-y", "cf. rep-x", 2);
-    parser.setArgument<int>("rep-z", "cf. rep-x", 1);
+    parser.setArgument<int>("rep-x", "Number of repetitions in x-direction (to refine the grid in steps that are not 2^N).", 8);
+    parser.setArgument<int>("rep-y", "cf. rep-x", 4);
+    parser.setArgument<int>("rep-z", "cf. rep-x", 2);
 
     try { parser.importOptions();
     } catch (HelpMessageStop&) { return 0;

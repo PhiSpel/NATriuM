@@ -78,49 +78,47 @@ namespace natrium {
         double m_initialT;
 
         /// constructor
-        MixingLayer3D(double viscosity, size_t refinementLevel, string meshname, double randu_scaling, string randuname, double U = 1., double T = 1., string bc = "EQ_BC");
+        MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname, double len_x, double len_y, double len_z, string meshname, double U = 1., double T = 1., string bc = "EQ_BC");
         /// destructor
         virtual ~MixingLayer3D();
 
         virtual void refine(Mesh<3>& mesh) {
             mesh.refine_global(m_refinementLevel);
         }
-        virtual void transform(Mesh<3>&) {}
         virtual bool isCartesian() {return true;}
 
         /**
-	* @short function to generate the unstructured mesh grid
-	*/
-	struct UnstructuredGridFunc {
-		double m_length;
-		double m_height;
-    		double m_width;
-	    	double m_gridDensity;
-		UnstructuredGridFunc(double length, double height, double width, double gridDensity = 0.8) :
-			m_length(length), m_height(height), m_width(width), m_gridDensity(gridDensity) {
-		}
-		double trans(const double y) const {
-                    double new_y = (2*y);
-                    new_y *= M_PI;
-                    new_y = -m_gridDensity*sin(new_y)/(2*M_PI);
-                    new_y += y;
-                    return new_y*m_height;
-		}
-		dealii::Point<3> operator()(const dealii::Point<3> &in) const {
-		    return dealii::Point<3>(m_length * in(0), trans(in(1)), m_width * in(2));
-		}
-	};
+        * @short function to generate the unstructured mesh grid
+        */
+        struct UnstructuredGridFunc {
+            double m_height;
+            UnstructuredGridFunc(double length, double height, double width, double gridDensity = 0.8) :
+                m_height(height * 0.093 / 4) {
+            }
+            double trans(const double y) const {
+                double y_norm = y / m_height;
+                double y_new_norm = std::tan(y_norm); // std::asin(y_norm); // std::tan(std::tan(std::tan(y_norm)));
+                double y_new = m_height * y_new_norm;//; std::pow(y_norm, 5); // // std::tan(std::tan(std::tan(y_norm)));
+//                if (is_MPI_rank_0()) cout << "y_norm = " << y << "/" << m_height << " = " << y_norm
+//                    << " -> y_new_norm = tan(tan(" << y_norm << ")) = " << y_new_norm
+//                    << " -> y_new = " << y_new_norm << "*" << m_height << " = " << y_new << endl;
+                return y_new;
+            }
+            dealii::Point<3> operator()(const dealii::Point<3> &in) const {
+                return dealii::Point<3>(in(0), trans(in(1)), in(2));
+            }
+        };
         virtual void transform(Mesh<3>& mesh) {
 		    // transform grid to unstructured grid
-		    dealii::GridTools::transform(
-				UnstructuredGridFunc(lx, ly, lz, m_gridDensity), mesh);
+            cout << "transforming grid";
+		    dealii::GridTools::transform(UnstructuredGridFunc(lx, ly, lz, m_gridDensity), mesh);
 	    }
+        double lx, ly, lz;
 
     private:
         /// speed of sound
         double m_U;
         string m_bc;
-        double lx, ly, lz;
         size_t m_refinementLevel;
 	    double m_gridDensity;
 
@@ -128,7 +126,7 @@ namespace natrium {
          * @short create triangulation for couette flow
          * @return shared pointer to a triangulation instance
          */
-        boost::shared_ptr<Mesh<3> > makeGrid(const string& meshname);
+        boost::shared_ptr<Mesh<3> > makeGrid(const string& meshname, double len_x, double len_y, double len_z, vector<unsigned int> repetitions = {1, 1, 1});
 
         /**
          * @short create boundaries for couette flow

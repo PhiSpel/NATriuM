@@ -38,8 +38,8 @@ double shearlayerthickness = 0.093;
 
 namespace natrium {
 
-MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, string meshname, double randu_scaling, string randuname, double U, double T, string bc) :
-ProblemDescription<3>(makeGrid(meshname), viscosity, 1), m_U(U), m_refinementLevel(refinementLevel), m_initialT(T), m_bc(bc) {
+MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname, double len_x, double len_y, double len_z, string meshname, double U, double T, string bc) :
+        ProblemDescription<3>(makeGrid(meshname, len_x, len_y, len_z), viscosity, 1), m_U(U), m_refinementLevel(refinementLevel), lx(len_x), ly(len_y), lz(len_z), m_initialT(T), m_bc(bc) {
     // **** Recommendations for CPU use ****
 	/*LOG(BASIC) << "-------------------------------------------------------------" << endl;
 	LOG(BASIC) << "**** Recommendations for CPU use ****" << endl;
@@ -195,7 +195,7 @@ double MixingLayer3D::InitialTemperature::value(const dealii::Point<3>& x, const
  * @short create triangulation for Compressible Mixing Layer flow
  * @return shared pointer to a triangulation instance
  */
-boost::shared_ptr<Mesh<3> > MixingLayer3D::makeGrid(const string& meshname) {
+boost::shared_ptr<Mesh<3> > MixingLayer3D::makeGrid(const string& meshname, double len_x, double len_y, double len_z, std::vector<unsigned int> repetitions) {
     boost::shared_ptr<Mesh<3> > mesh = boost::make_shared<Mesh<3> >(MPI_COMM_WORLD);
 
 //    // TODO: generate using step_sizes
@@ -210,16 +210,12 @@ boost::shared_ptr<Mesh<3> > MixingLayer3D::makeGrid(const string& meshname) {
     if (meshname == "cube") {
         if (is_MPI_rank_0()) cout << "doing cube with global refinement" << endl;
         boost::shared_ptr<Mesh<3> > cube = boost::make_shared<Mesh<3> >(MPI_COMM_WORLD);
-        double lx = 172 * shearlayerthickness / 2;
-        double ly = 38.7 * shearlayerthickness / 2;
-        double lz = 17.2 * shearlayerthickness / 2;
+        lx = len_x * shearlayerthickness / 2;
+        ly = len_y * shearlayerthickness / 2;
+        lz = len_z * shearlayerthickness / 2;
         dealii::Point<3> corner1(-lx, -ly, -lz);
         dealii::Point<3> corner2(lx, ly, lz);
-        std::vector<unsigned int> rep;
-        rep.push_back(1);
-        rep.push_back(1);
-        rep.push_back(1);
-        dealii::GridGenerator::subdivided_hyper_rectangle(*cube, rep, corner1, corner2, true);
+        dealii::GridGenerator::subdivided_hyper_rectangle(*cube, repetitions, corner1, corner2, true);
         return cube;
     }
 

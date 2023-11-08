@@ -48,6 +48,9 @@ int main(int argc, char** argv) {
     parser.setArgument<double>("CFL", "CFL number. Should be between 0.4 and 2", 1);
     parser.setArgument<double>("gamma", "Heat capacity ratio. Should be 1.4", 1.4);
     parser.setArgument<double>("ref-temp", "Reference temperature. Should be between 0.85 and 1 (lower may be more stable).", 1);
+    parser.setArgument<double>("lx", "Half length in x-direction (multiples of deltaTheta0)", 150);
+    parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 75);
+    parser.setArgument<double>("lz", "Half length in z-direction (multiples of deltaTheta0)", 40);
     parser.setArgument<int>("nout", "output vtk every nout steps", 2000);
     parser.setArgument<int>("nstats", "output stats every nstats steps", 20);
     parser.setArgument<string>("meshname", "name of the mesh file (shearlayer_*.txt)", "final_small");
@@ -56,12 +59,15 @@ int main(int argc, char** argv) {
                                      "'FOBB_BC' (First Order Bounce Back),'ThBB_BC' (Thermal Bounce Back), 'VNeq_BC' (Velocity Non-Equilibrium Bounce Back),"
                                      "'PP_BC' (Periodic - meh)", "EQ_BC");
     parser.setArgument<int>("order", "order of finite elements", 3);
-    parser.setArgument<int>("ref-level", "Refinement level of the computation grid.", 0);
+    parser.setArgument<int>("ref-level", "Refinement level of the computation grid.", 4);
     parser.setArgument<int>("grid-repetitions",
                             "Number of grid cells along each axis before global refinement; "
-                            "to produce grids with refinements that are not powers of two.", 3);
+                            "to produce grids with refinements that are not powers of two.", 1);
     parser.setArgument<int>("restart", "Restart at iteration ...", 0);
     parser.setArgument<int>("server-end", "Maximum server time [s]", 82800);
+    parser.setArgument<int>("rep-x", "Number of repetitions in x-direction (to refine the grid in steps that are not 2^N).", 5);
+    parser.setArgument<int>("rep-y", "cf. rep-x", 2);
+    parser.setArgument<int>("rep-z", "cf. rep-x", 1);
 
     try { parser.importOptions();
     } catch (HelpMessageStop&) { return 0;
@@ -76,7 +82,13 @@ int main(int argc, char** argv) {
     double randuscaling = parser.getArgument<double>("randuscaling");
     double uscaling = parser.getArgument<double>("uscaling");
     double Re = parser.getArgument<int>("Re");
-    double refinement_level = parser.getArgument<int>("ref-level");
+    // Grid resolution
+    const int ref_level = parser.getArgument<int>("ref-level");
+    std::vector<unsigned int> repetitions(3);
+    repetitions.at(0) = parser.getArgument<int>("rep-x");
+    repetitions.at(1) = parser.getArgument<int>("rep-y");
+    repetitions.at(2) = parser.getArgument<int>("rep-z");
+
     long nout = parser.getArgument<int>("nout");
     auto time = parser.getArgument<double>("time");
     const int restart = parser.getArgument<int>("restart");
@@ -98,7 +110,7 @@ int main(int argc, char** argv) {
     // Nach einem Blick in van Rees et.al. (2011) und einer erfolgreichen Simulation in Palabos:
     // (Hier war tau = 3*nu_LB + 0.5, nu_LB = U_lattice * (N/2pi) / Re, dt = 2pi/N* U_lattice
     // Re = 1/nu,L=2pi, U = 1 und D = [0,2pi*L]^3
-    const double U = 1;
+    const double U = 1 * uscaling;
     //const double L = 2 * M_PI;
     const double viscosity = 1.0 / Re;
     const double Ma = parser.getArgument<double>("Ma")*sqrt(1.4);
@@ -144,7 +156,7 @@ int main(int argc, char** argv) {
         dirName << getenv("NATRIUM_HOME");
         dirName << "/step-mixingLayer/Re" << Re
                 << "-Ma" << floor(Ma*1000)/1000
-                << "-ref" << refinement_level
+                << "-ref" << ref_level
                 << "-p" << configuration->getSedgOrderOfFiniteElement()
                 << "-mesh" << meshname
                 << "-randu" << randuname << "x" << floor(randuscaling*1000)/1000
@@ -172,58 +184,42 @@ int main(int argc, char** argv) {
     }
     configuration->setOutputDirectory(m_dirname);
 
-    // ========================================================================
-    // COMMAND LINE OUTPUT
-    // ========================================================================
-//    const double p = configuration->getSedgOrderOfFiniteElement();
-//    const double dt = configuration->getCFL() / (p * p) / (sqrt(2) * scaling) * ymin;
-//    const double dxplus = length / repetitions.at(0) / pow(2, ref_level)
-//                          / (viscosity / utau);
-//    const double dzplus = width / repetitions.at(2) / pow(2, ref_level)
-//                          / (viscosity / utau);
-//    LOG(WELCOME) << "          -----         " << endl
-//                    << "          -----         " << endl << "FLOW SETUP: " << endl
-//                    << "===================================================" << endl
-//                    << "Re_cl = u_cl * delta / nu   = " << u_cl << " * " << delta
-//                    << " / " << viscosity << " = " << u_cl * delta / viscosity << endl
-//                    << "u_tau = Re_tau * nu / delta = " << Re_tau << " * " << viscosity
-//                    << " / " << delta << " = " << Re_tau * viscosity / delta << endl
-//                    << "F     = rho * utau^2 / delta = 1.0 * " << utau << "^2" << " / "
-//                    << delta << " = " << utau * utau / delta << endl
-//                    << "          -----         " << endl << "          -----        "
-//                    << endl
-//                    << "CHANNEL SETUP: " << endl
-//                    << "===================================================" << endl
-//                    << "Dimensions:    " << lx << " x " << height << " x " << width
-//                    << endl << "Grid:          " << repetitions.at(0) << " x "
-//                    << repetitions.at(1) << " x " << repetitions.at(2)
-//                    << " blocks with 8^" << ref_level << " cells each " << endl
-//                    << "#Cells:        " << int(repetitions.at(0) * pow(2, ref_level))
-//                    << " x " << int(repetitions.at(1) * pow(2, ref_level)) << " x "
-//                    << int(repetitions.at(2) * pow(2, ref_level)) << " = "
-//                    << int(
-//                         repetitions.at(0) * repetitions.at(1) * repetitions.at(2)
-//                         * pow(2, 3 * ref_level)) << endl << "#Points:       "
-//                    << int(repetitions.at(0) * pow(2, ref_level) * p) << " x "
-//                    << int(repetitions.at(1) * pow(2, ref_level) * p) << " x "
-//                    << int(repetitions.at(2) * pow(2, ref_level) * p) << " = "
-//                    << int(
-//                         repetitions.at(0) * repetitions.at(1) * repetitions.at(2)
-//                         * pow(2, 3 * ref_level) * p * p * p) << endl
-//                    << "y+ (wrt. cells): "  << yplus << "   dx+ = " << dxplus << ", "
-//                    << "dz+ = " << dzplus << endl << "          -----         " << endl
-//                    << "          -----         " << endl;
-//                    << "==================================================="
-//                        << endl << "               dt  = " << dt << endl << "               dt+ = "
-//                        << dt/(viscosity/utau/utau) << endl << "    u_tau cross time = "
-//                        << length / utau << " = "
-//                        << int(length / utau / dt) << " steps" << endl
-//                        << "===================================================" << endl
-//                        << endl
+    // Grid resolution
+    double len_x = parser.getArgument<double>("lx");
+    double len_y = parser.getArgument<double>("ly");
+    double len_z = parser.getArgument<double>("lz");
+    boost::shared_ptr<MixingLayer3D> mixingLayer = boost::make_shared<MixingLayer3D>
+            (viscosity, ref_level, randuscaling, randuname, len_x, len_y, len_z, meshname, U * uscaling, reference_temperature, bc);
+    MixingLayer3D::UnstructuredGridFunc trafo(len_x, len_y, len_z);
 
-    boost::shared_ptr<ProblemDescription<3> > mixingLayer =
-            boost::make_shared<MixingLayer3D>(viscosity, refinement_level, meshname, randuscaling, randuname, U * uscaling, reference_temperature, bc);
-    MixingLayer3D::UnstructuredGridFunc trafo(mixingLayer.lx, mixingLayer.lx, mixingLayer.lx);
+    double ymin = trafo.trans(len_y / repetitions.at(1) / pow(2, ref_level));
+    const double p = configuration->getSedgOrderOfFiniteElement();
+    const double dt = configuration->getCFL() / (p * p) / (sqrt(2) * scaling) * ymin;
+
+    if (is_MPI_rank_0()) {
+        LOG(WELCOME) << "CHANNEL SETUP: " << endl
+                     << "===================================================" << endl
+                     << "Dimensions:    " << len_x << " x " << len_y << " x " << len_z
+                     << endl << "Grid:          " << repetitions.at(0) << " x "
+                     << repetitions.at(1) << " x " << repetitions.at(2)
+                     << " blocks with 8^" << ref_level << " cells each " << endl
+                     << "#Cells:        " << int(repetitions.at(0) * pow(2, ref_level))
+                     << " x " << int(repetitions.at(1) * pow(2, ref_level)) << " x "
+                     << int(repetitions.at(2) * pow(2, ref_level)) << " = "
+                     << int(
+                             repetitions.at(0) * repetitions.at(1) * repetitions.at(2)
+                             * pow(2, 3 * ref_level)) << endl << "#Points:       "
+                     << int(repetitions.at(0) * pow(2, ref_level) * p) << " x "
+                     << int(repetitions.at(1) * pow(2, ref_level) * p) << " x "
+                     << int(repetitions.at(2) * pow(2, ref_level) * p) << " = "
+                     << int(
+                             repetitions.at(0) * repetitions.at(1) * repetitions.at(2)
+                             * pow(2, 3 * ref_level) * p * p * p) << endl
+                     << endl << "               dt  = " << dt << endl
+                     << "===================================================" << endl
+                     << endl;
+    }
+//    MixingLayer3D::UnstructuredGridFunc trafo(mixingLayer->lx, mixingLayer->lx, mixingLayer->lx);
     /////////////////////////////////////////////////
     // run solver
     //////////////////////////////////////////////////

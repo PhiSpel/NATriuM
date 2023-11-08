@@ -110,7 +110,6 @@ namespace natrium {
         };
         virtual void transform(Mesh<3>& mesh) {
 		    // transform grid to unstructured grid
-            cout << "transforming grid";
 		    dealii::GridTools::transform(UnstructuredGridFunc(lx, ly, lz, m_gridDensity), mesh);
 	    }
         double lx, ly, lz;

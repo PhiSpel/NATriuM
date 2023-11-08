@@ -255,7 +255,7 @@ void SemiLagrangian<dim>::fillSparseObject(bool sparsity_pattern, size_t row_ind
 						// add diagonal entry to sparsity pattern
 						m_blockSparsityPattern.block(row_index,el.destination.direction- 1).add(el.destination.index,
 								el.destination.index);
-                        if (is_MPI_rank0()) LOG(WARNING) << " The SemiLagrangian Advection tracker ran into the life time counter limit of 50." << endl;
+                        if (is_MPI_rank_0()) LOG(WARNING) << " The SemiLagrangian Advection tracker ran into the life time counter limit of 50." << endl;
 
                     } else {
 						// insert '1'

@@ -38,8 +38,12 @@ double shearlayerthickness = 0.093;
 
 namespace natrium {
 
-MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname, double len_x, double len_y, double len_z, string meshname, double U, double T, string bc) :
-        ProblemDescription<3>(makeGrid(meshname, len_x, len_y, len_z), viscosity, 1), m_U(U), m_refinementLevel(refinementLevel), lx(len_x), ly(len_y), lz(len_z), m_initialT(T), m_bc(bc) {
+MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname,
+                             double len_x, double len_y, double len_z, string meshname, double center, double scaling,
+                             double U, double T, string bc) :
+        ProblemDescription<3>(makeGrid(meshname, len_x, len_y, len_z), viscosity, 1),
+                m_initialT(T), lx(len_x), ly(len_y), lz(len_z), m_center(center), m_scaling(scaling), m_U(U),
+                m_bc(bc), m_refinementLevel(refinementLevel) {
     // **** Recommendations for CPU use ****
 	/*LOG(BASIC) << "-------------------------------------------------------------" << endl;
 	LOG(BASIC) << "**** Recommendations for CPU use ****" << endl;

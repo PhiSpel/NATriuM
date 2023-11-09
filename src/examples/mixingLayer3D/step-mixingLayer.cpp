@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     parser.setArgument<double>("gamma", "Heat capacity ratio. Should be 1.4", 1.4);
     parser.setArgument<double>("ref-temp", "Reference temperature. Should be between 0.85 and 1 (lower may be more stable).", 1);
     parser.setArgument<double>("lx", "Half length in x-direction (multiples of deltaTheta0)", 150);
-    parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 50);
+    parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 75);
     parser.setArgument<double>("lz", "Half length in z-direction (multiples of deltaTheta0)", 40);
     parser.setArgument<int>("nout", "output vtk every nout steps", 2000);
     parser.setArgument<int>("nstats", "output stats every nstats steps", 20);
@@ -68,6 +68,8 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("rep-x", "Number of repetitions in x-direction (to refine the grid in steps that are not 2^N).", 8);
     parser.setArgument<int>("rep-y", "cf. rep-x", 4);
     parser.setArgument<int>("rep-z", "cf. rep-x", 2);
+    parser.setArgument<double>("center", "Central part with high-res grid, choose between 0.1 and 1", 0.7);
+    parser.setArgument<double>("dy_scaling", "scale dy to dy_scaling-times the element size (<1 to refine boundaries, >1 to loosen, 1 for equidistant mesh)", 3);
 
     try { parser.importOptions();
     } catch (HelpMessageStop&) { return 0;
@@ -188,9 +190,11 @@ int main(int argc, char** argv) {
     double len_x = parser.getArgument<double>("lx");
     double len_y = parser.getArgument<double>("ly");
     double len_z = parser.getArgument<double>("lz");
+    double center = parser.getArgument<double>("center");
+    double dy_scaling = parser.getArgument<double>("dy_scaling");
     boost::shared_ptr<MixingLayer3D> mixingLayer = boost::make_shared<MixingLayer3D>
-            (viscosity, ref_level, randuscaling, randuname, len_x, len_y, len_z, meshname, U * uscaling, reference_temperature, bc);
-    MixingLayer3D::UnstructuredGridFunc trafo(len_x, len_y, len_z);
+            (viscosity, ref_level, randuscaling, randuname, len_x, len_y, len_z, meshname, center, dy_scaling, U * uscaling, reference_temperature, bc);
+    MixingLayer3D::UnstructuredGridFunc trafo(len_y);
 
     double ymin = trafo.trans(len_y / repetitions.at(1) / pow(2, ref_level));
     const double p = configuration->getSedgOrderOfFiniteElement();

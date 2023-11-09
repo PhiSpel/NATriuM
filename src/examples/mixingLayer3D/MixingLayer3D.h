@@ -78,7 +78,9 @@ namespace natrium {
         double m_initialT;
 
         /// constructor
-        MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname, double len_x, double len_y, double len_z, string meshname, double U = 1., double T = 1., string bc = "EQ_BC");
+        MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname,
+                      double len_x, double len_y, double len_z, string meshname, double center, double scaling,
+                      double U = 1., double T = 1., string bc = "EQ_BC");
         /// destructor
         virtual ~MixingLayer3D();
 
@@ -92,25 +94,69 @@ namespace natrium {
         */
         struct UnstructuredGridFunc {
             double m_height;
-            UnstructuredGridFunc(double length, double height, double width, double gridDensity = 0.8) :
-                m_height(height * 0.093 / 4) {
+            double m_center;
+            double m_scaling;
+            double m_a, m_b, m_c;
+            UnstructuredGridFunc(double height, double center = 0.7, double scaling = 3) :
+                    m_height(height * 0.093 / 2), m_center(center), m_scaling(scaling) {
+                //// this one uses "m_scaling" to fix the maximum grid point distance (times the distance in the centre)
+                m_a = (m_scaling - 1) / (2 - 2 * m_center);
+                m_b = 1 - m_center * (m_scaling - 1) / (1 - m_center);
+                m_c = (m_scaling - 1) / (2 - 2 * m_center) * m_center * m_center;
             }
             double trans(const double y) const {
+                //// this one uses "m_scaling" to fix the maximum grid point distance (times the distance in the centre)
                 double y_norm = y / m_height;
-//                if (std::abs(y_norm) < 0.5) return y;
-//                int sign = 1;
-//                if (y_norm < 0) {
-//                    sign = -1;
-//                    y_norm = std::abs(y_norm);
-//                }
-//                double y_new_norm = std::exp(y_norm - 0.5) + 0.5; //std::tan(y_norm); // std::asin(y_norm); // std::tan(std::tan(std::tan(y_norm)));
-                double y_new_norm = std::tan(y_norm);
-                double y_new = m_height * y_new_norm;//; std::pow(y_norm, 5); // // std::tan(std::tan(std::tan(y_norm)));
+                if (std::abs(y_norm) < m_center) return y_norm * m_height;
+                int sign = 1;
+                if (y_norm < 0) {
+                    sign = -1;
+                    y_norm = std::abs(y_norm);
+                }
+                double y_new_norm = m_a * y_norm * y_norm + m_b * y_norm + m_c;
+                return m_height * y_new_norm * sign;
+            }
+            dealii::Point<3> operator()(const dealii::Point<3> &in) const {
+                return dealii::Point<3>(in(0), trans(in(1)), in(2));
+            }
+        };
+        struct UnstructuredGridFunc2 {
+            double m_height;
+            double m_center = 0.7;
+            double m_scaling = 1.5;
+            double m_a, m_b, m_c;
+            UnstructuredGridFunc2(double length, double height, double width, double gridDensity = 0.8) :
+                    m_height(height * 0.093 / 2) {
+                //// this one uses "m_scaling" to fix the outer width of the domain
+                m_a = (1 - m_scaling) / (-m_center*m_center + 2*m_center - 1);
+                m_b = 1 - 2*m_a*m_center;
+                m_c = m_scaling - m_a + 2*m_center*m_a - 1;
+            }
+            double trans(const double y) const {
+                //// tangential transform
+//                double y_norm = y / m_height;
+//                double y_new_norm = std::tan(y_norm);
+//                double y_new = m_height * y_new_norm; // std::tan(std::tan(std::tan(y_norm)));
 //                if (is_MPI_rank_0()) cout << "y_norm = " << y << "/" << m_height << " = " << y_norm
-//                    << " -> y_new_norm = tan(tan(" << y_norm << ")) = " << y_new_norm
-//                    << " -> y_new = " << y_new_norm << "*" << m_height << " = " << y_new << endl;
-//                return y_new * sign;
-                return y_new;
+//                                          << " -> y_new_norm = tan(tan(" << y_norm << ")) = " << y_new_norm
+//                                          << " -> y_new = " << y_new_norm << "*" << m_height << " = " << y_new << endl;
+//                return y_new;
+                //// other trig. functions (asin, power)
+//                double y_norm = y / m_height;
+//                double y_new_norm = std::asin(y_norm); //; std::pow(y_norm, 5);
+//                double y_new = m_height * y_new_norm;
+//                return y_new;
+                //// custom function (linear in 70% of domain, polynomail otherwise)
+                //// this one uses "m_scaling" to fix the outer width of the domain
+                double y_norm = y / m_height;
+                if (std::abs(y_norm) < m_center) return y_norm * m_height;
+                int sign = 1;
+                if (y_norm < 0) {
+                    sign = -1;
+                    y_norm = std::abs(y_norm);
+                }
+                double y_new_norm = m_a*y_norm*y_norm + m_b*y_norm + m_c;
+                return m_height * y_new_norm * sign;
             }
             dealii::Point<3> operator()(const dealii::Point<3> &in) const {
                 return dealii::Point<3>(in(0), trans(in(1)), in(2));
@@ -118,16 +164,15 @@ namespace natrium {
         };
         virtual void transform(Mesh<3>& mesh) {
 		    // transform grid to unstructured grid
-		    dealii::GridTools::transform(UnstructuredGridFunc(lx, ly, lz, m_gridDensity), mesh);
+		    dealii::GridTools::transform(UnstructuredGridFunc(ly, m_center, m_scaling), mesh);
 	    }
-        double lx, ly, lz;
+        double lx, ly, lz, m_center, m_scaling;
 
     private:
         /// speed of sound
         double m_U;
         string m_bc;
         size_t m_refinementLevel;
-	    double m_gridDensity;
 
         /**
          * @short create triangulation for couette flow

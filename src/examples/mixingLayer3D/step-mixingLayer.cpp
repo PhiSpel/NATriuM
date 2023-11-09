@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("rep-y", "cf. rep-x", 4);
     parser.setArgument<int>("rep-z", "cf. rep-x", 2);
     parser.setArgument<double>("center", "Central part with high-res grid, choose between 0.1 and 1", 0.7);
-    parser.setArgument<double>("dy_scaling", "scale dy to dy_scaling-times the element size (<1 to refine boundaries, >1 to loosen, 1 for equidistant mesh)", 3);
+    parser.setArgument<double>("dy-scaling", "scale dy to dy-scaling-times the element size (<1 to refine boundaries, >1 to loosen, 1 for equidistant mesh)", 3);
 
     try { parser.importOptions();
     } catch (HelpMessageStop&) { return 0;
@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
     double len_y = parser.getArgument<double>("ly");
     double len_z = parser.getArgument<double>("lz");
     double center = parser.getArgument<double>("center");
-    double dy_scaling = parser.getArgument<double>("dy_scaling");
+    double dy_scaling = parser.getArgument<double>("dy-scaling");
     boost::shared_ptr<MixingLayer3D> mixingLayer = boost::make_shared<MixingLayer3D>
             (viscosity, ref_level, randuscaling, randuname, len_x, len_y, len_z, meshname, center, dy_scaling, U * uscaling, reference_temperature, bc);
     MixingLayer3D::UnstructuredGridFunc trafo(len_y);

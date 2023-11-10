@@ -46,10 +46,111 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
     calculateRhoU();
     write_tn();
     write_console();
+    calculateDeltas();
 }
 
 bool ShearLayerStats::isMYCoordsUpToDate() const {
     return m_yCoordsUpToDate;
+}
+
+void ShearLayerStats::calculateDeltas() {
+    size_t itest = 0;
+    for (size_t dim = 0; dim < 3; ++dim) {
+        boost::shared_ptr<AdvectionOperator<3> > advection = m_solver.getAdvectionOperator();
+
+        //////////////////////////
+        // Calculate coordinates ////
+        //////////////////////////
+        std::set<double, own_double_less> coords;
+
+        // get y coordinates
+        const dealii::UpdateFlags update_flags = dealii::update_quadrature_points;
+        const dealii::DoFHandler<3> &dof_handler = *(advection->getDoFHandler());
+        dealii::FEValues<3> fe_values(advection->getMapping(), *(advection->getFe()),
+                                      advection->getSupportPointEvaluation(), update_flags);
+        typename dealii::DoFHandler<3>::active_cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+        for (; cell != endc; ++cell) {
+            if (cell->is_locally_owned()) {
+                fe_values.reinit(cell);
+                const std::vector<dealii::Point<3> > &quad_points = fe_values.get_quadrature_points();
+                for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
+                    coords.insert(floor(quad_points.at(i)(dim) * (nround*1000)) / (nround*1000));
+                }
+            }
+        }
+        //communicate list of y values
+        size_t n_coords = coords.size();
+        size_t max_ncoords = dealii::Utilities::MPI::min_max_avg(n_coords, MPI_COMM_WORLD).max;
+        auto *sendbuf = (double *) malloc(max_ncoords * sizeof(double));
+
+        // fill send buffer with y coordinates
+        size_t i = 0;
+        for (double coord: coords) {
+            sendbuf[i] = coord;
+            i++;
+        }
+        for (; i < max_ncoords; i++) {
+            sendbuf[i] = *coords.begin();
+        }
+        // allocate read buffer
+        double *recvbuf = (double *) malloc(
+                dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) * max_ncoords * sizeof(double));
+        // allgather: distribute all ycoords to all processors
+        MPI_Allgather(sendbuf, max_ncoords, MPI_DOUBLE, recvbuf, max_ncoords, MPI_DOUBLE, MPI_COMM_WORLD);
+
+        // remove double entries
+        std::set<double> coords_gathered;
+        for (i = 0; i < max_ncoords * dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+            coords_gathered.insert(recvbuf[i]);
+        }
+        // fill member variables
+        i = 0;
+        for (double it: coords_gathered) {
+            if (dim == 0) {
+                m_xCoordinates.push_back(it);
+                m_xCoordinateToIndex.insert(std::make_pair(it, i));
+            }
+            if (dim == 1) {
+                m_yCoordinates.push_back(it);
+                m_yCoordinateToIndex.insert(std::make_pair(it, i));
+            }
+            if (dim == 2) {
+                m_zCoordinates.push_back(it);
+                m_zCoordinateToIndex.insert(std::make_pair(it, i));
+            }
+            i++;
+        }
+        m_nofCoordinates_all.at(dim) = i;
+        // free
+        free(sendbuf);
+        free(recvbuf);
+        // finished
+    }
+    vector<double> mindeltas(3,100), maxdeltas(3,0); // double mindx=0, maxdx=0, mindy=0, maxdy=0, mindz=0, maxdz=0;
+    vector<vector<double>*> all_coords;
+    all_coords.push_back(&m_xCoordinates); all_coords.push_back(&m_yCoordinates); all_coords.push_back(&m_zCoordinates);
+    vector<double> deltas;
+
+    for (size_t dim = 0; dim < 3; ++dim) {
+        //// calculate deltas from coordinates
+        deltas.resize(m_nofCoordinates_all.at(dim) - 1);
+        for (size_t i = 0; i < m_nofCoordinates_all.at(dim)-1; ++i) {
+            deltas.at(i) = all_coords.at(dim)->at(i+1) - all_coords.at(dim)->at(i);
+        }
+        mindeltas.at(dim) = *std::min_element(deltas.begin(), deltas.end());
+        maxdeltas.at(dim) = *std::max_element(deltas.begin(), deltas.end());
+        // communicate
+        mindeltas.at(dim) = dealii::Utilities::MPI::min_max_avg(mindeltas.at(dim), MPI_COMM_WORLD).min;
+        maxdeltas.at(dim) = dealii::Utilities::MPI::min_max_avg(maxdeltas.at(dim), MPI_COMM_WORLD).max;
+    }
+    if (is_MPI_rank_0()) {
+        LOG(DETAILED) << "::::::---------------------------------------" << endl
+                      << "Mesh info after transform(): " << endl << "dx in [" << mindeltas.at(0) << ","
+                      << maxdeltas.at(0)
+                      << "], dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1)
+                      << "], dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
+                      << "---------------------------------------" << endl;
+    }
 }
 
 void ShearLayerStats::updateYValues() {

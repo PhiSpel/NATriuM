@@ -117,7 +117,7 @@ m_flow(flow), m_randu_scaling(randu_scaling) {
     double lx_u = m_flow->lx;
     double ly_u = m_flow->ly;
     double lz_u = m_flow->lz;
-    double dT0  = m_flow->deltaTheta0
+    double dT0  = m_flow->deltaTheta0;
 
     if (is_MPI_rank_0()) {
         LOG(WELCOME) << "Creating linspaces x, y, z for interpolation." << endl

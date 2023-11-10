@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     // Set to 0.3, 0.7, 0.9, 1.0, 1.2
     parser.setArgument<double>("Ma", "Mach number", 0.3);
     parser.setArgument<double>("time", "simulation time (s)", 15);
-    parser.setArgument<double>("randuscaling", "factor to scale random velocity field", 10);
+    parser.setArgument<double>("randuscaling", "factor to scale random velocity field", 5);
     parser.setArgument<double>("uscaling", "factor to scale U1, i.e. deltaUx", 1);
     parser.setArgument<double>("CFL", "CFL number. Should be between 0.4 and 2", 1);
     parser.setArgument<double>("gamma", "Heat capacity ratio. Should be 1.4", 1.4);
@@ -55,8 +55,8 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("ncheckpoint", "output checkpoint every ncheckpoint steps", 20000);
     parser.setArgument<int>("n-no-out", "do not output vtk before iteration n-no-out", -1);
     parser.setArgument<int>("nstats", "output stats every nstats steps", 20);
-    parser.setArgument<string>("meshname", "name of the mesh file (shearlayer_*.txt)", "final_small");
-    parser.setArgument<string>("randuname", "name of the initial velocity file (random_u_*.txt)", "k048_half");
+    parser.setArgument<string>("meshname", "name of the mesh file (shearlayer_*.txt)", "cube");
+    parser.setArgument<string>("randuname", "name of the initial velocity file (random_u_*.txt)", "cube_k048_half");
     parser.setArgument<string>("bc", "Boundary condition. Choose between 'EQ_BC' (equilibrium), 'DN_BC' (do nothing),"
                                      "'FOBB_BC' (First Order Bounce Back),'ThBB_BC' (Thermal Bounce Back), 'VNeq_BC' (Velocity Non-Equilibrium Bounce Back),"
                                      "'PP_BC' (Periodic - meh)", "EQ_BC");
@@ -94,7 +94,6 @@ int main(int argc, char** argv) {
     repetitions.at(2) = parser.getArgument<int>("rep-z");
 
     long nout = parser.getArgument<int>("nout");
-    long n_no_out = parser.getArgument<int>("n-no-out");
     auto time = parser.getArgument<double>("time");
     const int restart = parser.getArgument<int>("restart");
     if ((restart > 0) and is_MPI_rank_0()) {
@@ -134,7 +133,7 @@ int main(int argc, char** argv) {
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(parser.getArgument<int>("ncheckpoint"));
     configuration->setOutputSolutionInterval(nout);
-    configuration->setNoOutputInterval(n_no_out);
+    configuration->setNoOutputInterval(parser.getArgument<int>("n-no-out"));
     configuration->setSimulationEndTime(time);
     configuration->setOutputGlobalTurbulenceStatistics(true);
     configuration->setOutputCompressibleTurbulenceStatistics(true);

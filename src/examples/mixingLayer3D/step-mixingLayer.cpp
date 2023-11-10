@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
     double center = parser.getArgument<double>("center");
     double dy_scaling = parser.getArgument<double>("dy-scaling");
     boost::shared_ptr<MixingLayer3D> mixingLayer = boost::make_shared<MixingLayer3D>
-            (viscosity, ref_level, randuscaling, randuname, len_x, len_y, len_z, meshname, center, dy_scaling, deltaTheta0, U * uscaling, reference_temperature, bc);
+            (viscosity, ref_level, repetitions, randuscaling, randuname, len_x, len_y, len_z, meshname, center, dy_scaling, deltaTheta0, U * uscaling, reference_temperature, bc);
     MixingLayer3D::UnstructuredGridFunc trafo(len_y);
 
     double ymin = trafo.trans(len_y / repetitions.at(1) / pow(2, ref_level));
@@ -205,7 +205,7 @@ int main(int argc, char** argv) {
     const double dt = configuration->getCFL() / (p * p) / (sqrt(2) * scaling) * ymin;
 
     if (is_MPI_rank_0()) {
-        LOG(WELCOME) << "CHANNEL SETUP: " << endl
+        LOG(WELCOME) << "MIXING LAYER SETUP: " << endl
                      << "===================================================" << endl
                      << "Dimensions:    " << len_x << " x " << len_y << " x " << len_z
                      << endl << "Grid:          " << repetitions.at(0) << " x "

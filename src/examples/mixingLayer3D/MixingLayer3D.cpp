@@ -38,10 +38,10 @@ double shearlayerthickness = 0.093;
 
 namespace natrium {
 
-MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname,
+MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, vector<unsigned int> repetitions, double randu_scaling, string randuname,
                              double len_x, double len_y, double len_z, string meshname, double center, double scaling,
                              double dT0, double U, double T, string bc) :
-        ProblemDescription<3>(makeGrid(meshname, len_x, len_y, len_z), viscosity, 1),
+        ProblemDescription<3>(makeGrid(meshname, len_x, len_y, len_z, repetitions), viscosity, 1),
                 m_initialT(T), lx(len_x), ly(len_y), lz(len_z), m_center(center), m_scaling(scaling), m_U(U),
                 m_bc(bc), m_refinementLevel(refinementLevel), deltaTheta0(dT0) {
     // **** Recommendations for CPU use ****
@@ -227,20 +227,20 @@ boost::shared_ptr<Mesh<3> > MixingLayer3D::makeGrid(const string& meshname, doub
         dealii::Point<3> corner2(lx, ly, lz);
         dealii::GridGenerator::subdivided_hyper_rectangle(*cube, repetitions, corner1, corner2, true);
         return cube;
+    } else {
+        //Taken from DiamondObstacle2D in step-gridin
+        string mesh_filename = "/src/examples/mixingLayer3D/mesh/shearlayer_" + meshname + ".msh";
+        if (is_MPI_rank_0()) LOG(WELCOME) << "Reading mesh from " << mesh_filename << endl;
+        dealii::GridIn<3> grid_in;
+        grid_in.attach_triangulation(*mesh);
+        //// Read mesh data from file
+        stringstream filename;
+        filename << getenv("NATRIUM_DIR") << mesh_filename;
+        ifstream file(filename.str().c_str());
+        assert(file);
+        grid_in.read_msh(file);
     }
-
-    //Taken from DiamondObstacle2D in step-gridin
-    string mesh_filename = "/src/examples/mixingLayer3D/mesh/shearlayer_" + meshname + ".msh";
-    if (is_MPI_rank_0()) LOG(WELCOME) << "Reading mesh from " << mesh_filename << endl;
-    dealii::GridIn<3> grid_in;
-    grid_in.attach_triangulation(*mesh);
-    //// Read mesh data from file
-    stringstream filename;
-    filename << getenv("NATRIUM_DIR") << mesh_filename;
-    ifstream file(filename.str().c_str());
-    assert(file);
-    grid_in.read_msh(file);
-
+    //// calculate boundaries and set boundary ids
     if (is_MPI_rank_0()) LOG(DETAILED) << " dimensions: 3" << endl << " no. of cells: " << mesh->n_active_cells() << endl;
     double minx=0, maxx=0, miny=0, maxy=0, minz=0, maxz=0;
     //// get minimum and maximum coordinates

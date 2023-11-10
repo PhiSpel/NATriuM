@@ -575,21 +575,25 @@ void compressibleFilter() {
                 and (this->m_configuration->getNoOutputInterval() < iteration)
                 and (this->m_iterationStart != this->m_i)) {
 
-            boost::filesystem::path checkpoint_dir(
-                    this->m_configuration->getOutputDirectory());
-            checkpoint_dir /= "checkpoint";
-            Checkpoint<dim> checkpoint(this->m_i, checkpoint_dir, false);
-            Checkpoint<dim> checkpointG(this->m_i, checkpoint_dir, true);
-            CheckpointStatus checkpoint_status;
-            checkpoint_status.iterationNumber = this->m_i;
-            checkpoint_status.stencilScaling = this->m_stencil->getScaling();
-            checkpoint_status.time = this->m_time;
-            checkpoint_status.feOrder =
-                    this->m_configuration->getSedgOrderOfFiniteElement();
-            checkpoint.write(*(this->m_problemDescription->getMesh()), this->m_f,
-                              *(this->m_advectionOperator->getDoFHandler()), checkpoint_status);
-            checkpointG.write(*(this->m_problemDescription->getMesh()), m_g,
-                             *(this->m_advectionOperator->getDoFHandler()), checkpoint_status);
+            if (iteration < this->m_configuration->getNoOutputInterval()) {
+                if (is_MPI_rank_0()) LOG(DETAILED) << "No output at " << iteration << ". Only after " << this->m_configuration->getNoOutputInterval() << endl;
+            } else {
+                boost::filesystem::path checkpoint_dir(
+                        this->m_configuration->getOutputDirectory());
+                checkpoint_dir /= "checkpoint";
+                Checkpoint<dim> checkpoint(this->m_i, checkpoint_dir, false);
+                Checkpoint<dim> checkpointG(this->m_i, checkpoint_dir, true);
+                CheckpointStatus checkpoint_status;
+                checkpoint_status.iterationNumber = this->m_i;
+                checkpoint_status.stencilScaling = this->m_stencil->getScaling();
+                checkpoint_status.time = this->m_time;
+                checkpoint_status.feOrder =
+                        this->m_configuration->getSedgOrderOfFiniteElement();
+                checkpoint.write(*(this->m_problemDescription->getMesh()), this->m_f,
+                                 *(this->m_advectionOperator->getDoFHandler()), checkpoint_status);
+                checkpointG.write(*(this->m_problemDescription->getMesh()), m_g,
+                                  *(this->m_advectionOperator->getDoFHandler()), checkpoint_status);
+            }
         } /*if checkpoint interval*/
         if (is_final) {
             LOG(DETAILED) << "Total runtime: " << secs_to_stream(int(clock()/CLOCKS_PER_SEC)) << ". Server-end had been set to " << secs_to_stream(this->m_configuration->getServerEndTime()) << endl;

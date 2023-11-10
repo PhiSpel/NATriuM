@@ -190,14 +190,15 @@ int main(int argc, char** argv) {
     }
     configuration->setOutputDirectory(m_dirname);
 
+    double deltaTheta0 = 0.093;
     // Grid resolution
-    double len_x = parser.getArgument<double>("lx");
-    double len_y = parser.getArgument<double>("ly");
-    double len_z = parser.getArgument<double>("lz");
+    double len_x = parser.getArgument<double>("lx") * deltaTheta0;
+    double len_y = parser.getArgument<double>("ly") * deltaTheta0;
+    double len_z = parser.getArgument<double>("lz") * deltaTheta0;
     double center = parser.getArgument<double>("center");
     double dy_scaling = parser.getArgument<double>("dy-scaling");
     boost::shared_ptr<MixingLayer3D> mixingLayer = boost::make_shared<MixingLayer3D>
-            (viscosity, ref_level, randuscaling, randuname, len_x, len_y, len_z, meshname, center, dy_scaling, U * uscaling, reference_temperature, bc);
+            (viscosity, ref_level, randuscaling, randuname, len_x, len_y, len_z, meshname, center, dy_scaling, deltaTheta0, U * uscaling, reference_temperature, bc);
     MixingLayer3D::UnstructuredGridFunc trafo(len_y);
 
     double ymin = trafo.trans(len_y / repetitions.at(1) / pow(2, ref_level));

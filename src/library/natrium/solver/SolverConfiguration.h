@@ -1468,6 +1468,37 @@ public:
         leave_subsection();
     }
 
+    size_t getNoOutputInterval() {
+        enter_subsection("Output");
+        size_t solutionInterval;
+        try {
+            solutionInterval = get_integer("No output interval");
+        } catch (std::exception& e) {
+            std::stringstream msg;
+            msg
+                    << "Could not read parameter 'No output interval' from parameters: "
+                    << e.what();
+            leave_subsection();
+            throw ConfigurationException(msg.str());
+        }
+        leave_subsection();
+        return solutionInterval;
+    }
+
+    void setNoOutputInterval(long int noOutputInterval) {
+        enter_subsection("Output");
+        try {
+            set("No output interval", noOutputInterval);
+        } catch (std::exception& e) {
+            std::stringstream msg;
+            msg << "Could not assign value " << noOutputInterval
+                << " to Output solution interval: " << e.what();
+            leave_subsection();
+            throw ConfigurationException(msg.str());
+        }
+        leave_subsection();
+    }
+
     size_t getOutputShearLayerInterval() {
         enter_subsection("Output");
         enter_subsection("Shear Layer");

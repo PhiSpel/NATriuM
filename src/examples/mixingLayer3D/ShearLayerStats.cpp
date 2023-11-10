@@ -22,6 +22,9 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
         m_vectorfilename(vectoroutfile(solver.getConfiguration()->getOutputDirectory())),
         m_currentDeltaTheta_Fa(starting_delta_theta), m_currentDeltaOmega(0.41),
         m_b11(0), m_b22(0), m_b33(0), m_b12(0), m_b13(0), m_b23(0), m_K_integrated(0) {
+
+    TimerOutput::Scope timer_section(Timing::getTimer(), "Shearlayer Reporter");
+
     nround = pow(10,12); // round coordinates to this magnitude
     m_yCoordsUpToDate = false;
     m_nofCoordinates = 0;
@@ -113,9 +116,11 @@ void ShearLayerStats::updateYValues() {
 }
 
 void ShearLayerStats::apply() {
+    TimerOutput::Scope timer_section(Timing::getTimer(), "Shearlayer Reporter");
     size_t iteration = m_solver.getIteration();
-    if ((iteration == 1) or (iteration == 10) or (iteration == 50) or (iteration == 100) or (iteration == 500)
-        or (iteration % 1000 == 0) or (iteration % m_solver.getConfiguration()->getOutputShearLayerInterval() == 0)) {
+    if (((iteration == 1) or (iteration == 10) or (iteration == 50) or (iteration == 100) or (iteration == 500)
+        or (iteration % 1000 == 0) or (iteration % m_solver.getConfiguration()->getOutputShearLayerInterval() == 0))
+        and (iteration > m_solver.getConfiguration()->getNoOutputInterval())) {
         if (!isMYCoordsUpToDate()) {
             updateYValues();
         }

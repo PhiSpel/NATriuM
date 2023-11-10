@@ -572,6 +572,7 @@ void compressibleFilter() {
         // no output if checkpoint interval > 10^8
         if (((iteration % this->m_configuration->getOutputCheckpointInterval() == 0) or is_final)
                 and (this->m_configuration->getOutputCheckpointInterval() <= 1e8)
+                and (this->m_configuration->getNoOutputInterval() < iteration)
                 and (this->m_iterationStart != this->m_i)) {
 
             boost::filesystem::path checkpoint_dir(

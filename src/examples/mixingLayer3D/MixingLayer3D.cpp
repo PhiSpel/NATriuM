@@ -40,10 +40,10 @@ namespace natrium {
 
 MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname,
                              double len_x, double len_y, double len_z, string meshname, double center, double scaling,
-                             double U, double T, string bc) :
+                             double dT0, double U, double T, string bc) :
         ProblemDescription<3>(makeGrid(meshname, len_x, len_y, len_z), viscosity, 1),
                 m_initialT(T), lx(len_x), ly(len_y), lz(len_z), m_center(center), m_scaling(scaling), m_U(U),
-                m_bc(bc), m_refinementLevel(refinementLevel) {
+                m_bc(bc), m_refinementLevel(refinementLevel), deltaTheta0(dT0) {
     // **** Recommendations for CPU use ****
 	/*LOG(BASIC) << "-------------------------------------------------------------" << endl;
 	LOG(BASIC) << "**** Recommendations for CPU use ****" << endl;
@@ -88,12 +88,12 @@ double MixingLayer3D::InitialVelocity::value(const dealii::Point<3>& x, const un
 }
 
 MixingLayer3D::InitialVelocity::InitialVelocity(natrium::MixingLayer3D *flow, double randu_scaling, string randuname) :
-m_flow(flow), lx(flow->lx), ly(flow->ly), lz(flow->lz), m_randu_scaling(randu_scaling) {
+m_flow(flow), m_randu_scaling(randu_scaling) {
     stringstream filename;
     filename << getenv("NATRIUM_DIR") << "/src/examples/mixingLayer3D/random_u/random_u_" << randuname << ".txt";
     string filestring = filename.str();
     ifstream file(filestring);
-    if (is_MPI_rank_0()) LOG(WELCOME) << "Reading initial velocities from " << filestring << endl;
+    if (is_MPI_rank_0()) LOG(WELCOME) << "Reading random velocity field from " << filestring << endl;
     string line;
     while (getline(file, line)) {
         stringstream linestream(line);
@@ -114,22 +114,28 @@ m_flow(flow), lx(flow->lx), ly(flow->ly), lz(flow->lz), m_randu_scaling(randu_sc
             } tmpdir.push_back(tmpi); ny = tmpi.size();
         } curlOfPsi.push_back(tmpdir); nx = tmpdir.size();
     }
+    double lx_u = m_flow->lx;
+    double ly_u = m_flow->ly;
+    double lz_u = m_flow->lz;
+    double dT0  = m_flow->deltaTheta0
 
     if (is_MPI_rank_0()) {
-        LOG(WELCOME) << "Creating linspaces x, y, z for interpolation." << endl;
-        LOG(DETAILED) << "nx: " << nx << ", ny: " << ny << ", nz: " << nz << endl
-            << "lx: " << lx << ", ly: " << ly << ", lz: " << lz << endl
-            << "lx/dTh0: " << lx / 0.093 << ", ly/dTh0: " << ly / 0.093 << ", lz/dTh0: " << lz / 0.093 << endl;
+        LOG(WELCOME) << "Creating linspaces x, y, z for interpolation." << endl
+                     << "nx: " << nx << ", ny: " << ny << ", nz: " << nz << endl
+                     << "lx_u: " << lx_u << ", ly: " << ly_u << ", lz: " << lz_u << endl
+                     << "lx_u/dTh0: " << lx_u / dT0 << ", ly/dTh0: " << ly_u / dT0 << ", lz/dTh0: " << lz_u / dT0 << endl;
     }
+
+    //// velocity field is scaled to domain
     vector<double> x, y, z;
     double dx, dy, dz;
     double xmin, ymin, zmin;
-    xmin = -lx / 2;
-    ymin = -ly / 2;
-    zmin = -lz / 2;
-    dx = lx / nx;
-    dy = ly / ny;
-    dz = lz / nz;
+    xmin = -lx_u / 2;
+    ymin = -ly_u / 2;
+    zmin = -lz_u / 2;
+    dx = lx_u / nx;
+    dy = ly_u / ny;
+    dz = lz_u / nz;
     double linvalue;
     linvalue = xmin; for (int i = 0; i < nx; i++) { x.push_back(linvalue); linvalue += dx; }
     linvalue = ymin; for (int i = 0; i < ny; i++) { y.push_back(linvalue); linvalue += dy; }
@@ -214,9 +220,9 @@ boost::shared_ptr<Mesh<3> > MixingLayer3D::makeGrid(const string& meshname, doub
     if (meshname == "cube") {
         if (is_MPI_rank_0()) cout << "doing cube with global refinement" << endl;
         boost::shared_ptr<Mesh<3> > cube = boost::make_shared<Mesh<3> >(MPI_COMM_WORLD);
-        lx = len_x * shearlayerthickness / 2;
-        ly = len_y * shearlayerthickness / 2;
-        lz = len_z * shearlayerthickness / 2;
+        lx = len_x / 2;
+        ly = len_y / 2;
+        lz = len_z / 2;
         dealii::Point<3> corner1(-lx, -ly, -lz);
         dealii::Point<3> corner2(lx, ly, lz);
         dealii::GridGenerator::subdivided_hyper_rectangle(*cube, repetitions, corner1, corner2, true);

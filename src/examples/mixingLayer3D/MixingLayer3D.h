@@ -51,7 +51,6 @@ namespace natrium {
                 double maxx, maxy, maxz;
                 double m_randu_scaling;
 //                double dx, dy, dz;
-                double lx, ly, lz;
 //                double m_Ux;
                 int nx, ny, nz;
                 int kxmax, kymax, kzmax;
@@ -80,7 +79,7 @@ namespace natrium {
         /// constructor
         MixingLayer3D(double viscosity, size_t refinementLevel, double randu_scaling, string randuname,
                       double len_x, double len_y, double len_z, string meshname, double center, double scaling,
-                      double U = 1., double T = 1., string bc = "EQ_BC");
+                      double deltaTheta0, double U = 1., double T = 1., string bc = "EQ_BC");
         /// destructor
         virtual ~MixingLayer3D();
 
@@ -98,7 +97,7 @@ namespace natrium {
             double m_scaling;
             double m_a, m_b, m_c;
             UnstructuredGridFunc(double height, double center = 0.7, double scaling = 3) :
-                    m_height(height * 0.093 / 2), m_center(center), m_scaling(scaling) {
+                    m_height(height / 2), m_center(center), m_scaling(scaling) {
                 //// this one uses "m_scaling" to fix the maximum grid point distance (times the distance in the centre)
                 m_a = (m_scaling - 1) / (2 - 2 * m_center);
                 m_b = 1 - m_center * (m_scaling - 1) / (1 - m_center);
@@ -126,7 +125,7 @@ namespace natrium {
             double m_scaling = 1.5;
             double m_a, m_b, m_c;
             UnstructuredGridFunc2(double length, double height, double width, double gridDensity = 0.8) :
-                    m_height(height * 0.093 / 2) {
+                    m_height(height / 2) {
                 //// this one uses "m_scaling" to fix the outer width of the domain
                 m_a = (1 - m_scaling) / (-m_center*m_center + 2*m_center - 1);
                 m_b = 1 - 2*m_a*m_center;
@@ -166,7 +165,7 @@ namespace natrium {
 		    // transform grid to unstructured grid
 		    dealii::GridTools::transform(UnstructuredGridFunc(ly, m_center, m_scaling), mesh);
 	    }
-        double lx, ly, lz, m_center, m_scaling;
+        double lx, ly, lz, m_center, m_scaling, deltaTheta0;
 
     private:
         /// speed of sound

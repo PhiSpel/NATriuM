@@ -119,8 +119,7 @@ void ShearLayerStats::apply() {
     TimerOutput::Scope timer_section(Timing::getTimer(), "Shearlayer Reporter");
     size_t iteration = m_solver.getIteration();
     if (((iteration == 1) or (iteration == 10) or (iteration == 50) or (iteration == 100) or (iteration == 500)
-        or (iteration % 1000 == 0) or (iteration % m_solver.getConfiguration()->getOutputShearLayerInterval() == 0))
-        and (iteration > m_solver.getConfiguration()->getNoOutputInterval())) {
+        or (iteration % 1000 == 0) or (iteration % m_solver.getConfiguration()->getOutputShearLayerInterval() == 0))) {
         if (!isMYCoordsUpToDate()) {
             updateYValues();
         }

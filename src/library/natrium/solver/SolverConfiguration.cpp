@@ -267,9 +267,12 @@ SolverConfiguration::SolverConfiguration() {
 		declare_entry("Output table interval", "1000",
 				dealii::Patterns::Integer(1),
 				"Write out a line to the result table every ... step.");
-		declare_entry("Output solution interval", "1000",
-				dealii::Patterns::Integer(1),
-				"Write out solution every ... step.");
+        declare_entry("Output solution interval", "1000",
+                      dealii::Patterns::Integer(1),
+                      "Write out solution every ... step.");
+        declare_entry("No output interval", "-1",
+                      dealii::Patterns::Integer(-1),
+                      "No not output solution before ... steps.");
 		declare_entry("Command line verbosity", "5",
 				dealii::Patterns::Integer(0, 8),
 				"The amount of command line output.");

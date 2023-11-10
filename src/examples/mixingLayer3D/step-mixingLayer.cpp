@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 75);
     parser.setArgument<double>("lz", "Half length in z-direction (multiples of deltaTheta0)", 40);
     parser.setArgument<int>("nout", "output vtk every nout steps", 2000);
+    parser.setArgument<int>("n-no-out", "do not output vtk before iteration n-no-out", -1);
     parser.setArgument<int>("nstats", "output stats every nstats steps", 20);
     parser.setArgument<string>("meshname", "name of the mesh file (shearlayer_*.txt)", "final_small");
     parser.setArgument<string>("randuname", "name of the initial velocity file (random_u_*.txt)", "k048_half");
@@ -92,6 +93,7 @@ int main(int argc, char** argv) {
     repetitions.at(2) = parser.getArgument<int>("rep-z");
 
     long nout = parser.getArgument<int>("nout");
+    long n_no_out = parser.getArgument<int>("n-no-out");
     auto time = parser.getArgument<double>("time");
     const int restart = parser.getArgument<int>("restart");
     if ((restart > 0) and is_MPI_rank_0()) {
@@ -131,6 +133,7 @@ int main(int argc, char** argv) {
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(nout*100);
     configuration->setOutputSolutionInterval(nout);
+    configuration->setNoOutputInterval(n_no_out);
     configuration->setSimulationEndTime(time);
     configuration->setOutputGlobalTurbulenceStatistics(true);
     configuration->setOutputCompressibleTurbulenceStatistics(true);

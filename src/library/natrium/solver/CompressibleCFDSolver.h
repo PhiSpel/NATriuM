@@ -413,92 +413,82 @@ void compressibleFilter() {
 // sync MPI processes
         MPI_sync();
 
-// output: vector fields as .vtu files
-        if (not this->m_configuration->isSwitchOutputOff()) {
-            /*if (iteration - this->m_iterationStart == 0) {
-                // first iteration: put out mesh
-                std::stringstream str0;
-                str0 << this->m_configuration->getOutputDirectory().c_str()
-                     << "/grid.vtk";
-                std::string grid_file = str0.str();
-                std::ofstream grid_out_file(grid_file);
-                dealii::GridOut().write_vtk(*(this->m_problemDescription)->getMesh(),
-                                            grid_out_file);
-                grid_out_file.close();
-            }*/
-            if ((iteration % 1000 == 0) or (is_final)) {
-            }
-            // output elapsed time, server-time, and estimated runtime after iterations 1, 10, 100, 1000, ... and after every 1000
+// output time estimates
 
-            if ((iteration == 1) or (iteration == 10) or (iteration == 50) or (iteration == 100) or (iteration == 500)
-                    or ((iteration % 1000 == 0) and iteration > 0)) {
-                int secs2 = int(clock() / CLOCKS_PER_SEC);
-                time_t t_now = time(nullptr);
-                struct tm *ltm = localtime(&t_now);
-                LOG(DETAILED) << "Iteration " << iteration << ", t = " << this->m_time << ", server-time = "
-                              << secs_to_stream(secs2) << "." << endl;
+        if ((iteration == 1) or (iteration == 10) or (iteration == 50) or (iteration == 100) or (iteration == 500)
+            or ((iteration % 1000 == 0) and iteration > 0)) {
+            int secs2 = int(clock() / CLOCKS_PER_SEC);
+            time_t t_now = time(nullptr);
+            struct tm *ltm = localtime(&t_now);
+            LOG(DETAILED) << "Iteration " << iteration << ", t = " << this->m_time << ", server-time = "
+                          << secs_to_stream(secs2) << "." << endl;
 //                LOG(DETAILED) << ":Started simulation after " << m_tstart << " seconds." << endl;
-                LOG(DETAILED) << ":Started at " << m_tstart2;
-                LOG(DETAILED) << ":::::::Now, it is " << string(asctime(ltm));
+            LOG(DETAILED) << ":Started at " << m_tstart2;
+            LOG(DETAILED) << ":::::::Now, it is " << string(asctime(ltm));
 
-                double secs = 1e-10 + (clock() - this->m_tstart) / CLOCKS_PER_SEC;
-                LOG(DETAILED) << ":::::::Average Performance: "
-                              << 1.0 * this->m_advectionOperator->getDoFHandler()->n_dofs()
-                                 * (iteration - this->m_iterationStart) / secs / 1000000.0
-                              << " million DoF updates per second" << endl;
-                Timing::getTimer().print_summary();
+            double secs = 1e-10 + (clock() - this->m_tstart) / CLOCKS_PER_SEC;
+            LOG(DETAILED) << ":::::::Average Performance: "
+                          << 1.0 * this->m_advectionOperator->getDoFHandler()->n_dofs()
+                             * (iteration - this->m_iterationStart) / secs / 1000000.0
+                          << " million DoF updates per second" << endl;
+            Timing::getTimer().print_summary();
 
-                if ((this->m_configuration->getNumberOfTimeSteps() < 1e8) or (this->m_configuration->getSimulationEndTime() < 1e8)) {
-                    double factor;
-                    string base;
-                    if (this->m_configuration->getNumberOfTimeSteps() < 1e8) {
-                        base = "max iterations";
-                        // Calculating done iterations
-                        int done_iterations = iteration - this->m_iterationStart;
-                        // Calculating to-be-done iterations
-                        double tobedone_iterations = this->m_configuration->getNumberOfTimeSteps() - this->m_iterationStart;
-                        // Calculating iterations factor
-                        factor = tobedone_iterations / done_iterations;
-                    }
-                    if (this->m_configuration->getSimulationEndTime() < 1e8) {
-                        base = "physical time";
-                        // Calculating done time
-                        double done_time_ph = this->getTime() - this->m_tstart_ph;
-                        // Calculating to-be-done iterations
-                        double tobedone_time_ph = this->m_configuration->getSimulationEndTime() - this->m_tstart_ph;
-                        // Calculating time factor
-                        factor = tobedone_time_ph / done_time_ph;
-                    }
-                    time_t start = m_tstart3;
-                    time_t done_time = clock()/CLOCKS_PER_SEC;
-                    time_t tobedone_time = done_time * factor;
-                    time_t estimated_end = start + tobedone_time;
-                    struct tm * ltm2 = localtime(&estimated_end);
-                    //                struct tm * ltm1 = localtime(&start);
-                    LOG(DETAILED) << ":Finished " << int(100.0/factor * 10000) / 10000 << " % based on " << base << ". Estimated end: " << string(asctime(ltm2));
-                    time_t server_max = this->m_configuration->getServerEndTime();
-                    time_t estimated_server_end = start + server_max;
-                    struct tm * ltm3 = localtime(&estimated_server_end);
-                    LOG(DETAILED) << ":::::::Server-time left: " << secs_to_stream(server_max - done_time) << ".   Estimated server-end: " << string(asctime(ltm3));
+            if ((this->m_configuration->getNumberOfTimeSteps() < 1e8) or (this->m_configuration->getSimulationEndTime() < 1e8)) {
+                double factor;
+                string base;
+                if (this->m_configuration->getNumberOfTimeSteps() < 1e8) {
+                    base = "max iterations";
+                    // Calculating done iterations
+                    int done_iterations = iteration - this->m_iterationStart;
+                    // Calculating to-be-done iterations
+                    double tobedone_iterations = this->m_configuration->getNumberOfTimeSteps() - this->m_iterationStart;
+                    // Calculating iterations factor
+                    factor = tobedone_iterations / done_iterations;
+                }
+                if (this->m_configuration->getSimulationEndTime() < 1e8) {
+                    base = "physical time";
+                    // Calculating done time
+                    double done_time_ph = this->getTime() - this->m_tstart_ph;
+                    // Calculating to-be-done iterations
+                    double tobedone_time_ph = this->m_configuration->getSimulationEndTime() - this->m_tstart_ph;
+                    // Calculating time factor
+                    factor = tobedone_time_ph / done_time_ph;
+                }
+                time_t start = m_tstart3;
+                time_t done_time = clock()/CLOCKS_PER_SEC;
+                time_t tobedone_time = done_time * factor;
+                time_t estimated_end = start + tobedone_time;
+                struct tm * ltm2 = localtime(&estimated_end);
+                //                struct tm * ltm1 = localtime(&start);
+                LOG(DETAILED) << ":Finished " << int(100.0/factor * 10000) / 10000 << " % based on " << base << ". Estimated end: " << string(asctime(ltm2));
+                time_t server_max = this->m_configuration->getServerEndTime();
+                time_t estimated_server_end = start + server_max;
+                struct tm * ltm3 = localtime(&estimated_server_end);
+                LOG(DETAILED) << ":::::::Server-time left: " << secs_to_stream(server_max - done_time) << ".   Estimated server-end: " << string(asctime(ltm3));
 //                    LOG(DETAILED) << "Server time: " << clock()/CLOCKS_PER_SEC << endl;
 //                    LOG(DETAILED) << "Calculated done_time: " << done_time << endl;
 //                    LOG(DETAILED) << "Calculated tobedone_t " << tobedone_time << endl;
-                    //                LOG(DETAILED) << "Started at: " << string(asctime(ltm1));
-                    //                LOG(DETAILED) << "Already did: " << done_time << "[time_t]";
-                    //                LOG(DETAILED) << "Overall needs: " << tobedone_time << "[time_t]";
-                }
+                //                LOG(DETAILED) << "Started at: " << string(asctime(ltm1));
+                //                LOG(DETAILED) << "Already did: " << done_time << "[time_t]";
+                //                LOG(DETAILED) << "Overall needs: " << tobedone_time << "[time_t]";
             }
+        }
+
+// output: vector fields as .vtu files
+        if ((iteration == 0) and (not this->m_configuration->isSwitchOutputOff())) {
+            std::filesystem::path out_dir(this->m_configuration->getOutputDirectory() + "/vtk");
+            std::filesystem::create_directory(out_dir);
+        }
+
+        if ((not this->m_configuration->isSwitchOutputOff()) and (this->m_configuration->getNoOutputInterval() < iteration)) {
+            // output elapsed time, server-time, and estimated runtime after iterations 1, 10, 100, 1000, ... and after every 1000
             // add turbulence statistics to output
             if (this->m_configuration->isOutputTurbulenceStatistics())
                 this->m_turbulenceStats->addToReynoldsStatistics(this->m_velocity);
             // create vtk-subdirectory
-            if (iteration == 0) {
-                std::filesystem::path out_dir(this->m_configuration->getOutputDirectory() + "/vtk");
-                std::filesystem::create_directory(out_dir);
-            }
             // no output if solution interval > 10^8
             if (((iteration % this->m_configuration->getOutputSolutionInterval() == 0)
-                 and this->m_configuration->getOutputSolutionInterval() <= 1e8)
+                 and (this->m_configuration->getOutputSolutionInterval() <= 1e8))
                 or (is_final)) {
                 // save local part of the solution
                 std::stringstream str;

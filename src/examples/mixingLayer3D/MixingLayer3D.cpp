@@ -90,7 +90,7 @@ double MixingLayer3D::InitialVelocity::value(const dealii::Point<3>& x, const un
 MixingLayer3D::InitialVelocity::InitialVelocity(natrium::MixingLayer3D *flow, double randu_scaling, string randuname) :
 m_flow(flow), lx(flow->lx), ly(flow->ly), lz(flow->lz), m_randu_scaling(randu_scaling) {
     stringstream filename;
-    filename << getenv("NATRIUM_DIR") << "/src/examples/mixingLayer3D/random_u_" << randuname << ".txt";
+    filename << getenv("NATRIUM_DIR") << "/src/examples/mixingLayer3D/random_u/random_u_" << randuname << ".txt";
     string filestring = filename.str();
     ifstream file(filestring);
     if (is_MPI_rank_0()) LOG(WELCOME) << "Reading initial velocities from " << filestring << endl;
@@ -224,7 +224,7 @@ boost::shared_ptr<Mesh<3> > MixingLayer3D::makeGrid(const string& meshname, doub
     }
 
     //Taken from DiamondObstacle2D in step-gridin
-    string mesh_filename = "/src/examples/mixingLayer3D/shearlayer_" + meshname + ".msh";
+    string mesh_filename = "/src/examples/mixingLayer3D/mesh/shearlayer_" + meshname + ".msh";
     if (is_MPI_rank_0()) LOG(WELCOME) << "Reading mesh from " << mesh_filename << endl;
     dealii::GridIn<3> grid_in;
     grid_in.attach_triangulation(*mesh);

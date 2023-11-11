@@ -480,7 +480,10 @@ void compressibleFilter() {
             std::filesystem::create_directory(out_dir);
         }
 
-        if ((not this->m_configuration->isSwitchOutputOff()) and (this->m_configuration->getNoOutputInterval() < iteration)) {
+        if ((not this->m_configuration->isSwitchOutputOff())
+//                 and (this->m_configuration->getNoOutputInterval() < iteration)) 
+		)
+		{
             // output elapsed time, server-time, and estimated runtime after iterations 1, 10, 100, 1000, ... and after every 1000
             // add turbulence statistics to output
             if (this->m_configuration->isOutputTurbulenceStatistics())
@@ -572,7 +575,7 @@ void compressibleFilter() {
         // no output if checkpoint interval > 10^8
         if (((iteration % this->m_configuration->getOutputCheckpointInterval() == 0) or is_final)
                 and (this->m_configuration->getOutputCheckpointInterval() <= 1e8)
-                and (this->m_configuration->getNoOutputInterval() < iteration)
+//                 and (this->m_configuration->getNoOutputInterval() < iteration)
                 and (this->m_iterationStart != this->m_i)) {
 
             if (iteration < this->m_configuration->getNoOutputInterval()) {

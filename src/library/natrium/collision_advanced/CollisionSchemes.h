@@ -52,11 +52,11 @@ public:
 		calculateGeqFromFeq<T_D,T_Q>(genData.feq,genData.geq,genData);
 
 		//Distribution functions for variable Prandtl number (cf. Frapolli 2019)
-		std::array<double, T_Q> fStar = {0.0};//genData.feq;
-        std::array<double, T_Q> gStar = {0.0};//genData.geq;
+		std::array<double, T_Q> fStar = {};//genData.feq;
+        std::array<double, T_Q> gStar = {};//genData.geq;
 
-        std::array<double, T_Q> fNeq = {0.0};
-        std::array<double, T_Q> gNeq = {0.0};
+        std::array<double, T_Q> fNeq = {};
+        std::array<double, T_Q> gNeq = {};
         for (int p = 0; p < T_Q; ++p) {
             fNeq[p] = fLocal[p] - genData.feq[p];
             gNeq[p] = gLocal[p] - genData.geq[p];
@@ -67,9 +67,9 @@ public:
         if (isPrandtlNumberSet) {
 
             // 3 staged non-equilibrium heat flux tensors
-            std::array<std::array<std::array<double, T_D>, T_D>, T_D> heatFluxTensorFNEq = {0.0};
+            std::array<std::array<std::array<double, T_D>, T_D>, T_D> heatFluxTensorFNEq = {};
            // std::array<std::array<std::array<double, T_D>, T_D>, T_D> heatFluxTensorGNeq = {{{0.0}}};
-            std::array<double, T_D> FluxTensorGNeq = {0.0};
+            std::array<double, T_D> FluxTensorGNeq = {};
 
             calculateCenteredHeatFluxTensor<T_D,T_Q>(fNeq, heatFluxTensorFNEq, genData);
             //calculateCenteredHeatFluxTensor<T_D,T_Q>(genData.feq, heatFluxTensorFEq, genData);

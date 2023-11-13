@@ -99,7 +99,7 @@ public:
         const double density = rho;
         double feq;
         const double weight =  stencil.getWeight(destination.direction);
-        std::array<double,dim> e_vel ={0.0};
+        std::array<double,dim> e_vel ={};
         for (size_t i = 0; i < dim; i++) {
             e_vel[i] = stencil.getDirection(destination.direction)(i);
         }

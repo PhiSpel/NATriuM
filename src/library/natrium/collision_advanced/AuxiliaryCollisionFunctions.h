@@ -217,7 +217,7 @@ struct GeneralCollisionData {
 template <size_t T_D>
 constexpr std::array<std::array<size_t,T_D>, T_D> unity_matrix()
 {
-    std::array<std::array<size_t,T_D>, T_D> eye ={{0}};
+    std::array<std::array<size_t,T_D>, T_D> eye = {};
     for (size_t a = 0; a<T_D; a++)  {
         for (size_t b = 0; b < T_D; b++) {
             if (a==b){

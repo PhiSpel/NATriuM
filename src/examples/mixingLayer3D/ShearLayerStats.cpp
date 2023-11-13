@@ -46,14 +46,14 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
     calculateRhoU();
     write_tn();
     write_console();
-    calculateDeltas();
+    calculateDeltas(starting_delta_theta);
 }
 
 bool ShearLayerStats::isMYCoordsUpToDate() const {
     return m_yCoordsUpToDate;
 }
 
-void ShearLayerStats::calculateDeltas() {
+void ShearLayerStats::calculateDeltas(double dT0) {
     size_t itest = 0;
     for (size_t dim = 0; dim < 3; ++dim) {
         boost::shared_ptr<AdvectionOperator<3> > advection = m_solver.getAdvectionOperator();
@@ -145,11 +145,14 @@ void ShearLayerStats::calculateDeltas() {
     }
     if (is_MPI_rank_0()) {
         LOG(DETAILED) << "::::::---------------------------------------" << endl
-                      << "Mesh info after transform(): " << endl << "dx in [" << mindeltas.at(0) << ","
-                      << maxdeltas.at(0)
-                      << "], dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1)
-                      << "], dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
-                      << "---------------------------------------" << endl;
+            << "Mesh info after transform(): " << endl << "dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0)
+            << "], dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1)
+            << "], dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
+            << "normalized by deltaTheta0: " << endl
+            << "dx in [" << mindeltas.at(0) / dT0 << "," << maxdeltas.at(0) / dT0
+            << "], dy in [" << mindeltas.at(1) / dT0 << "," << maxdeltas.at(1) / dT0
+            << "], dz in [" << mindeltas.at(2) / dT0 << "," << maxdeltas.at(2) / dT0 << "]." << endl
+            << "---------------------------------------" << endl;
     }
 }
 

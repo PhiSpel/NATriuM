@@ -68,7 +68,7 @@ private:
     void write_tn();
     void write_console();
     void calculateRhoU();
-    void calculateDeltas();
+    void calculateDeltas(double dT0);
 
     static string scalaroutfile(string dir) {
         boost::filesystem::path out_dir(dir);

@@ -907,21 +907,19 @@ std::string secs_to_stream(int secs) {
         << std::setfill('0') << std::setw(2) << m << ":"
         << std::setfill('0') << std::setw(2) << s; // << " / " << secs << " seconds";
     return result.str();
-};
+}
 
 template<size_t dim>
 bool CFDSolver<dim>::stopConditionMet() {
 
 // start timer
-	TimerOutput::Scope timer_section(Timing::getTimer(),
-			"Check stop condition");
+	TimerOutput::Scope timer_section(Timing::getTimer(), "Check stop condition");
 
 // Maximum number of iterations
 	size_t N = m_configuration->getNumberOfTimeSteps();
 	if (m_i >= N) {
-		LOG(BASIC)
-				<< "Stop condition: Maximum number of iterations reached in iteration "
-				<< m_i << "." << endl;
+		LOG(BASIC) << "Stop condition: Maximum number of iterations reached in iteration "
+				   << m_i << "." << endl;
 		return true;
 	}
 // End time

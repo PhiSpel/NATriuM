@@ -273,6 +273,9 @@ SolverConfiguration::SolverConfiguration() {
         declare_entry("No output interval", "-1",
                       dealii::Patterns::Integer(-1),
                       "No not output solution before ... steps.");
+        declare_entry("No stats interval", "-1",
+                      dealii::Patterns::Integer(-1),
+                      "No not reporter stats before ... steps.");
 		declare_entry("Command line verbosity", "5",
 				dealii::Patterns::Integer(0, 8),
 				"The amount of command line output.");

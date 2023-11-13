@@ -21,7 +21,7 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
         m_outDir(outdir), m_filename(scalaroutfile(solver.getConfiguration()->getOutputDirectory())),
         m_vectorfilename(vectoroutfile(solver.getConfiguration()->getOutputDirectory())),
         m_currentDeltaTheta_Fa(starting_delta_theta), m_currentDeltaOmega(0.41),
-        m_b11(0), m_b22(0), m_b33(0), m_b12(0), m_b13(0), m_b23(0), m_K_integrated(0) {
+        m_b11(0), m_b22(0), m_b33(0), m_b12(0), m_b13(0), m_b23(0), m_K_integrated(0), m_no_stats(solver.getConfiguration()->getNoStatsInterval()) {
 
     TimerOutput::Scope timer_section(Timing::getTimer(), "Shearlayer Reporter");
 
@@ -221,16 +221,15 @@ void ShearLayerStats::updateYValues() {
 void ShearLayerStats::apply() {
     TimerOutput::Scope timer_section(Timing::getTimer(), "Shearlayer Reporter");
     size_t iteration = m_solver.getIteration();
-    int no_out = m_solver.getConfiguration()->getNoOutputInterval();
-    if (int(iteration) < no_out) {
+    if (int(iteration) < m_no_stats) {
         if (is_MPI_rank_0()) {
             LOG(DETAILED) << "No stats at " << iteration <<
-                          ", only after " << m_solver.getConfiguration()->getNoOutputInterval() << endl;
+                          ", only after " << m_no_stats << endl;
         }
     }
     if (((iteration == 1) or (iteration == 10) or (iteration == 50) or (iteration == 100) or (iteration == 500)
         or (iteration % 1000 == 0)) or ((iteration % m_solver.getConfiguration()->getOutputShearLayerInterval() == 0)
-        and (int(iteration) > m_solver.getConfiguration()->getNoOutputInterval())))
+        and (int(iteration) > m_no_stats)))
         {
             if (!isMYCoordsUpToDate()) {
                 updateYValues();

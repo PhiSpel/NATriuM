@@ -145,11 +145,11 @@ public:
             const double scaling = this->m_stencil->getScaling();
                 for (; it != end; it++) {
                     double density = 0.0;
-                    std::array<double,dim> vel={0.0};
+                    std::array<double,dim> vel;
                     for (size_t i = 0; i < this->m_stencil->getQ(); i++) {
                         density +=  this->m_f.at(i)(*it);
                         for (size_t a = 0; a < dim; a++) {
-                            vel[a]+=this->m_stencil->getDirection(i)(a)/scaling *this->m_f.at(i)(*it);
+                            vel[a] += this->m_stencil->getDirection(i)(a)/scaling *this->m_f.at(i)(*it);
                         }
                     }
                         double temperature = 0.0;
@@ -445,7 +445,7 @@ void compressibleFilter() {
                     // Calculating iterations factor
                     factor = tobedone_iterations / done_iterations;
                 }
-                if (this->m_configuration->getSimulationEndTime() < 1e8) {
+                else if (this->m_configuration->getSimulationEndTime() < 1e8) {
                     base = "physical time";
                     // Calculating done time
                     double done_time_ph = this->getTime() - this->m_tstart_ph;
@@ -453,6 +453,9 @@ void compressibleFilter() {
                     double tobedone_time_ph = this->m_configuration->getSimulationEndTime() - this->m_tstart_ph;
                     // Calculating time factor
                     factor = tobedone_time_ph / done_time_ph;
+                }
+                else {
+                    factor = 1;
                 }
                 time_t start = m_tstart3;
                 time_t done_time = clock()/CLOCKS_PER_SEC;

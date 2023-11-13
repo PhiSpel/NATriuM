@@ -232,10 +232,9 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 	} else {
 		m_problemDescription->refineAndTransform();
 		m_advectionOperator->setupDoFs();
-		m_f.reinit(m_stencil->getQ(),
-				m_advectionOperator->getLocallyOwnedDofs(),
-				m_advectionOperator->getLocallyRelevantDofs(),
-				MPI_COMM_WORLD, (SEDG == configuration->getAdvectionScheme()));
+		m_f.reinit(m_stencil->getQ(), m_advectionOperator->getLocallyOwnedDofs(),
+                   m_advectionOperator->getLocallyRelevantDofs(), MPI_COMM_WORLD,
+                   (SEDG == configuration->getAdvectionScheme()));
 		m_iterationStart = 0;
 		m_time = 0;
 	}
@@ -288,14 +287,14 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 				m_stencil);
 
 	} else if (BGK_MULTIPHASE == configuration->getCollisionScheme()) {
-        double G = -5;
+//        double G = -5;
 		tau = BGKStandardTransformed::calculateRelaxationParameter(
 				m_problemDescription->getViscosity(), delta_t, *m_stencil);
 		PseudopotentialParameters pp_para(
 				m_configuration->getPseudopotentialType(),
 				m_configuration->getBGKPseudopotentialG(),
 				m_configuration->getBGKPseudopotentialT());
-		G = m_configuration->getBGKPseudopotentialG();
+//		G = m_configuration->getBGKPseudopotentialG();
 		boost::shared_ptr<BGKPseudopotential<dim> > coll_tmp =
 				boost::make_shared<BGKPseudopotential<dim> >(tau, delta_t,
 						m_stencil, pp_para);
@@ -364,18 +363,13 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 
 // initialize macroscopic variables
 	m_advectionOperator->mapDoFsToSupportPoints(m_supportPoints);
-	m_density.reinit(m_advectionOperator->getLocallyOwnedDofs(),
-			m_advectionOperator->getLocallyRelevantDofs(),
-			MPI_COMM_WORLD);
-	m_tmpDensity.reinit(m_advectionOperator->getLocallyOwnedDofs(),
-	MPI_COMM_WORLD);
+	m_density.reinit(m_advectionOperator->getLocallyOwnedDofs(), m_advectionOperator->getLocallyRelevantDofs(),
+                     MPI_COMM_WORLD);
+	m_tmpDensity.reinit(m_advectionOperator->getLocallyOwnedDofs(), MPI_COMM_WORLD);
 	for (size_t i = 0; i < dim; i++) {
-		distributed_vector vi_ghosted(
-				m_advectionOperator->getLocallyOwnedDofs(),
-				m_advectionOperator->getLocallyRelevantDofs(),
-				MPI_COMM_WORLD);
-		distributed_vector vi(m_advectionOperator->getLocallyOwnedDofs(),
-		MPI_COMM_WORLD);
+		distributed_vector vi_ghosted(m_advectionOperator->getLocallyOwnedDofs(),
+                                      m_advectionOperator->getLocallyRelevantDofs(), MPI_COMM_WORLD);
+		distributed_vector vi(m_advectionOperator->getLocallyOwnedDofs(), MPI_COMM_WORLD);
 		m_velocity.push_back(vi_ghosted);
 		m_tmpVelocity.push_back(vi);
 	}
@@ -383,10 +377,8 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 		// get writeable copies of density and velocity
 		std::vector<distributed_vector> writeable_u;
 		distributed_vector writeable_rho;
-		CFDSolverUtilities::getWriteableDensity(writeable_rho, m_density,
-				m_advectionOperator->getLocallyOwnedDofs());
-		CFDSolverUtilities::getWriteableVelocity(writeable_u, m_velocity,
-				m_advectionOperator->getLocallyOwnedDofs());
+		CFDSolverUtilities::getWriteableDensity(writeable_rho, m_density, m_advectionOperator->getLocallyOwnedDofs());
+		CFDSolverUtilities::getWriteableVelocity(writeable_u, m_velocity, m_advectionOperator->getLocallyOwnedDofs());
 
 		// set writeable copies
 		applyInitialDensities(writeable_rho, m_supportPoints);
@@ -558,24 +550,22 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 			nofBoundaryNodes += 1;
 		}
 	}
-	LOG(DETAILED) << "Number of non-periodic boundary grid points: "
-			<< nofBoundaryNodes << endl;
-	LOG(DETAILED) << "Number of total grid points: " << getNumberOfDoFs()
-			<< endl;
-	dealii::types::global_dof_index dofs_per_proc2 = m_advectionOperator->getDoFHandler()->n_locally_owned_dofs();
-    size_t proc_id = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
-    size_t n_procs = dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-    LOG(DETAILED) << "Process_id: " << proc_id << " of " << n_procs << ", grid points: " << dofs_per_proc2 << endl;
-	for (size_t i = 0; i < n_procs; i++) {
-        if (proc_id == i) {
-            LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc2 << " grid points." << endl;
-        }
-	}
+	LOG(DETAILED) << "Number of non-periodic boundary grid points: " << nofBoundaryNodes << endl
+	              << "Number of total grid points: " << getNumberOfDoFs() << endl;
+
+//	dealii::types::global_dof_index dofs_per_proc2 = m_advectionOperator->getDoFHandler()->n_locally_owned_dofs();
+//    size_t proc_id = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
+//    size_t n_procs = dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+//    LOG(DETAILED) << "Process_id: " << proc_id << " of " << n_procs << ", grid points: " << dofs_per_proc2 << endl;
+//	for (size_t i = 0; i < n_procs; i++) {
+//        if (proc_id == i) {
+//            LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc2 << " grid points." << endl;
+//        }
+//	}
 
     const vector<dealii::types::global_dof_index>& dofs_per_proc =
             m_advectionOperator->getDoFHandler()->n_locally_owned_dofs_per_processor();
-    for (size_t i = 0;
-         i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+    for (size_t i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
         LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc.at(i)
                       << " grid points." << endl;
     }
@@ -957,13 +947,13 @@ bool CFDSolver<dim>::stopConditionMet() {
     int secs = int(t_tot / CLOCKS_PER_SEC);
     if (secs >= server_end_time) {
         if (is_MPI_rank_0()) {
-            cout << "Stop condition: Server end time";
-            cout << " reached after " << secs_to_stream(secs);
-            cout << " in iteration " << m_i << "." << endl;
-            cout << "Started at " << m_tstart2;
             time_t t_now = time(nullptr);
             struct tm* ltm = localtime(&t_now);
-            cout << "Stopped at " << string(asctime(ltm));
+            cout << "Stop condition: Server end time"
+                 << " reached after " << secs_to_stream(secs)
+                 << " in iteration " << m_i << "." << endl
+                 << "Started at " << m_tstart2
+                 << "Stopped at " << string(asctime(ltm));
         }
         return true;
     }
@@ -1097,13 +1087,11 @@ void CFDSolver<dim>::output(size_t iteration, bool is_final) {
 
 				// generate all other filenames
 				std::vector<std::string> filenames;
-				for (unsigned int i = 0;
-						i < dealii::Utilities::MPI::n_mpi_processes(
-						MPI_COMM_WORLD); ++i) {
+				for (unsigned int i = 0; i < dealii::Utilities::MPI::n_mpi_processes( MPI_COMM_WORLD); ++i) {
 					std::stringstream vtu_filename_i;
 					vtu_filename_i
-					//<< m_configuration->getOutputDirectory().c_str() << "/"
-					<< "t_" << i << "." << iteration << ".vtu";
+					    //<< m_configuration->getOutputDirectory().c_str() << "/"
+					    << "t_" << i << "." << iteration << ".vtu";
 					filenames.push_back(vtu_filename_i.str());
 				}
 				data_out.write_pvtu_record(pvtu_output, filenames);

@@ -36,11 +36,12 @@ int main(int argc, char** argv) {
     //////////////////////////////////////////////////
     CommandLineParser parser(argc, argv);
     parser.setArgument<int>("Re", "Reynolds number 1/nu", 800);
-    // TODO: Convective Mach number Mc=(U1-Uc)/c1, Uc=(U1c2+U2c1)/(c1+c2)
-    //  Uc is the convective velocity of the large structures, U\
-    //  and U2 are the freestream velocities, and c{ and c2 are the
-    //  freestream sound speeds.
-    // Set to 0.3, 0.7, 0.9, 1.0, 1.2
+    /* TODO: Convective Mach number Mc=(U1-Uc)/c1, Uc=(U1c2+U2c1)/(c1+c2)
+    Uc is the convective velocity of the large structures, U\
+    and U2 are the freestream velocities, and c{ and c2 are the
+    freestream sound speeds.
+    Set to 0.3, 0.7, 0.9, 1.0, 1.2
+    */
     parser.setArgument<double>("Ma", "Mach number", 0.3);
     parser.setArgument<double>("time", "simulation time (s)", 15);
     parser.setArgument<double>("randuscaling", "factor to scale random velocity field", 5);

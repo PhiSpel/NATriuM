@@ -553,18 +553,8 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 	LOG(DETAILED) << "Number of non-periodic boundary grid points: " << nofBoundaryNodes << endl
 	              << "Number of total grid points: " << getNumberOfDoFs() << endl;
 
-//	dealii::types::global_dof_index dofs_per_proc2 = m_advectionOperator->getDoFHandler()->n_locally_owned_dofs();
-//    size_t proc_id = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
-//    size_t n_procs = dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-//    LOG(DETAILED) << "Process_id: " << proc_id << " of " << n_procs << ", grid points: " << dofs_per_proc2 << endl;
-//	for (size_t i = 0; i < n_procs; i++) {
-//        if (proc_id == i) {
-//            LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc2 << " grid points." << endl;
-//        }
-//	}
-
     const vector<dealii::types::global_dof_index>& dofs_per_proc =
-            m_advectionOperator->getDoFHandler()->n_locally_owned_dofs_per_processor();
+    Utilities::MPI::all_gather(MPI_COMM_WORLD, m_advectionOperator->getDoFHandler()->n_locally_owned_dofs());
     for (size_t i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
         LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc.at(i)
                       << " grid points." << endl;

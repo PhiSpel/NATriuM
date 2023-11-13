@@ -145,11 +145,11 @@ public:
             const double scaling = this->m_stencil->getScaling();
                 for (; it != end; it++) {
                     double density = 0.0;
-                    std::array<double,dim> vel={0.0};
+                    std::array<double,dim> vel;
                     for (size_t i = 0; i < this->m_stencil->getQ(); i++) {
                         density +=  this->m_f.at(i)(*it);
                         for (size_t a = 0; a < dim; a++) {
-                            vel[a]+=this->m_stencil->getDirection(i)(a)/scaling *this->m_f.at(i)(*it);
+                            vel[a] += this->m_stencil->getDirection(i)(a)/scaling *this->m_f.at(i)(*it);
                         }
                     }
                         double temperature = 0.0;
@@ -271,7 +271,7 @@ public:
 void gStream() {
 
 	// no streaming in direction 0; begin with 1
-	distributed_block_vector& g = m_g.getFStream();
+//	distributed_block_vector& g = m_g.getFStream();
 	const distributed_sparse_block_matrix& systemMatrix =
 		this->getAdvectionOperator()->getSystemMatrix();
 
@@ -295,8 +295,8 @@ void gStream() {
 	else
     {
         this->m_boundaryVector = this->m_advectionOperator->getSystemVector();
-        double new_dt = this->m_timeIntegrator->step(g, systemMatrix,
-                                               this->m_boundaryVector, 0.0, this->m_timeIntegrator->getTimeStepSize());
+//        double new_dt = this->m_timeIntegrator->step(g, systemMatrix,
+//                                               this->m_boundaryVector, 0.0, this->m_timeIntegrator->getTimeStepSize());
     }
 }
 
@@ -445,7 +445,7 @@ void compressibleFilter() {
                     // Calculating iterations factor
                     factor = tobedone_iterations / done_iterations;
                 }
-                if (this->m_configuration->getSimulationEndTime() < 1e8) {
+                else if (this->m_configuration->getSimulationEndTime() < 1e8) {
                     base = "physical time";
                     // Calculating done time
                     double done_time_ph = this->getTime() - this->m_tstart_ph;
@@ -453,6 +453,9 @@ void compressibleFilter() {
                     double tobedone_time_ph = this->m_configuration->getSimulationEndTime() - this->m_tstart_ph;
                     // Calculating time factor
                     factor = tobedone_time_ph / done_time_ph;
+                }
+                else {
+                    factor = 1;
                 }
                 time_t start = m_tstart3;
                 time_t done_time = clock()/CLOCKS_PER_SEC;
@@ -857,13 +860,13 @@ void compressibleFilter() {
         std::vector<double> feq(T_Q);
 		std::array<double,dim> u;
         std::vector<std::array<double,dim>> e(T_Q);
-        for (int i = 0; i < dim; ++i) {
-            for (int j = 0; j < this->getStencil()->getQ(); ++j) {
+        for (size_t i = 0; i < dim; ++i) {
+            for (size_t j = 0; j < this->getStencil()->getQ(); ++j) {
                 e[j][i] = this->getStencil()->getDirections().at(j)(i) / this->getStencil()->getScaling();
             }
         }
         std::vector<double> weight(T_Q);
-        for (int j = 0; j < this->getStencil()->getQ(); ++j) {
+        for (size_t j = 0; j < this->getStencil()->getQ(); ++j) {
             weight[j] = this->getStencil()->getWeight(j);
         }
         double descaled_cs2 = this->m_stencil->getSpeedOfSoundSquare() / (this->getStencil()->getScaling()*this->getStencil()->getScaling());
@@ -920,7 +923,7 @@ void compressibleFilter() {
                 // Iterative procedure; leading to consistent initial values
                 size_t loopCount = 0;
                 double residual = 1000000000;
-                const bool inInitializationProcedure = true;
+//                const bool inInitializationProcedure = true;
                 distributed_vector oldDensities;
                 while (loopCount
                        < this->m_configuration->getIterativeInitializationNumberOfIterations()) {

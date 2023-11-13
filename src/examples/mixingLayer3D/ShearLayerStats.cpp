@@ -25,7 +25,6 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
 
     TimerOutput::Scope timer_section(Timing::getTimer(), "Shearlayer Reporter");
 
-    nround = pow(10,12); // round coordinates to this magnitude
     m_yCoordsUpToDate = false;
     m_nofCoordinates = 0;
 
@@ -54,7 +53,7 @@ bool ShearLayerStats::isMYCoordsUpToDate() const {
 }
 
 void ShearLayerStats::calculateDeltas(double dT0) {
-    size_t itest = 0;
+//    size_t itest = 0;
     for (size_t dim = 0; dim < 3; ++dim) {
         boost::shared_ptr<AdvectionOperator<3> > advection = m_solver.getAdvectionOperator();
 

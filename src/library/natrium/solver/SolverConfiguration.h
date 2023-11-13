@@ -1344,9 +1344,9 @@ public:
 		leave_subsection();
 	}
 
-	size_t getOutputCheckpointInterval() {
+	int getOutputCheckpointInterval() {
 		enter_subsection("Output");
-		size_t checkpointInterval;
+        int checkpointInterval;
 		try {
 			checkpointInterval = get_integer("Output checkpoint interval");
 		} catch (std::exception& e) {
@@ -1468,9 +1468,9 @@ public:
         leave_subsection();
     }
 
-    size_t getNoOutputInterval() {
+    int getNoOutputInterval() {
         enter_subsection("Output");
-        size_t solutionInterval;
+        int solutionInterval;
         try {
             solutionInterval = get_integer("No output interval");
         } catch (std::exception& e) {

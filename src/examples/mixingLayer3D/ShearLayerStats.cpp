@@ -222,21 +222,24 @@ void ShearLayerStats::updateYValues() {
 void ShearLayerStats::apply() {
     TimerOutput::Scope timer_section(Timing::getTimer(), "Shearlayer Reporter");
     size_t iteration = m_solver.getIteration();
-    if (iteration < m_solver.getConfiguration()->getNoOutputInterval()) {
-        if (is_MPI_rank_0()) LOG(DETAILED) << "No stats at " << iteration << ", only after " << m_solver.getConfiguration()->getNoOutputInterval();
+    int no_out = m_solver.getConfiguration()->getNoOutputInterval();
+    if (int(iteration) < no_out) {
+        if (is_MPI_rank_0()) {
+            LOG(DETAILED) << "No stats at " << iteration <<
+                          ", only after " << m_solver.getConfiguration()->getNoOutputInterval() << endl;
+        }
     }
     if (((iteration == 1) or (iteration == 10) or (iteration == 50) or (iteration == 100) or (iteration == 500)
         or (iteration % 1000 == 0)) or ((iteration % m_solver.getConfiguration()->getOutputShearLayerInterval() == 0)
-//        and (iteration > m_solver.getConfiguration()->getNoOutputInterval())))
-            ))
-    {
-        if (!isMYCoordsUpToDate()) {
-            updateYValues();
+        and (int(iteration) > m_solver.getConfiguration()->getNoOutputInterval())))
+        {
+            if (!isMYCoordsUpToDate()) {
+                updateYValues();
+            }
+            calculateRhoU();
+            write_tn();
+            write_console();
         }
-        calculateRhoU();
-        write_tn();
-        write_console();
-    }
 }
 
 void ShearLayerStats::calculateRhoU() {

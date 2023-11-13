@@ -634,7 +634,9 @@ TODO BRUTE FORCE KILLED SEDG HERE DOMINIK WILDE 2020
 					this, dealii::std_cxx11::_1, dealii::std_cxx11::_2,
 					dealii::std_cxx11::_3), t, dt, vector);
 
-					*/}
+					*/
+    return 0;
+}
 
 template<class MATRIX, class VECTOR>
 natrium::DealIIWrapper<MATRIX, VECTOR>::DealIIWrapper(const double timeStepSize,

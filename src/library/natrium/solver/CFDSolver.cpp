@@ -262,7 +262,6 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 /// Calculate relaxation parameter and build collision model
 	double tau = 0.0;
 	double gamma = -1.0;
-	double G = -5;
 
 	if (BGK_STANDARD == configuration->getCollisionScheme()) {
 		tau = BGKStandard::calculateRelaxationParameter(
@@ -289,6 +288,7 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 				m_stencil);
 
 	} else if (BGK_MULTIPHASE == configuration->getCollisionScheme()) {
+        double G = -5;
 		tau = BGKStandardTransformed::calculateRelaxationParameter(
 				m_problemDescription->getViscosity(), delta_t, *m_stencil);
 		PseudopotentialParameters pp_para(
@@ -562,13 +562,23 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 			<< nofBoundaryNodes << endl;
 	LOG(DETAILED) << "Number of total grid points: " << getNumberOfDoFs()
 			<< endl;
-	const vector<dealii::types::global_dof_index>& dofs_per_proc =
-			m_advectionOperator->getDoFHandler()->n_locally_owned_dofs_per_processor();
-	for (size_t i = 0;
-			i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
-		LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc.at(i)
-				<< " grid points." << endl;
+	dealii::types::global_dof_index dofs_per_proc2 = m_advectionOperator->getDoFHandler()->n_locally_owned_dofs();
+    size_t proc_id = dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
+    size_t n_procs = dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+    LOG(DETAILED) << "Process_id: " << proc_id << " of " << n_procs << ", grid points: " << dofs_per_proc2 << endl;
+	for (size_t i = 0; i < n_procs; i++) {
+        if (proc_id == i) {
+            LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc2 << " grid points." << endl;
+        }
 	}
+
+    const vector<dealii::types::global_dof_index>& dofs_per_proc =
+            m_advectionOperator->getDoFHandler()->n_locally_owned_dofs_per_processor();
+    for (size_t i = 0;
+         i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+        LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc.at(i)
+                      << " grid points." << endl;
+    }
 
 // Initialize distribution functions
 	if (not checkpoint) {
@@ -1218,8 +1228,8 @@ void CFDSolver<dim>::initializeDistributions() {
         const distributed_vector & rho_local(getDensity());
 
         int eye [dim][dim] ={{0}};
-        for (int a = 0; a<dim; a++)  {
-            for (int b = 0; b < dim; b++) {
+        for (size_t a = 0; a<dim; a++)  {
+            for (size_t b = 0; b < dim; b++) {
                 if (a==b){
                     eye[a][b] = 1;
                 }
@@ -1228,9 +1238,9 @@ void CFDSolver<dim>::initializeDistributions() {
 
         std::vector<std::array<std::array<double, dim>, dim>> Q(m_stencil->getQ());
 
-        for (int i = 0; i < m_stencil->getQ(); i++) {
-            for (int a = 0; a < dim; a++) {
-                for (int b = 0; b < dim; b++) {
+        for (size_t i = 0; i < m_stencil->getQ(); i++) {
+            for (size_t a = 0; a < dim; a++) {
+                for (size_t b = 0; b < dim; b++) {
                     Q[i][a][b] = m_stencil->getDirection(i)[a] * m_stencil->getDirection(i)[b] -
                                  eye[a][b] * m_stencil->getSpeedOfSoundSquare();
                 }
@@ -1246,7 +1256,7 @@ void CFDSolver<dim>::initializeDistributions() {
 
                 // get averages
                 fe_values.reinit(cell);
-                const std::vector<double> &weights = fe_values.get_JxW_values();
+//                const std::vector<double> &weights = fe_values.get_JxW_values();
 
                 // calculate gradients (for w and strain rate)
                 fe_values.get_function_gradients(u_local.at(0), ux_gradients);
@@ -1263,8 +1273,8 @@ void CFDSolver<dim>::initializeDistributions() {
                     double dx = 1.0; //cell->minimum_vertex_distance()/ m_configuration->getSedgOrderOfFiniteElement();
                     double tau = getTau() + 0.5;
                     double Pi_1[dim][dim] = {{0.0}};
-                    for (int a = 0; a < dim; a++) {
-                        for (int b = 0; b < dim; b++) {
+                    for (size_t a = 0; a < dim; a++) {
+                        for (size_t b = 0; b < dim; b++) {
                             Pi_1[a][b] = -1.0 * tau * rhos.at(q) / m_stencil->getSpeedOfSoundSquare() * dx;
                         }
                     }
@@ -1293,9 +1303,9 @@ void CFDSolver<dim>::initializeDistributions() {
                     }
 
                     std::vector<double> fneq(m_stencil->getQ(),0.0);
-                    for (int i = 0; i < m_stencil->getQ(); i++) {
-                        for (int a = 0; a < dim; a++) {
-                            for (int b = 0; b < dim; b++) {
+                    for (size_t i = 0; i < m_stencil->getQ(); i++) {
+                        for (size_t a = 0; a < dim; a++) {
+                            for (size_t b = 0; b < dim; b++) {
                                 fneq.at(i) += Q[i][a][b]*Pi_1[a][b];
                             }
                         }

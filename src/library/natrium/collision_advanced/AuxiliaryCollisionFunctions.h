@@ -259,6 +259,7 @@ template<>
 inline void calculateVelocity<2, 9>(const std::array<double, 9>& fLocal,
 		std::array<double, 2>& velocity, double density,
 		GeneralCollisionData<2, 9>& params) {
+    (void)params;
 	velocity[0] = 1.0 / density
 			* (fLocal[1] + fLocal[5] + fLocal[8] - fLocal[3] - fLocal[6]
 					- fLocal[7]);
@@ -271,7 +272,7 @@ template<>
 inline void calculateVelocity<3, 19>(const std::array<double, 19>& fLocal,
 		std::array<double, 3>& velocity, double density,
 		GeneralCollisionData<3, 19>& params) {
-
+    (void)params;
 	velocity[0] = 1.0 / density
 			* (fLocal[1] - fLocal[3] + fLocal[7] - fLocal[8] - fLocal[9]
 					+ fLocal[10] + fLocal[11] + fLocal[12] - fLocal[13]

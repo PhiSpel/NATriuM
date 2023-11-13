@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cmath>
 #include <tuple>
+#include <utility>
 #include <vector>
 #include <iostream>
 #include "deal.II/grid/grid_in.h"
@@ -41,9 +42,9 @@ namespace natrium {
 MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, vector<unsigned int> repetitions, double randu_scaling, string randuname,
                              double len_x, double len_y, double len_z, string meshname, double center, double scaling,
                              double dT0, double U, double T, string bc) :
-        ProblemDescription<3>(makeGrid(meshname, len_x, len_y, len_z, repetitions), viscosity, 1),
-                m_initialT(T), lx(len_x), ly(len_y), lz(len_z), m_center(center), m_scaling(scaling), m_U(U),
-                m_bc(bc), m_refinementLevel(refinementLevel), deltaTheta0(dT0) {
+        ProblemDescription<3>(makeGrid(meshname, len_x, len_y, len_z, std::move(repetitions)), viscosity, 1),
+                m_initialT(T), lx(len_x), ly(len_y), lz(len_z), m_center(center), m_scaling(scaling), deltaTheta0(dT0),
+                m_U(U), m_bc(bc), m_refinementLevel(refinementLevel) {
     // **** Recommendations for CPU use ****
 	/*LOG(BASIC) << "-------------------------------------------------------------" << endl;
 	LOG(BASIC) << "**** Recommendations for CPU use ****" << endl;
@@ -194,10 +195,12 @@ double MixingLayer3D::InitialVelocity::InterpolateVelocities(double xq, double y
 
 double MixingLayer3D::InitialDensity::value(const dealii::Point<3>& x, const unsigned int component) const {
     assert(component == 0);
+    (void) x;
     return 1.0;// + p / (m_flow->m_cs * m_flow->m_cs);
 }
 double MixingLayer3D::InitialTemperature::value(const dealii::Point<3>& x, const unsigned int component) const {
     assert(component == 0);
+    (void) x;
     return this->m_flow->m_initialT;
 }
 

@@ -22,14 +22,14 @@ template<size_t dim>
 class SLEquilibriumBoundary: public Boundary<dim> {
 
 public:
-	SLEquilibriumBoundary(size_t boundary_id, dealii::Tensor<1, dim>& velocity, double temperature = 1.0) : m_temperature(temperature),
-			Boundary<dim>(boundary_id, VELOCITY_EQUILIBRIUM_BOUNDARY,
-					PrescribedBoundaryValues<dim>(velocity)) {
+	SLEquilibriumBoundary(size_t boundary_id, dealii::Tensor<1, dim>& velocity, double temperature = 1.0) :
+			Boundary<dim>(boundary_id, VELOCITY_EQUILIBRIUM_BOUNDARY, PrescribedBoundaryValues<dim>(velocity)),
+			        m_temperature(temperature) {
 	}
 
-    SLEquilibriumBoundary(size_t boundary_id, const dealii::Vector<double>& velocity, double temperature = 1.0) : m_temperature(temperature),
-            Boundary<dim>(boundary_id, VELOCITY_EQUILIBRIUM_BOUNDARY,
-                          PrescribedBoundaryValues<dim>(velocity)) {
+    SLEquilibriumBoundary(size_t boundary_id, const dealii::Vector<double>& velocity, double temperature = 1.0) :
+            Boundary<dim>(boundary_id, VELOCITY_EQUILIBRIUM_BOUNDARY, PrescribedBoundaryValues<dim>(velocity)),
+                    m_temperature(temperature) {
     }
 
 	//virtual ~SLEquilibriumBoundary();

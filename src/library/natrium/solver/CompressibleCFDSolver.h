@@ -489,11 +489,18 @@ void compressibleFilter() {
             // add turbulence statistics to output
             if (this->m_configuration->isOutputTurbulenceStatistics())
                 this->m_turbulenceStats->addToReynoldsStatistics(this->m_velocity);
+
             // create vtk-subdirectory
             // no output if solution interval > 10^8
+            double maxP = this->m_solverStats->getMaxP();
             if (((iteration % this->m_configuration->getOutputSolutionInterval() == 0)
                  and (this->m_configuration->getOutputSolutionInterval() <= 1e8))
-                or (is_final)) {
+                or (is_final)
+                or (maxP > 0.6)) {
+                if (maxP > 0.6) {
+                    LOG(DETAILED) << "Doing VTK output at " << iteration << " because MaxP = " << maxP
+                                  << "; MinP = " << this->m_solverStats->getMinP() << endl;
+                }
                 // save local part of the solution
                 std::stringstream str;
                 str << this->m_configuration->getOutputDirectory().c_str() << "/vtk/t_"

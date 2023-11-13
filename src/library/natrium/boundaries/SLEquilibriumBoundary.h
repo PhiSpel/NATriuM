@@ -115,10 +115,7 @@ public:
             uxu += u[i] * u[i];
         }
 
-
-        double to_add = 2 * stencil.getWeight(destination.direction)
-                        * rho * exu / stencil.getSpeedOfSoundSquare();
-
+//        double to_add = 2 * stencil.getWeight(destination.direction) * rho * exu / stencil.getSpeedOfSoundSquare();
 
         const std::array<std::array<size_t,dim>, dim> eye = unity_matrix<dim>();
         double uu_term = 0.0;
@@ -126,8 +123,6 @@ public:
             uu_term += -(u[j] * u[j])
                        / (2.0 * cs2);
         }
-
-
 
         double T1 = cs2*(temperature-1);
 

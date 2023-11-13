@@ -28,6 +28,7 @@ public:
 	void relax(std::array<double, T_Q>& fLocal,
 			GeneralCollisionData<T_D, T_Q>& genData,
 			SpecificCollisionData& specData) {
+        (void) specData;
 		//Initialize the corresponding Equilibrium Distribution Function
 		T_equilibrium<T_D, T_Q> eq(genData.cs2,genData.e);
 
@@ -40,9 +41,10 @@ public:
 		}
 	}
 
-		void relaxWithG(std::array<double, T_Q>& fLocal, std::array<double, T_Q>& gLocal,
-			GeneralCollisionData<T_D, T_Q>& genData,
-			SpecificCollisionData& specData, T_equilibrium<T_D, T_Q> eq) {
+    void relaxWithG(std::array<double, T_Q>& fLocal, std::array<double, T_Q>& gLocal,
+                    GeneralCollisionData<T_D, T_Q>& genData, SpecificCollisionData& specData,
+                    T_equilibrium<T_D, T_Q> eq) {
+        (void) specData;
 		//Initialize the corresponding Equilibrium Distribution Function
 
 		//Calculate the equilibrium and write the result to feq
@@ -65,7 +67,7 @@ public:
         if (isPrandtlNumberSet) {
 
             // 3 staged non-equilibrium heat flux tensors
-            std::array<std::array<std::array<double, T_D>, T_D>, T_D> heatFluxTensorFNEq = {{{0.0}}};
+            std::array<std::array<std::array<double, T_D>, T_D>, T_D> heatFluxTensorFNEq = {0.0};
            // std::array<std::array<std::array<double, T_D>, T_D>, T_D> heatFluxTensorGNeq = {{{0.0}}};
             std::array<double, T_D> FluxTensorGNeq = {0.0};
 
@@ -88,14 +90,14 @@ public:
         const double visc_tau = (genData.tau-0.5)*sutherland_factor/(genData.temperature*genData.density)+0.5;
 
         const double knudsen_estimate = calculateKnudsenNumberEstimate<T_D, T_Q>(fLocal, genData.feq, genData.weight);
-        double tau_factor = 1.0;
-            if(knudsen_estimate >= 0.01)
-                tau_factor = 1.05;
-            if(knudsen_estimate >= 0.05)
-                tau_factor = 1.35;
-            if(knudsen_estimate >= 0.1)
-                tau_factor = 1/visc_tau;
-        //visc_tau *=tau_factor;
+//        double tau_factor;
+//        if(knudsen_estimate >= 0.01)
+//            tau_factor = 1.05;
+//        if(knudsen_estimate >= 0.05)
+//            tau_factor = 1.35;
+//        if(knudsen_estimate >= 0.1)
+//            tau_factor = 1/visc_tau;
+//        visc_tau *=tau_factor;
 
         genData.maskShockSensor = knudsen_estimate;
 
@@ -103,7 +105,7 @@ public:
         const double prandtl_tau = (visc_tau - 0.5) / prandtl + 0.5;
 
         const double visc_omega = 1./visc_tau;
-        const double ener_omega = 1./visc_tau;
+//        const double ener_omega = 1./visc_tau;
         const double prandtl_omega = 1./prandtl_tau;
         const double prandtl_diff = visc_omega - prandtl_omega;
 

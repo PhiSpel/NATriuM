@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     const double viscosity = 1.0 / Re;
     const double Ma = parser.getArgument<double>("Ma")*sqrt(1.4);
     const auto cfl = parser.getArgument<double>("CFL");
-    const double cs = U / Ma;
+//    const double cs = U / Ma;
 
     // chose scaling so that the right Ma-number is achieved
     const double reference_temperature = parser.getArgument<double>("ref-temp");

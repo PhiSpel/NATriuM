@@ -271,7 +271,7 @@ public:
 void gStream() {
 
 	// no streaming in direction 0; begin with 1
-	distributed_block_vector& g = m_g.getFStream();
+//	distributed_block_vector& g = m_g.getFStream();
 	const distributed_sparse_block_matrix& systemMatrix =
 		this->getAdvectionOperator()->getSystemMatrix();
 
@@ -295,8 +295,8 @@ void gStream() {
 	else
     {
         this->m_boundaryVector = this->m_advectionOperator->getSystemVector();
-        double new_dt = this->m_timeIntegrator->step(g, systemMatrix,
-                                               this->m_boundaryVector, 0.0, this->m_timeIntegrator->getTimeStepSize());
+//        double new_dt = this->m_timeIntegrator->step(g, systemMatrix,
+//                                               this->m_boundaryVector, 0.0, this->m_timeIntegrator->getTimeStepSize());
     }
 }
 
@@ -862,13 +862,13 @@ void compressibleFilter() {
         std::vector<double> feq(T_Q);
 		std::array<double,dim> u;
         std::vector<std::array<double,dim>> e(T_Q);
-        for (int i = 0; i < dim; ++i) {
-            for (int j = 0; j < this->getStencil()->getQ(); ++j) {
+        for (size_t i = 0; i < dim; ++i) {
+            for (size_t j = 0; j < this->getStencil()->getQ(); ++j) {
                 e[j][i] = this->getStencil()->getDirections().at(j)(i) / this->getStencil()->getScaling();
             }
         }
         std::vector<double> weight(T_Q);
-        for (int j = 0; j < this->getStencil()->getQ(); ++j) {
+        for (size_t j = 0; j < this->getStencil()->getQ(); ++j) {
             weight[j] = this->getStencil()->getWeight(j);
         }
         double descaled_cs2 = this->m_stencil->getSpeedOfSoundSquare() / (this->getStencil()->getScaling()*this->getStencil()->getScaling());
@@ -925,7 +925,7 @@ void compressibleFilter() {
                 // Iterative procedure; leading to consistent initial values
                 size_t loopCount = 0;
                 double residual = 1000000000;
-                const bool inInitializationProcedure = true;
+//                const bool inInitializationProcedure = true;
                 distributed_vector oldDensities;
                 while (loopCount
                        < this->m_configuration->getIterativeInitializationNumberOfIterations()) {

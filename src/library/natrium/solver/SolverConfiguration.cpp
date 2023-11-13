@@ -322,7 +322,8 @@ SolverConfiguration::SolverConfiguration(const std::string& XMLfilename) {
  **/
 void SolverConfiguration::readFromTextFile(const std::string & filename,
 		const bool optional, const bool write_stripped_file) {
-
+    (void)optional;
+    (void)write_stripped_file;
 	ParameterHandler::parse_input(filename);
 
 } /* readFromTextFile */

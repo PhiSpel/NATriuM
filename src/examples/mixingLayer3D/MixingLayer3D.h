@@ -128,6 +128,9 @@ namespace natrium {
             double m_a, m_b, m_c;
             UnstructuredGridFunc2(double length, double height, double width, double gridDensity = 0.8) :
                     m_height(height / 2) {
+                (void) length;
+                (void) width;
+                (void) gridDensity;
                 //// this one uses "m_scaling" to fix the outer width of the domain
                 m_a = (1 - m_scaling) / (-m_center*m_center + 2*m_center - 1);
                 m_b = 1 - 2*m_a*m_center;

@@ -65,6 +65,8 @@ private:
     vector<double> m_number;
     vector<double> m_K;
 
+    int m_no_stats;
+
     void write_tn();
     void write_console();
     void calculateRhoU();

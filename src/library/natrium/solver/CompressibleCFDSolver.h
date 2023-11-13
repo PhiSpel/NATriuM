@@ -479,11 +479,9 @@ void compressibleFilter() {
             std::filesystem::path out_dir(this->m_configuration->getOutputDirectory() + "/vtk");
             std::filesystem::create_directory(out_dir);
         }
-
+        int no_out = this->m_configuration->getNoOutputInterval();
         if ((not this->m_configuration->isSwitchOutputOff())
-//                 and (this->m_configuration->getNoOutputInterval() < iteration)) 
-		)
-		{
+            and (no_out < int(iteration))) {
             // output elapsed time, server-time, and estimated runtime after iterations 1, 10, 100, 1000, ... and after every 1000
             // add turbulence statistics to output
             if (this->m_configuration->isOutputTurbulenceStatistics())
@@ -575,11 +573,11 @@ void compressibleFilter() {
         // no output if checkpoint interval > 10^8
         if (((iteration % this->m_configuration->getOutputCheckpointInterval() == 0) or is_final)
                 and (this->m_configuration->getOutputCheckpointInterval() <= 1e8)
-//                 and (this->m_configuration->getNoOutputInterval() < iteration)
+                and (no_out < int(iteration))
                 and (this->m_iterationStart != this->m_i)) {
 
-            if (iteration < this->m_configuration->getNoOutputInterval()) {
-                if (is_MPI_rank_0()) LOG(DETAILED) << "No output at " << iteration << ". Only after " << this->m_configuration->getNoOutputInterval() << endl;
+            if (int(iteration) < no_out) {
+                if (is_MPI_rank_0()) LOG(DETAILED) << "No output at " << iteration << ". Only after " << no_out << endl;
             } else {
                 boost::filesystem::path checkpoint_dir(
                         this->m_configuration->getOutputDirectory());

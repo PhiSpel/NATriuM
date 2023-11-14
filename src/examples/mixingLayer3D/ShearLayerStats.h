@@ -41,7 +41,7 @@ private:
 
     // Y Coordinates
     vector<double> m_xCoordinates, m_yCoordinates, m_zCoordinates;
-    size_t nround = -1; // round coordinates to this magnitude
+//    size_t nround = -1; // round coordinates to this magnitude
     std::map<double, size_t, own_double_less> m_xCoordinateToIndex, m_yCoordinateToIndex, m_zCoordinateToIndex;
     size_t m_nofCoordinates;
     vector<size_t> m_nofCoordinates_all = {0,0,0};

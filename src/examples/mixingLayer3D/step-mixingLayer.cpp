@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("nout", "output vtk every nout steps", 2000);
     parser.setArgument<int>("ncheckpoint", "output checkpoint every ncheckpoint steps", 20000);
     parser.setArgument<int>("n-no-out", "do not output vtk before iteration n-no-out", -1);
+    parser.setArgument<int>("n-no-stats", "do not output stats before iteration n-no-stats", -1);
     parser.setArgument<int>("nstats", "output stats every nstats steps", 20);
     parser.setArgument<string>("meshname", "name of the mesh file (shearlayer_*.txt)", "cube");
     parser.setArgument<string>("randuname", "name of the initial velocity file (random_u_*.txt)", "cube_k048_half");
@@ -135,6 +136,7 @@ int main(int argc, char** argv) {
     configuration->setOutputCheckpointInterval(parser.getArgument<int>("ncheckpoint"));
     configuration->setOutputSolutionInterval(nout);
     configuration->setNoOutputInterval(parser.getArgument<int>("n-no-out"));
+    configuration->setNoStatsInterval(parser.getArgument<int>("n-no-stats"));
     configuration->setSimulationEndTime(time);
     configuration->setOutputGlobalTurbulenceStatistics(true);
     configuration->setOutputCompressibleTurbulenceStatistics(true);

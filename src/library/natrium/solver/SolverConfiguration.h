@@ -1499,6 +1499,37 @@ public:
         leave_subsection();
     }
 
+    int getNoStatsInterval() {
+        enter_subsection("Output");
+        int solutionInterval;
+        try {
+            solutionInterval = get_integer("No stats interval");
+        } catch (std::exception& e) {
+            std::stringstream msg;
+            msg
+                    << "Could not read parameter 'No output interval' from parameters: "
+                    << e.what();
+            leave_subsection();
+            throw ConfigurationException(msg.str());
+        }
+        leave_subsection();
+        return solutionInterval;
+    }
+
+    void setNoStatsInterval(long int NoStatsInterval) {
+        enter_subsection("Output");
+        try {
+            set("No stats interval", NoStatsInterval);
+        } catch (std::exception& e) {
+            std::stringstream msg;
+            msg << "Could not assign value " << NoStatsInterval
+                << " to Output solution interval: " << e.what();
+            leave_subsection();
+            throw ConfigurationException(msg.str());
+        }
+        leave_subsection();
+    }
+
     size_t getOutputShearLayerInterval() {
         enter_subsection("Output");
         enter_subsection("Shear Layer");

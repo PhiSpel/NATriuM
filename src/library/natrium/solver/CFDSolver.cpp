@@ -106,7 +106,8 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 
 	// welcome message
 	LOG(WELCOME) << "------ NATriuM solver ------" << endl;
-	LOG(WELCOME) << "------ commit " << Info::getGitSha() << " ------" << endl;
+    LOG(WELCOME) << "------ branch " << Info::getGitBranch() << " ------" << endl;
+    LOG(WELCOME) << "------ commit " << Info::getGitSha() << " ------" << endl;
 	LOG(WELCOME) << "------ " << currentDateTime() << " ------" << endl;
 	LOG(WELCOME) << "------ " << Info::getUserName() << " on "
 			<< Info::getHostName() << " ------" << endl;

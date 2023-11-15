@@ -50,6 +50,8 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
                                                               m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
     calculateDeltas(starting_delta_theta);
     updateYValues();
+    testIntegration();
+    testDerivate();
     calculateRhoU();
     write_tn();
     write_console();
@@ -57,6 +59,43 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
 
 bool ShearLayerStats::isMYCoordsUpToDate() const {
     return m_yCoordsUpToDate;
+}
+
+void ShearLayerStats::testIntegration() {
+    vector<double> ones(m_nofCoordinates, 1.);
+    if (is_MPI_rank_0()) {
+        LOG(DETAILED) << "Integration test of int_-dOmeg^dOmeg(1) returned "
+                      << integrate(ones, -m_currentDeltaOmega, m_currentDeltaOmega)
+                      << " expected " << 2*m_currentDeltaOmega << endl;
+        LOG(DETAILED) << "Integration test of int_-1^1(1) returned "
+                      << integrate(ones, -1, 1)
+                      << " expected 2" << endl;
+    }
+    if (is_MPI_rank_0()) {
+        LOG(DETAILED) << "Integration test of int(1) returned "
+                      << integrate(ones)
+                      << " expected " << m_ly << endl;
+    }
+}
+
+void ShearLayerStats::testDerivate() {
+    // symmetry test
+    vector<double> parabola(m_nofCoordinates);
+    for (size_t i = 0; i < m_nofCoordinates; i++) {
+        parabola.at(i) = m_yCoordinates.at(i) * m_yCoordinates.at(i);
+    }
+    vector<double> deri = derivative(parabola);
+    // precision test
+    vector<double> diff(m_nofCoordinates);
+    for (size_t i = 0; i < m_nofCoordinates; i++) {
+        diff.at(i) = std::pow(deri.at(i) - m_yCoordinates.at(i), 1);
+    }
+    if (is_MPI_rank_0()) {
+        LOG(DETAILED) << "Derivative of parabola sums up to "
+                      << std::accumulate(deri.begin(), deri.end(), 0.) << ", expected 0." << endl
+                      << "Difference to f(x)=x (RMS) sums up to "
+                      << std::accumulate(diff.begin(), diff.end(), 0.) << ", expected 0." << endl;
+    }
 }
 
 void ShearLayerStats::calculateDeltas(double dT0) {
@@ -175,7 +214,7 @@ void ShearLayerStats::calculateDeltas(double dT0) {
         xmax = *std::max_element(m_xCoordinates.begin(), m_xCoordinates.end());
         ymax = *std::max_element(m_yCoordinates.begin(), m_yCoordinates.end());
         zmax = *std::max_element(m_zCoordinates.begin(), m_zCoordinates.end());
-        double lx = xmax - xmin, ly = ymax - ymin, lz = zmax - zmin;
+        m_lx = xmax - xmin; m_ly = ymax - ymin; m_lz = zmax - zmin;
         LOG(DETAILED) << "::::::---------------------------------------" << endl
                       << "Mesh info after transform() (rounded coordinates to " << roundtol << " for uniqueness): " << endl
                           << " dx in [" << mindeltas_verteces.at(0) << "," << maxdeltas_verteces.at(0) << "], " << endl
@@ -184,7 +223,7 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                           << " x in [" << xmin << "," << xmax << "], " << endl
                           << " y in [" << ymin << "," << ymax << "], " << endl
                           << " z in [" << zmin << "," << zmax << "]." << endl
-                          << " lx = " << lx << ", ly = " << ly << ", lz = " << lz << endl
+                          << " lx = " << m_lx << ", ly = " << m_ly << ", lz = " << m_lz << endl
                       << "Integration point distances: " << endl
                           << " dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0) << "], " << endl
                           << " dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1) << "], " << endl
@@ -198,7 +237,7 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                           << " x in [" << xmin / dT0 << "," << xmax / dT0 << "], " << endl
                           << " y in [" << ymin / dT0 << "," << ymax / dT0 << "], " << endl
                           << " z in [" << zmin / dT0 << "," << zmax / dT0 << "]." << endl
-                          << " lx = " << lx / dT0 << ", ly = " << ly / dT0 << ", lz = " << lz / dT0 << endl
+                          << " lx = " << m_lx / dT0 << ", ly = " << m_ly / dT0 << ", lz = " << m_lz / dT0 << endl
                       << "---------------------------------------" << endl;
     }
     if (is_MPI_rank_0()) {
@@ -303,8 +342,7 @@ void ShearLayerStats::apply() {
     size_t iteration = m_solver.getIteration();
     if (int(iteration) < m_no_stats) {
         if (is_MPI_rank_0()) {
-            LOG(DETAILED) << "No stats at " << iteration <<
-                          ", only after " << m_no_stats << endl;
+            LOG(DETAILED) << "No stats at " << iteration << ", only after " << m_no_stats << endl;
         }
     }
     if (((iteration == 1) or (iteration == 10) or (iteration == 50) or (iteration == 100) or (iteration == 500)
@@ -631,11 +669,10 @@ void ShearLayerStats::write_console() {
             << ", b11: " << m_b11
             << ", b22: " << m_b22
 //            << ", b33: " << m_b33
-            << ", b12: " << m_b12
+            << ", b12: " << m_b12;
 //            << ", b13: " << m_b13
 //            << ", b23: " << m_b23
-            << endl;
-        LOG(DETAILED) << log.str();
+        LOG(DETAILED) << log.str() << endl;
     }
 }
 

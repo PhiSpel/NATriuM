@@ -49,6 +49,7 @@ private:
     vector<size_t> m_nofCoordinates_all = {0,0,0};
     bool m_yCoordsUpToDate;
     size_t m_reflevel;
+    double m_lx, m_ly, m_lz;
 
     // Data
     double rho0 = 1;
@@ -74,6 +75,8 @@ private:
     void write_console();
     void calculateRhoU();
     void calculateDeltas(double dT0);
+    void testIntegration();
+    void testDerivate();
 
     static string scalaroutfile(string dir) {
         boost::filesystem::path out_dir(dir);

@@ -41,6 +41,10 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
             m_vectorFile = boost::make_shared<std::fstream>(m_vectorfilename, std::fstream::out);
         }
     }
+
+    nround *= CFDSolverUtilities::getMinimumDoFDistanceGLL<3>( *m_solver.getProblemDescription()->getMesh(),
+            m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
+
     calculateDeltas(starting_delta_theta);
     updateYValues();
     calculateRhoU();

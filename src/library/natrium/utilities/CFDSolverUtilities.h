@@ -66,6 +66,11 @@ template<size_t dim>
 double getMaximumVertexDistance(const Mesh<dim>& tria);
 
 template<size_t dim>
+vector<double> getMinimumVertexDistanceDirs(const Mesh<dim>& tria);
+template<size_t dim>
+vector<double> getMaximumVertexDistanceDirs(const Mesh<dim>& tria);
+
+template<size_t dim>
 double calculateTimestep(const Mesh<dim>& tria, const size_t orderOfFiniteElement, const Stencil& stencil,
                          double cFL = 0.4);
 

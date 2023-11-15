@@ -48,6 +48,7 @@ private:
     size_t m_nofCoordinates;
     vector<size_t> m_nofCoordinates_all = {0,0,0};
     bool m_yCoordsUpToDate;
+    size_t m_reflevel;
 
     // Data
     double rho0 = 1;
@@ -92,7 +93,8 @@ private:
     }
 
 public:
-	ShearLayerStats(CompressibleCFDSolver<3> & solver, string outdir, double starting_delta_theta, double starting_Re);
+	ShearLayerStats(CompressibleCFDSolver<3> & solver, string outdir, double starting_delta_theta, double starting_Re,
+                    size_t reflevel);
 	void apply() override;
 	~ShearLayerStats() override;
     bool isMYCoordsUpToDate() const;

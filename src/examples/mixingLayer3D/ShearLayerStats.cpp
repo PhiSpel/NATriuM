@@ -537,9 +537,11 @@ void ShearLayerStats::calculateRhoU() {
 
         // integrate bij over vorticity thickness
         for (size_t ij = 0; ij < 6; ij++) {
-            *bij_set.at(ij) = integrate(*bijvec_set.at(ij), -m_currentDeltaOmega, m_currentDeltaOmega);
+            *bij_set.at(ij) = 1 / (2*m_currentDeltaOmega)
+                    * integrate(*bijvec_set.at(ij), -m_currentDeltaOmega, m_currentDeltaOmega);
         }
-        m_K_integrated = integrate(m_K, -m_currentDeltaOmega, m_currentDeltaOmega);
+        m_K_integrated = 1 / (2*m_currentDeltaOmega)
+                         * integrate(m_K, -m_currentDeltaOmega, m_currentDeltaOmega);
     }
     auto [minR11_pos, maxR11_pos] = std::minmax_element(begin(m_R11), end(m_R11));
     min_R11 = *minR11_pos; max_R11 = *maxR11_pos;

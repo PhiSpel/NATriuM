@@ -632,11 +632,15 @@ double ShearLayerStats::integrate(vector<double> integrand, double ymin, double 
             if ((ymin < yi) and (yi < ymax)) {// left side: trapezoidal rule
                 window_size = (m_yCoordinates.at(iy + 1) - yi);
                 fi = (integrand.at(iy) + integrand.at(iy + 1)) / 2;
+            } else {
+                fi = 0;
             }
         } else if (iy == m_nofCoordinates - 1) {
             if ((ymin < yi) and (yi < ymax)) {
                 window_size = (yi - m_yCoordinates.at(iy - 1));
                 fi = (integrand.at(iy) + integrand.at(iy - 1)) / 2;
+            } else {
+                fi = 0;
             }
         } else if ((iy > 0) and (iy < m_nofCoordinates - 1)){
             y_upper = m_yCoordinates.at(iy + 1);
@@ -653,6 +657,8 @@ double ShearLayerStats::integrate(vector<double> integrand, double ymin, double 
                 } else if (ymin > y_lower2) {
                     window_size *= (ymax - y_lower2) / (y_upper2 - y_lower2);
                 }
+            } else {
+                fi = 0;
             }
         } else {
             fi = 0;

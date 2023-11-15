@@ -67,6 +67,12 @@ void ShearLayerStats::testIntegration() {
         LOG(DETAILED) << "Integration test of int_-dOmeg^dOmeg(1) returned "
                       << integrate(ones, -m_currentDeltaOmega, m_currentDeltaOmega)
                       << " expected " << 2*m_currentDeltaOmega << endl;
+        LOG(DETAILED) << "Integration test of int_-dT0^dT0(1) returned "
+                      << integrate(ones, -m_currentDeltaTheta_Fa, m_currentDeltaTheta_Fa)
+                      << " expected " << 2*m_currentDeltaTheta_Fa << endl;
+        LOG(DETAILED) << "Integration test of int_-1.222^1.222(1) returned "
+                      << integrate(ones, -1.222, 1.222)
+                      << " expected " << 2*1.222 << endl;
         LOG(DETAILED) << "Integration test of int_-1^1(1) returned "
                       << integrate(ones, -1, 1)
                       << " expected 2" << endl;
@@ -622,18 +628,22 @@ double ShearLayerStats::integrate(vector<double> integrand, double ymin, double 
     for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
         yi = m_yCoordinates.at(iy);
         window_size = 0;
-        if ((iy == 0) and (ymin < yi) and (yi < ymax)) { // left side: trapezoidal rule
-            window_size = (m_yCoordinates.at(iy + 1) - yi);
-            fi = (integrand.at(iy) + integrand.at(iy + 1)) / 2;
-        } else if ((iy == m_nofCoordinates - 1) and (ymin < yi) and (yi < ymax)) {
-            window_size = (yi - m_yCoordinates.at(iy - 1));
-            fi = (integrand.at(iy) + integrand.at(iy - 1)) / 2;
+        if (iy == 0) {
+            if ((ymin < yi) and (yi < ymax)) {// left side: trapezoidal rule
+                window_size = (m_yCoordinates.at(iy + 1) - yi);
+                fi = (integrand.at(iy) + integrand.at(iy + 1)) / 2;
+            }
+        } else if (iy == m_nofCoordinates - 1) {
+            if ((ymin < yi) and (yi < ymax)) {
+                window_size = (yi - m_yCoordinates.at(iy - 1));
+                fi = (integrand.at(iy) + integrand.at(iy - 1)) / 2;
+            }
         } else if ((iy > 0) and (iy < m_nofCoordinates - 1)){
             y_upper = m_yCoordinates.at(iy + 1);
             y_lower = m_yCoordinates.at(iy - 1);
-            y_upper2 = (m_yCoordinates.at(iy + 1) + yi) / 2;
-            y_lower2 = (m_yCoordinates.at(iy - 1) + yi) / 2;
             if ((ymin < y_lower) and (y_upper < ymax)) { // other: simpson rule
+                y_upper2 = (m_yCoordinates.at(iy + 1) + yi) / 2;
+                y_lower2 = (m_yCoordinates.at(iy - 1) + yi) / 2;
                 fi = (integrand.at(iy - 1) + 4 * integrand.at(iy) + integrand.at(iy + 1)) / 6;
                 window_size = 0.5 * (y_upper - y_lower);
                 if ((ymin < y_lower2) and (y_upper2 < ymax)) {
@@ -643,9 +653,9 @@ double ShearLayerStats::integrate(vector<double> integrand, double ymin, double 
                 } else if (ymin > y_lower2) {
                     window_size *= (ymax - y_lower2) / (y_upper2 - y_lower2);
                 }
-            } else {
-                fi = 0;
             }
+        } else {
+            fi = 0;
         }
         integral += window_size * fi;
 //        if (is_MPI_rank_0()) cout << "iy="<<iy<<",yi="<<yi<<"window_size="<<window_size<<"fi="<<fi;

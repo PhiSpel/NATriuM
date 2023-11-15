@@ -91,6 +91,46 @@ template double CFDSolverUtilities::getMinimumVertexDistance<2>(const Mesh<2>& t
 template double CFDSolverUtilities::getMinimumVertexDistance<3>(const Mesh<3>& tria);
 
 template<size_t dim>
+vector<double> CFDSolverUtilities::getMinimumVertexDistanceDirs(const Mesh<dim>& tria) {
+    // calculate minimal distance between vertices of the triangulation
+    vector<double> min_vertex_distance(dim, 100000.0);
+    for (typename Mesh<3>::active_cell_iterator cell = tria.begin_active(); cell != tria.end(); ++cell) {
+        if (cell->is_locally_owned()) {
+            BoundingBox<3> box = cell->bounding_box();
+            for (size_t dir = 0; dir < dim; ++dir) {
+                min_vertex_distance.at(dir) = std::min(min_vertex_distance.at(dir), box.side_length(dir));
+            }
+        }
+    } // sync over all MPI processes
+    for (size_t dir = 0; dir < dim; ++dir) {
+        min_vertex_distance.at(dir) = dealii::Utilities::MPI::min_max_avg(min_vertex_distance.at(dir), MPI_COMM_WORLD).min;
+    }
+    return min_vertex_distance;
+}
+template vector<double> CFDSolverUtilities::getMinimumVertexDistanceDirs<2>(const Mesh<2>& tria);
+template vector<double> CFDSolverUtilities::getMinimumVertexDistanceDirs<3>(const Mesh<3>& tria);
+
+template<size_t dim>
+vector<double> CFDSolverUtilities::getMaximumVertexDistanceDirs(const Mesh<dim>& tria) {
+    // calculate maximal distance between vertices of the triangulation
+    vector<double> max_vertex_distance(dim, 0.0);
+    for (typename Mesh<3>::active_cell_iterator cell = tria.begin_active(); cell != tria.end(); ++cell) {
+        if (cell->is_locally_owned()) {
+            BoundingBox<3> box = cell->bounding_box();
+            for (size_t dir = 0; dir < dim; ++dir) {
+                max_vertex_distance.at(dir) = std::max(max_vertex_distance.at(dir), box.side_length(dir));
+            }
+        }
+    } // sync over all MPI processes
+    for (size_t dir = 0; dir < dim; ++dir) {
+        max_vertex_distance.at(dir) = dealii::Utilities::MPI::min_max_avg(max_vertex_distance.at(dir), MPI_COMM_WORLD).max;
+    }
+    return max_vertex_distance;
+}
+template vector<double> CFDSolverUtilities::getMaximumVertexDistanceDirs<2>(const Mesh<2>& tria);
+template vector<double> CFDSolverUtilities::getMaximumVertexDistanceDirs<3>(const Mesh<3>& tria);
+
+template<size_t dim>
 double CFDSolverUtilities::getMaximumVertexDistance(const Mesh<dim>& tria) {
     double max_vertex_distance = 0.0;
     double distance;

@@ -42,9 +42,9 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
         }
     }
 
-    nround *= CFDSolverUtilities::getMinimumDoFDistanceGLL<3>(*m_solver.getProblemDescription()->getMesh(),
-            m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
-
+    roundtol = pow(10, -solver.getConfiguration()->getCoordsRound())
+            * CFDSolverUtilities::getMinimumDoFDistanceGLL<3>(*m_solver.getProblemDescription()->getMesh(),
+                                                              m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
     calculateDeltas(starting_delta_theta);
     updateYValues();
     calculateRhoU();
@@ -77,8 +77,8 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                 fe_values.reinit(cell);
                 const std::vector<dealii::Point<3> > &quad_points = fe_values.get_quadrature_points();
                 for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
-                    coords.insert(floor(quad_points.at(i)(dim) * (nround)) / (nround));
-//                    coords.insert(quad_points.at(i)(dim));
+//                    coords.insert(floor(quad_points.at(i)(dim) * (nround)) / (nround));
+                    coords.insert(quad_points.at(i)(dim));
                 }
             }
         }
@@ -103,10 +103,22 @@ void ShearLayerStats::calculateDeltas(double dT0) {
         MPI_Allgather(sendbuf, max_ncoords, MPI_DOUBLE, recvbuf, max_ncoords, MPI_DOUBLE, MPI_COMM_WORLD);
 
         // remove double entries
-        std::set<double> coords_gathered;
+        std::set<double> coords_gathered = {};
         for (i = 0; i < max_ncoords * dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
-            coords_gathered.insert(recvbuf[i]);
-        }
+            bool is_unique = true;
+            for (auto coord : coords_gathered) {
+                if (std::abs(recvbuf[i] - coord) < roundtol) {
+                    is_unique = false;
+                    break;
+                }
+            } // all so-far-unique coordinates
+            if (is_unique) {
+                m_nofCoordinates_all.at(dim) += 1;
+//                coords_gathered.resize(m_nofCoordinates_all.at(dim));
+                coords_gathered.insert(recvbuf[i]);
+            }
+        } // all gathered coordinates
+
         // fill member variables
         i = 0;
         for (double it: coords_gathered) {
@@ -124,13 +136,12 @@ void ShearLayerStats::calculateDeltas(double dT0) {
             }
             i++;
         }
-        m_nofCoordinates_all.at(dim) = i;
         // free
         free(sendbuf);
         free(recvbuf);
         // finished
     }
-    vector<double> mindeltas(3,100), maxdeltas(3,0); // double mindx=0, maxdx=0, mindy=0, maxdy=0, mindz=0, maxdz=0;
+    vector<double> mindeltas(3,10000), maxdeltas(3,0); // double mindx=0, maxdx=0, mindy=0, maxdy=0, mindz=0, maxdz=0;
     vector<vector<double>*> all_coords;
     all_coords.push_back(&m_xCoordinates); all_coords.push_back(&m_yCoordinates); all_coords.push_back(&m_zCoordinates);
     vector<double> deltas;
@@ -151,12 +162,19 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                                                                      m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
     double dofmax = CFDSolverUtilities::getMaximumDoFDistanceGLL<3>( *m_solver.getProblemDescription()->getMesh(),
                                                                      m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
+    vector<double> mindeltas2 = CFDSolverUtilities::getMinimumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
+    vector<double> maxdeltas2 = CFDSolverUtilities::getMaximumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
     if (is_MPI_rank_0()) {
         LOG(DETAILED) << "::::::---------------------------------------" << endl
-            << "Mesh info after transform(): " << endl
+            << "Mesh info after transform() (rounded coordinates to " << roundtol << "): " << endl
             << "dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0) << "], " << endl
             << "dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1) << "], " << endl
             << "dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
+            << "DOF distance in [" << dofmin << "," << dofmax << "]." << endl
+            << "Calculated with new function: " << endl
+            << "dx in [" << mindeltas2.at(0) << "," << maxdeltas2.at(0) << "], " << endl
+            << "dy in [" << mindeltas2.at(1) << "," << maxdeltas2.at(1) << "], " << endl
+            << "dz in [" << mindeltas2.at(2) << "," << maxdeltas2.at(2) << "]." << endl
             << "DOF distance in [" << dofmin << "," << dofmax << "]." << endl
             << "normalized by deltaTheta0: " << endl
             << "dx in [" << mindeltas.at(0) / dT0 << "," << maxdeltas.at(0) / dT0 << "], " << endl
@@ -185,8 +203,8 @@ void ShearLayerStats::updateYValues() {
             fe_values.reinit(cell);
             const std::vector<dealii::Point<3> >& quad_points = fe_values.get_quadrature_points();
             for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
-                y_coords.insert(floor(quad_points.at(i)(1)*nround)/nround);
-//                y_coords.insert(quad_points.at(i)(1));
+//                y_coords.insert(floor(quad_points.at(i)(1)*nround)/nround);
+                y_coords.insert(quad_points.at(i)(1));
             }
         }
     }
@@ -211,10 +229,22 @@ void ShearLayerStats::updateYValues() {
     MPI_Allgather(sendbuf, max_nycoords, MPI_DOUBLE, recvbuf, max_nycoords, MPI_DOUBLE, MPI_COMM_WORLD);
 
     // remove double entries
-    std::set<double> y_coords_gathered;
-    for (i = 0; i < max_nycoords * dealii::Utilities::MPI::n_mpi_processes( MPI_COMM_WORLD); i++) {
-        y_coords_gathered.insert(recvbuf[i]);
-    }
+    std::set<double> y_coords_gathered = {};
+    for (i = 0; i < max_nycoords * dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
+        bool is_unique = true;
+        for (auto coord : y_coords_gathered) {
+            if (std::abs(recvbuf[i] - coord) < roundtol) {
+                is_unique = false;
+                break;
+            }
+        } // all so-far-unique coordinates
+        if (is_unique) {
+            m_nofCoordinates += 1;
+//                coords_gathered.resize(m_nofCoordinates_all.at(dim));
+            y_coords_gathered.insert(recvbuf[i]);
+        }
+    } // all gathered coordinates
+
     // fill member variables
     i = 0;
     for (double it : y_coords_gathered) {
@@ -317,8 +347,8 @@ void ShearLayerStats::calculateRhoU() {
             fe_values.reinit(cell);
             const std::vector<dealii::Point<3> >& quad_points = fe_values.get_quadrature_points();
             for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
-                y = floor(quad_points.at(i)(1)*nround)/nround;
-//                y = quad_points.at(i)(1);
+//                y = floor(quad_points.at(i)(1)*nround)/nround;
+                y = quad_points.at(i)(1);
                 assert(m_yCoordinateToIndex.find(y) != m_yCoordinateToIndex.end());
                 y_ind = m_yCoordinateToIndex.at(y);
                 dof_ind = local_indices.at(i);
@@ -388,8 +418,8 @@ void ShearLayerStats::calculateRhoU() {
             fe_values.reinit(cell);
             const std::vector<dealii::Point<3> > &quad_points = fe_values.get_quadrature_points();
             for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
-                y = floor(quad_points.at(i)(1)*nround)/nround;
-//                y = quad_points.at(i)(1);
+//                y = floor(quad_points.at(i)(1)*nround)/nround;
+                y = quad_points.at(i)(1);
                 assert(m_yCoordinateToIndex.find(y) != m_yCoordinateToIndex.end());
                 y_ind = m_yCoordinateToIndex.at(y);
                 dof_ind = local_indices.at(i);

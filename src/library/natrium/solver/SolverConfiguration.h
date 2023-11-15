@@ -1530,6 +1530,34 @@ public:
         leave_subsection();
     }
 
+    int getCoordsRound() {
+        enter_subsection("Output");
+        int CoordsRound;
+        try {
+            CoordsRound = get_integer("Coordinates round degree");
+        } catch (std::exception& e) {
+            std::stringstream msg;
+            msg << "Could not read parameter 'Coordinates round degree' from parameters: " << e.what();
+            leave_subsection();
+            throw ConfigurationException(msg.str());
+        }
+        leave_subsection();
+        return CoordsRound;
+    }
+
+    void setCoordsRound(long int CoordsRound) {
+        enter_subsection("Output");
+        try {
+            set("Coordinates round degree", CoordsRound);
+        } catch (std::exception& e) {
+            std::stringstream msg;
+            msg << "Could not assign value " << CoordsRound << " to Output solution interval: " << e.what();
+            leave_subsection();
+            throw ConfigurationException(msg.str());
+        }
+        leave_subsection();
+    }
+
     size_t getOutputShearLayerInterval() {
         enter_subsection("Output");
         enter_subsection("Shear Layer");

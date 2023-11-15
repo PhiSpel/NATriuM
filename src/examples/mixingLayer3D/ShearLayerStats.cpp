@@ -617,22 +617,52 @@ double ShearLayerStats::integrate(vector<double> integrand) {
 
 double ShearLayerStats::integrate(vector<double> integrand, double ymin, double ymax) {
     double integral = 0;
-    double window_size, fi, yi;
+    double window_size, fi, yi, y_upper, y_lower, y_upper2, y_lower2;
+    //// TODO: additional extrapolation
     for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
         yi = m_yCoordinates.at(iy);
-        if ((ymin < yi) and (yi < ymax)) {
-            if (iy == 0) { // left side: trapezoidal rule
-                window_size = (m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy));
-                fi = (integrand.at(iy) + integrand.at(iy + 1)) / 2;
-            } else if (iy == m_nofCoordinates - 1) {
-                window_size = (m_yCoordinates.at(iy) - m_yCoordinates.at(iy-1));
-                fi = (integrand.at(iy) + integrand.at(iy - 1)) / 2;
-            } else { // other: simpson rule
-                window_size = 0.5 * (m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy - 1));
+        window_size = 0;
+        if ((iy == 0) and (ymin < yi) and (yi < ymax)) { // left side: trapezoidal rule
+            window_size = (m_yCoordinates.at(iy + 1) - yi);
+            fi = (integrand.at(iy) + integrand.at(iy + 1)) / 2;
+        } else if ((iy == m_nofCoordinates - 1) and (ymin < yi) and (yi < ymax)) {
+            window_size = (yi - m_yCoordinates.at(iy - 1));
+            fi = (integrand.at(iy) + integrand.at(iy - 1)) / 2;
+        } else if ((iy > 0) and (iy < m_nofCoordinates - 1)){
+            y_upper = m_yCoordinates.at(iy + 1);
+            y_lower = m_yCoordinates.at(iy - 1);
+            y_upper2 = (m_yCoordinates.at(iy + 1) + yi) / 2;
+            y_lower2 = (m_yCoordinates.at(iy - 1) + yi) / 2;
+            if ((ymin < y_lower) and (y_upper < ymax)) { // other: simpson rule
                 fi = (integrand.at(iy - 1) + 4 * integrand.at(iy) + integrand.at(iy + 1)) / 6;
+                window_size = 0.5 * (y_upper - y_lower);
+                if ((ymin < y_lower2) and (y_upper2 < ymax)) {
+                    // no action required
+                } else if (ymin > y_lower2) {
+                    window_size *= (y_upper2 - ymin) / (y_upper2 - y_lower2);
+                } else if (ymin > y_lower2) {
+                    window_size *= (ymax - y_lower2) / (y_upper2 - y_lower2);
+                }
+            } else {
+                fi = 0;
             }
-            integral += window_size * fi;
         }
+        integral += window_size * fi;
+//        if (is_MPI_rank_0()) cout << "iy="<<iy<<",yi="<<yi<<"window_size="<<window_size<<"fi="<<fi;
+//        //// additional for outliers
+//        // left
+//        if ((yi < ymin) and (y_upper > ymin)) {
+//            double fac = (y_upper - ymin) / (y_upper - yi);
+//            window_size = fac * 0.5 * (y_upper - y_lower);
+//            fi = (integrand.at(iy - 1) + 4 * integrand.at(iy) + integrand.at(iy + 1)) / 6;
+//        }
+//        // right
+//        if ((yi > ymax) and (y_lower < ymax)) {
+//            double fac = (ymax - y_lower) / (yi - y_lower);
+//            window_size = fac * 0.5 * (y_upper - y_lower);
+//            fi = (integrand.at(iy - 1) + 4 * integrand.at(iy) + integrand.at(iy + 1)) / 6;
+//        }
+//        integral += window_size * fi;
     }
     return integral;
 }

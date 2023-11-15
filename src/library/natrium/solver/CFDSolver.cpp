@@ -476,26 +476,20 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 	if (charU == 0.0) {
 		charU = maxU;
 	}
-	double dx = CFDSolverUtilities::getMinimumVertexDistance<dim>(
-			*problemDescription->getMesh());
-	LOG(WELCOME) << "viscosity:                "
-			<< problemDescription->getViscosity() << " m^2/s" << endl;
-	LOG(WELCOME) << "char. length:             "
-			<< problemDescription->getCharacteristicLength() << " m" << endl;
-	LOG(WELCOME) << "max |u_0|:                "
-			<< maxU * problemDescription->getCharacteristicLength() << " m/s"
+    double dxmin = CFDSolverUtilities::getMinimumVertexDistance<dim>(*problemDescription->getMesh());
+    double dxmax = CFDSolverUtilities::getMaximumVertexDistance<dim>(*problemDescription->getMesh());
+	LOG(WELCOME) << "viscosity:                " << problemDescription->getViscosity() << " m^2/s" << endl;
+	LOG(WELCOME) << "char. length:             " << problemDescription->getCharacteristicLength() << " m" << endl;
+	LOG(WELCOME) << "max |u_0|:                " << maxU * problemDescription->getCharacteristicLength() << " m/s"
 			<< endl;
-	LOG(WELCOME) << "Reynolds number:          "
-			<< (charU * problemDescription->getCharacteristicLength())
+	LOG(WELCOME) << "Reynolds number:          " << (charU * problemDescription->getCharacteristicLength())
 					/ problemDescription->getViscosity() << endl;
 //    scaling = sqrt(3) * U / (Ma*sqrt(gamma*reference_temperature));
 //    m_speedOfSound(scaling/sqrt(3))
     double Ma = charU / m_stencil->getSpeedOfSound();
 	LOG(WELCOME) << "Mach number:              " << Ma << endl;
-	LOG(WELCOME) << "Stencil scaling:          "
-			<< configuration->getStencilScaling() << endl;
-	LOG(WELCOME) << "Sound speed:              " << m_stencil->getSpeedOfSound()
-			<< endl;
+	LOG(WELCOME) << "Stencil scaling:          " << configuration->getStencilScaling() << endl;
+	LOG(WELCOME) << "Sound speed:              " << m_stencil->getSpeedOfSound() << endl;
 //TODO propose optimal cfl based on time integrator
 	LOG(WELCOME) << "----------------------------" << endl;
 	LOG(WELCOME) << "== ADVECTION ==          " << endl;
@@ -516,11 +510,10 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 						*m_stencil, std_cfl) << " s" << endl;
 	}
 	LOG(WELCOME) << "Actual dt:                " << delta_t << " s" << endl;
-	LOG(WELCOME) << "CFL number:               " << configuration->getCFL()
-			<< endl;
-	LOG(WELCOME) << "dx:                       " << dx << endl;
-	LOG(WELCOME) << "Order of finite element:  "
-			<< configuration->getSedgOrderOfFiniteElement() << endl;
+	LOG(WELCOME) << "CFL number:               " << configuration->getCFL() << endl;
+    LOG(WELCOME) << "dx_min:                   " << dxmin << endl;
+    LOG(WELCOME) << "dx_max:                   " << dxmax << endl;
+	LOG(WELCOME) << "Order of finite element:  " << configuration->getSedgOrderOfFiniteElement() << endl;
 	LOG(WELCOME) << "----------------------------" << endl;
 	LOG(WELCOME) << "== COLLISION ==           " << endl;
 	LOG(WELCOME) << "tau:                      " << tau << endl;
@@ -528,7 +521,6 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
     LOG(WELCOME) << "Is Prandtl number set?    " << configuration->isPrandtlNumberSet() << endl;
     LOG(WELCOME) << "Prandtl number Pr:        " << configuration->getPrandtlNumber() << endl;
     LOG(WELCOME) << "Heat capacity ratio:      " << configuration->getHeatCapacityRatioGamma() << endl;
-
     LOG(WELCOME) << "----------------------------" << endl;
 
 // initialize boundary dof indicator
@@ -543,8 +535,7 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 	}
 	m_isDoFAtBoundary.resize(getNumberOfDoFs());
 	DealIIExtensions::extract_dofs_with_support_on_boundary(
-			*(m_advectionOperator->getDoFHandler()), dealii::ComponentMask(),
-			m_isDoFAtBoundary, boundaryIndicators);
+			*(m_advectionOperator->getDoFHandler()), dealii::ComponentMask(), m_isDoFAtBoundary, boundaryIndicators);
 	size_t nofBoundaryNodes = 0;
 	for (size_t i = 0; i < m_isDoFAtBoundary.size(); i++) {
 		if (m_isDoFAtBoundary.at(i)) {
@@ -557,8 +548,7 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
     const vector<dealii::types::global_dof_index>& dofs_per_proc =
     Utilities::MPI::all_gather(MPI_COMM_WORLD, m_advectionOperator->getDoFHandler()->n_locally_owned_dofs());
     for (size_t i = 0; i < dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD); i++) {
-        LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc.at(i)
-                      << " grid points." << endl;
+        LOG(DETAILED) << "Process " << i << " has " << dofs_per_proc.at(i) << " grid points." << endl;
     }
 
 // Initialize distribution functions
@@ -577,8 +567,7 @@ CFDSolver<dim>::CFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
 	/*and (configuration->getOutputTableInterval()
 	 < configuration->getNumberOfTimeSteps())*/) {
 		std::stringstream s;
-		s << configuration->getOutputDirectory().c_str()
-				<< "/results_table.txt";
+		s << configuration->getOutputDirectory().c_str() << "/results_table.txt";
 		//create the SolverStats object which is responsible for the results table
 		m_solverStats = boost::make_shared<SolverStats<dim> >(this, s.str());
 		//create the TurbulenceStats object which is responsible for the turbulence table

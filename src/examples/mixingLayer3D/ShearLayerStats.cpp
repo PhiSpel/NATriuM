@@ -202,9 +202,10 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                       << "---------------------------------------" << endl;
     }
     if (is_MPI_rank_0()) {
-        double fac = pow(2., m_reflevel-3.);
+        int scaleto = 4;
+        double fac = pow(2., int(m_reflevel)-scaleto);
         LOG(DETAILED) << "::::::---------------------------------------" << endl
-                      << "Mesh info for ref-level 3 (this was " << m_reflevel << ", so multiplying by " << fac << "): " << endl
+                      << "Mesh info for ref-level " << scaleto << " (this was " << m_reflevel << ", so multiplying by " << fac << "): " << endl
                           << " dx in [" << mindeltas_verteces.at(0)*fac << "," << maxdeltas_verteces.at(0)*fac << "], " << endl
                           << " dy in [" << mindeltas_verteces.at(1)*fac << "," << maxdeltas_verteces.at(1)*fac << "], " << endl
                           << " dz in [" << mindeltas_verteces.at(2)*fac << "," << maxdeltas_verteces.at(2)*fac << "]." << endl

@@ -226,27 +226,27 @@ namespace natrium {
             ly = maxy-miny;
             lz = maxz-minz;
 
-            if (is_MPI_rank_0()) {
-                LOG(DETAILED) << "---------------------------------------" << endl
-                << "Mesh info after transform(): " << endl << "dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0)
-                << "], dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1)
-                << "], dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl;
-                //// Print boundary indicators
-                map<types::boundary_id, unsigned int> boundary_count;
-                for (auto cell: mesh.active_cell_iterators()) {
-                    for (unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; ++face) {
-                        if (cell->face(face)->at_boundary()) boundary_count[cell->face(face)->boundary_id()]++;
-                    }
-                }
-                LOG(DETAILED) << " domain limits: x in[" << minx << "," << maxx
-                    << "], y in [" << miny << "," << maxy
-                    << "], z in [" << minz << "," << maxz << "]" << endl
-                    << " boundary indicators: ";
-                for (const pair<const types::boundary_id, unsigned int> &pair: boundary_count) {
-                    LOG(DETAILED) << pair.first << "(" << pair.second << " times) ";
-                }
-                LOG(DETAILED) << endl << "---------------------------------------" << endl;
-            }
+//            if (is_MPI_rank_0()) {
+//                LOG(DETAILED) << "---------------------------------------" << endl
+//                << "Mesh info before transform(): " << endl << "dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0)
+//                << "], dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1)
+//                << "], dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl;
+//                //// Print boundary indicators
+//                map<types::boundary_id, unsigned int> boundary_count;
+//                for (auto cell: mesh.active_cell_iterators()) {
+//                    for (unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; ++face) {
+//                        if (cell->face(face)->at_boundary()) boundary_count[cell->face(face)->boundary_id()]++;
+//                    }
+//                }
+//                LOG(DETAILED) << " domain limits: x in[" << minx << "," << maxx
+//                    << "], y in [" << miny << "," << maxy
+//                    << "], z in [" << minz << "," << maxz << "]" << endl
+//                    << " boundary indicators: ";
+//                for (const pair<const types::boundary_id, unsigned int> &pair: boundary_count) {
+//                    LOG(DETAILED) << pair.first << "(" << pair.second << " times) ";
+//                }
+//                LOG(DETAILED) << endl << "---------------------------------------" << endl;
+//            }
 	    }
         double lx, ly, lz, m_center, m_scaling, deltaTheta0;
 

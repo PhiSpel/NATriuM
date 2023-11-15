@@ -41,11 +41,11 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
             m_vectorFile = boost::make_shared<std::fstream>(m_vectorfilename, std::fstream::out);
         }
     }
+    calculateDeltas(starting_delta_theta);
     updateYValues();
     calculateRhoU();
     write_tn();
     write_console();
-    calculateDeltas(starting_delta_theta);
 }
 
 bool ShearLayerStats::isMYCoordsUpToDate() const {
@@ -73,8 +73,8 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                 fe_values.reinit(cell);
                 const std::vector<dealii::Point<3> > &quad_points = fe_values.get_quadrature_points();
                 for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
-//                    coords.insert(floor(quad_points.at(i)(dim) * (nround*1000)) / (nround*1000));
-                    coords.insert(quad_points.at(i)(dim));
+                    coords.insert(floor(quad_points.at(i)(dim) * (nround)) / (nround));
+//                    coords.insert(quad_points.at(i)(dim));
                 }
             }
         }
@@ -174,8 +174,8 @@ void ShearLayerStats::updateYValues() {
             fe_values.reinit(cell);
             const std::vector<dealii::Point<3> >& quad_points = fe_values.get_quadrature_points();
             for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
-//                y_coords.insert(floor(quad_points.at(i)(1)*nround)/nround);
-                y_coords.insert(quad_points.at(i)(1));
+                y_coords.insert(floor(quad_points.at(i)(1)*nround)/nround);
+//                y_coords.insert(quad_points.at(i)(1));
             }
         }
     }
@@ -306,8 +306,8 @@ void ShearLayerStats::calculateRhoU() {
             fe_values.reinit(cell);
             const std::vector<dealii::Point<3> >& quad_points = fe_values.get_quadrature_points();
             for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
-//                y = floor(quad_points.at(i)(1)*nround)/nround;
-                y = quad_points.at(i)(1);
+                y = floor(quad_points.at(i)(1)*nround)/nround;
+//                y = quad_points.at(i)(1);
                 assert(m_yCoordinateToIndex.find(y) != m_yCoordinateToIndex.end());
                 y_ind = m_yCoordinateToIndex.at(y);
                 dof_ind = local_indices.at(i);
@@ -363,7 +363,7 @@ void ShearLayerStats::calculateRhoU() {
         }
     }
     auto [minUx, maxUx] = std::minmax_element(begin(ux_Fa), end(ux_Fa));
-    m_dUx = m_dU0; // *maxUx - *minUx;
+    m_dUx = *maxUx - *minUx;
     for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
         momentumthickness_integrand.at(iy) = rho_Re.at(iy) * (m_dUx / 2 - ux_Fa.at(iy)) * (m_dUx / 2 + ux_Fa.at(iy));
     }
@@ -377,8 +377,8 @@ void ShearLayerStats::calculateRhoU() {
             fe_values.reinit(cell);
             const std::vector<dealii::Point<3> > &quad_points = fe_values.get_quadrature_points();
             for (size_t i = 0; i < fe_values.n_quadrature_points; i++) {
-//                y = floor(quad_points.at(i)(1)*nround)/nround;
-                y = quad_points.at(i)(1);
+                y = floor(quad_points.at(i)(1)*nround)/nround;
+//                y = quad_points.at(i)(1);
                 assert(m_yCoordinateToIndex.find(y) != m_yCoordinateToIndex.end());
                 y_ind = m_yCoordinateToIndex.at(y);
                 dof_ind = local_indices.at(i);

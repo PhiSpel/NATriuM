@@ -162,25 +162,24 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                                                                      m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
     double dofmax = CFDSolverUtilities::getMaximumDoFDistanceGLL<3>( *m_solver.getProblemDescription()->getMesh(),
                                                                      m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
-    vector<double> mindeltas2 = CFDSolverUtilities::getMinimumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
-    vector<double> maxdeltas2 = CFDSolverUtilities::getMaximumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
+    vector<double> mindeltas_verteces = CFDSolverUtilities::getMinimumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
+    vector<double> maxdeltas_verteces = CFDSolverUtilities::getMaximumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
     if (is_MPI_rank_0()) {
         LOG(DETAILED) << "::::::---------------------------------------" << endl
-            << "Mesh info after transform() (rounded coordinates to " << roundtol << "): " << endl
-            << "dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0) << "], " << endl
-            << "dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1) << "], " << endl
-            << "dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
-            << "DOF distance in [" << dofmin << "," << dofmax << "]." << endl
-            << "Calculated with new function: " << endl
-            << "dx in [" << mindeltas2.at(0) << "," << maxdeltas2.at(0) << "], " << endl
-            << "dy in [" << mindeltas2.at(1) << "," << maxdeltas2.at(1) << "], " << endl
-            << "dz in [" << mindeltas2.at(2) << "," << maxdeltas2.at(2) << "]." << endl
-            << "DOF distance in [" << dofmin << "," << dofmax << "]." << endl
+            << "Mesh info after transform() (rounded coordinates to " << roundtol << " for uniqueness): " << endl
+                << " dx in [" << mindeltas_verteces.at(0) << "," << maxdeltas_verteces.at(0) << "], " << endl
+                << " dy in [" << mindeltas_verteces.at(1) << "," << maxdeltas_verteces.at(1) << "], " << endl
+                << " dz in [" << mindeltas_verteces.at(2) << "," << maxdeltas_verteces.at(2) << "]." << endl
+            << "Integration point distances: " << endl
+                << " dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0) << "], " << endl
+                << " dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1) << "], " << endl
+                << " dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
+                << " DOF distance in [" << dofmin << "," << dofmax << "]." << endl
             << "normalized by deltaTheta0: " << endl
-            << "dx in [" << mindeltas.at(0) / dT0 << "," << maxdeltas.at(0) / dT0 << "], " << endl
-            << "dy in [" << mindeltas.at(1) / dT0 << "," << maxdeltas.at(1) / dT0 << "], " << endl
-            << "dz in [" << mindeltas.at(2) / dT0 << "," << maxdeltas.at(2) / dT0 << "]." << endl
-            << "DOF distance in [" << dofmin / dT0 << "," << dofmax / dT0 << "]." << endl
+                << " dx in [" << mindeltas.at(0) / dT0 << "," << maxdeltas.at(0) / dT0 << "], " << endl
+                << " dy in [" << mindeltas.at(1) / dT0 << "," << maxdeltas.at(1) / dT0 << "], " << endl
+                << " dz in [" << mindeltas.at(2) / dT0 << "," << maxdeltas.at(2) / dT0 << "]." << endl
+                << " DOF distance in [" << dofmin / dT0 << "," << dofmax / dT0 << "]." << endl
             << "---------------------------------------" << endl;
     }
 }

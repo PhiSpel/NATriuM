@@ -217,16 +217,13 @@ int main(int argc, char** argv) {
                      << "#Cells:        " << int(repetitions.at(0) * pow(2, ref_level))
                      << " x " << int(repetitions.at(1) * pow(2, ref_level)) << " x "
                      << int(repetitions.at(2) * pow(2, ref_level)) << " = "
-                     << int(
-                             repetitions.at(0) * repetitions.at(1) * repetitions.at(2)
-                             * pow(2, 3 * ref_level)) << endl << "#Points:       "
+                     << int(repetitions.at(0) * repetitions.at(1) * repetitions.at(2) * pow(2, 3 * ref_level)) << endl
+                     << "#Points:       "
                      << int(repetitions.at(0) * pow(2, ref_level) * p) << " x "
                      << int(repetitions.at(1) * pow(2, ref_level) * p) << " x "
                      << int(repetitions.at(2) * pow(2, ref_level) * p) << " = "
-                     << int(
-                             repetitions.at(0) * repetitions.at(1) * repetitions.at(2)
-                             * pow(2, 3 * ref_level) * p * p * p) << endl
-                     << endl << "               dt  = " << dt << endl
+                     << int(repetitions.at(0)*repetitions.at(1)*repetitions.at(2) * pow(2,3*ref_level) * p*p*p) << endl
+                     << "               dt  = " << dt << endl
                      << "===================================================" << endl
                      << endl;
     }

@@ -42,7 +42,7 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
         }
     }
 
-    nround *= CFDSolverUtilities::getMinimumDoFDistanceGLL<3>( *m_solver.getProblemDescription()->getMesh(),
+    nround *= CFDSolverUtilities::getMinimumDoFDistanceGLL<3>(*m_solver.getProblemDescription()->getMesh(),
             m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
 
     calculateDeltas(starting_delta_theta);
@@ -147,15 +147,22 @@ void ShearLayerStats::calculateDeltas(double dT0) {
         mindeltas.at(dim) = dealii::Utilities::MPI::min_max_avg(mindeltas.at(dim), MPI_COMM_WORLD).min;
         maxdeltas.at(dim) = dealii::Utilities::MPI::min_max_avg(maxdeltas.at(dim), MPI_COMM_WORLD).max;
     }
+    double dofmin = CFDSolverUtilities::getMinimumDoFDistanceGLL<3>( *m_solver.getProblemDescription()->getMesh(),
+                                                                     m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
+    double dofmax = CFDSolverUtilities::getMaximumDoFDistanceGLL<3>( *m_solver.getProblemDescription()->getMesh(),
+                                                                     m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
     if (is_MPI_rank_0()) {
         LOG(DETAILED) << "::::::---------------------------------------" << endl
-            << "Mesh info after transform(): " << endl << "dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0)
-            << "], dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1)
-            << "], dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
+            << "Mesh info after transform(): " << endl
+            << "dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0) << "], " << endl
+            << "dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1) << "], " << endl
+            << "dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
+            << "DOF distance in [" << dofmin << "," << dofmax << "]." << endl
             << "normalized by deltaTheta0: " << endl
-            << "dx in [" << mindeltas.at(0) / dT0 << "," << maxdeltas.at(0) / dT0
-            << "], dy in [" << mindeltas.at(1) / dT0 << "," << maxdeltas.at(1) / dT0
-            << "], dz in [" << mindeltas.at(2) / dT0 << "," << maxdeltas.at(2) / dT0 << "]." << endl
+            << "dx in [" << mindeltas.at(0) / dT0 << "," << maxdeltas.at(0) / dT0 << "], " << endl
+            << "dy in [" << mindeltas.at(1) / dT0 << "," << maxdeltas.at(1) / dT0 << "], " << endl
+            << "dz in [" << mindeltas.at(2) / dT0 << "," << maxdeltas.at(2) / dT0 << "]." << endl
+            << "DOF distance in [" << dofmin / dT0 << "," << dofmax / dT0 << "]." << endl
             << "---------------------------------------" << endl;
     }
 }

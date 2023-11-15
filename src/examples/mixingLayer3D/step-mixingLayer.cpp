@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("n-no-out", "do not output vtk before iteration n-no-out", -1);
     parser.setArgument<int>("n-no-stats", "do not output stats before iteration n-no-stats", -1);
     parser.setArgument<int>("nstats", "output stats every nstats steps", 20);
+    parser.setArgument<int>("ncoordsround", "round coordinates to this degree for statistics", 8);
     parser.setArgument<string>("meshname", "name of the mesh file (shearlayer_*.txt)", "cube");
     parser.setArgument<string>("randuname", "name of the initial velocity file (random_u_*.txt)", "cube_k048_half");
     parser.setArgument<string>("bc", "Boundary condition. Choose between 'EQ_BC' (equilibrium), 'DN_BC' (do nothing),"
@@ -141,6 +142,7 @@ int main(int argc, char** argv) {
     configuration->setOutputGlobalTurbulenceStatistics(true);
     configuration->setOutputCompressibleTurbulenceStatistics(true);
     configuration->setOutputShearLayerStatistics(true);
+    configuration->setCoordsRound(parser.getArgument<int>("ncoordsround"));
     configuration->setOutputShearLayerInterval(parser.getArgument<int>("nstats"));
     configuration->setMachNumber(Ma);
     configuration->setStencilScaling(scaling);

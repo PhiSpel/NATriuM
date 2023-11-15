@@ -276,6 +276,9 @@ SolverConfiguration::SolverConfiguration() {
         declare_entry("No stats interval", "-1",
                       dealii::Patterns::Integer(-1),
                       "No not reporter stats before ... steps.");
+        declare_entry("Coordinates round degree", "8",
+                      dealii::Patterns::Integer(0, 20),
+                      "Round coordinates to this degree, related to integration point distance.");
 		declare_entry("Command line verbosity", "5",
 				dealii::Patterns::Integer(0, 8),
 				"The amount of command line output.");

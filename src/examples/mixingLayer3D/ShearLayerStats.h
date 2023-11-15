@@ -41,7 +41,9 @@ private:
 
     // Y Coordinates
     vector<double> m_xCoordinates, m_yCoordinates, m_zCoordinates;
-    unsigned long nround = pow(10,8); // round coordinates to this magnitude
+//    size_t tol;
+    double roundtol;
+//    unsigned long nround; // round coordinates to this magnitude
     std::map<double, size_t, own_double_less> m_xCoordinateToIndex, m_yCoordinateToIndex, m_zCoordinateToIndex;
     size_t m_nofCoordinates;
     vector<size_t> m_nofCoordinates_all = {0,0,0};

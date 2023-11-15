@@ -49,9 +49,9 @@ int main(int argc, char** argv) {
     parser.setArgument<double>("CFL", "CFL number. Should be between 0.4 and 2", 1);
     parser.setArgument<double>("gamma", "Heat capacity ratio. Should be 1.4", 1.4);
     parser.setArgument<double>("ref-temp", "Reference temperature. Should be between 0.85 and 1 (lower may be more stable).", 1);
-    parser.setArgument<double>("lx", "Half length in x-direction (multiples of deltaTheta0)", 200);
-    parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 100);
-    parser.setArgument<double>("lz", "Half length in z-direction (multiples of deltaTheta0)", 50);
+    parser.setArgument<double>("lx", "Half length in x-direction (multiples of deltaTheta0)", 160);
+    parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 80);
+    parser.setArgument<double>("lz", "Half length in z-direction (multiples of deltaTheta0)", 40);
     parser.setArgument<int>("nout", "output vtk every nout steps", 2000);
     parser.setArgument<int>("ncheckpoint", "output checkpoint every ncheckpoint steps", 20000);
     parser.setArgument<int>("n-no-out", "do not output vtk before iteration n-no-out", -1);

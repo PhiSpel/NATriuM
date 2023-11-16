@@ -646,7 +646,7 @@ double ShearLayerStats::integrate(vector<double> integrand, double ymin, double 
                 y_upper2 = (y_upper + yi) / 2;
                 y_lower2 = (y_lower + yi) / 2;
                 fi = (integrand.at(iy - 1) + 4 * integrand.at(iy) + integrand.at(iy + 1)) / 6;
-                window_size = std::min(y_upper2, ymax) - std::max(y_lower2, ymin);
+                window_size = std::max(std::min(y_upper2, ymax) - std::max(y_lower2, ymin), 0.);
             }
         }
 //        if (is_MPI_rank_0()) {

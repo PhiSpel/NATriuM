@@ -615,10 +615,10 @@ double ShearLayerStats::integrate(vector<double> integrand) {
     double fi;
     for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
         if (iy == 0) { // left side: trapezoidal rule
-            window_size = (m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy));
+            window_size = (m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy)) / 2;
             fi = (integrand.at(iy) + integrand.at(iy + 1)) / 2;
         } else if (iy == m_nofCoordinates - 1) {
-            window_size = (m_yCoordinates.at(iy) - m_yCoordinates.at(iy-1));
+            window_size = (m_yCoordinates.at(iy) - m_yCoordinates.at(iy-1)) / 2;
             fi = (integrand.at(iy) + integrand.at(iy - 1)) / 2;
         } else { // other: simpson rule
             window_size = 0.5 * (m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy - 1));

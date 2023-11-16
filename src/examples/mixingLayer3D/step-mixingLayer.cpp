@@ -44,7 +44,6 @@ int main(int argc, char** argv) {
     */
     parser.setArgument<double>("Ma", "Mach number", 0.3);
     parser.setArgument<double>("time", "simulation time (s)", 15);
-    parser.setArgument<double>("randuscaling", "factor to scale random velocity field", 5);
     parser.setArgument<double>("uscaling", "factor to scale U1, i.e. deltaUx", 1);
     parser.setArgument<double>("CFL", "CFL number. Should be between 0.4 and 2", 1);
     parser.setArgument<double>("gamma", "Heat capacity ratio. Should be 1.4", 1.4);
@@ -60,6 +59,7 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("ncoordsround", "round coordinates to this degree for statistics", 10);
     parser.setArgument<string>("meshname", "name of the mesh file (shearlayer_*.txt)", "cube");
     parser.setArgument<string>("randuname", "name of the initial velocity file (random_u_*.txt)", "cube_k048_half");
+    parser.setArgument<double>("randuscaling", "factor to scale random velocity field", 1);
     parser.setArgument<string>("bc", "Boundary condition. Choose between 'EQ_BC' (equilibrium), 'DN_BC' (do nothing),"
                                      "'FOBB_BC' (First Order Bounce Back),'ThBB_BC' (Thermal Bounce Back), 'VNeq_BC' (Velocity Non-Equilibrium Bounce Back),"
                                      "'PP_BC' (Periodic - meh)", "EQ_BC");
@@ -133,6 +133,7 @@ int main(int argc, char** argv) {
     // setup configuration
     boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
     if (restart > 0) configuration->setRestartAtIteration(restart);
+    configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(parser.getArgument<int>("ncheckpoint"));
     configuration->setOutputSolutionInterval(nout);

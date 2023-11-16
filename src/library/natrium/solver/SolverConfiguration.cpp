@@ -48,7 +48,7 @@ SolverConfiguration::SolverConfiguration() {
 				dealii::Patterns::Selection("SEDG|Semi-Lagrangian"),
 				"The algorithm which is used for the advection (=streaming) step. While the LBM on a uniform mesh facilitates streaming towards a simple index shift, non-uniform meshes need a more sophisticated advection scheme. SEDG stands for spectral element discontinuous Galerkin. Note that the Semi-Lagrangian streaming does not require a time integrator.");
 
-		declare_entry("Support points", "Gauss-Lobatto",
+		declare_entry("Support points", "Gauss-Lobatto-Chebyshev",
 				dealii::Patterns::Selection(
 						"Gauss-Lobatto|Gauss-Lobatto-Chebyshev|Gauss-Chebyshev|Equidistant"),
 				"The support points of the finite elements. For the SEDG streaming, "

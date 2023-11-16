@@ -52,9 +52,9 @@ public:
  * @short
  */
 template<size_t dim>
-double getMinimumDoFDistanceGLL(const Mesh<dim>& tria, const size_t orderOfFiniteElement);
+double getMinimumDoFDistanceGLC(const Mesh<dim>& tria, const size_t orderOfFiniteElement);
 template<size_t dim>
-double getMaximumDoFDistanceGLL(const Mesh<dim>& tria, const size_t orderOfFiniteElement);
+double getMaximumDoFDistanceGLC(const Mesh<dim>& tria, const size_t orderOfFiniteElement);
 
 template<size_t dim>
 double getMinimumDoFDistance(const Mesh<dim>& tria, const dealii::FiniteElement<dim,dim>& fe);

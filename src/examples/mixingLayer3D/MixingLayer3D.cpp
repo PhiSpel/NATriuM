@@ -121,7 +121,7 @@ m_flow(flow), m_randu_scaling(randu_scaling) {
     double dT0  = m_flow->deltaTheta0;
 
     if (is_MPI_rank_0()) {
-        LOG(WELCOME) << "Creating linspaces x, y, z for interpolation." << endl
+        LOG(WELCOME) << "Creating linspaces x, y, z for interpolation from random_u." << endl
                      << "nx: " << nx << ", ny: " << ny << ", nz: " << nz << endl
                      << "lx_u: " << lx_u << ", ly: " << ly_u << ", lz: " << lz_u << endl
                      << "lx_u/dTh0: " << lx_u / dT0 << ", ly/dTh0: " << ly_u / dT0 << ", lz/dTh0: " << lz_u / dT0 << endl;

@@ -66,21 +66,21 @@ void ShearLayerStats::testIntegration() {
     if (is_MPI_rank_0()) {
         LOG(DETAILED) << "Integration test of int_-dOmeg^dOmeg(1) returned "
                       << integrate(ones, -m_currentDeltaOmega, m_currentDeltaOmega)
-                      << " expected " << 2*m_currentDeltaOmega << endl;
+                      << ". Expected " << 2*m_currentDeltaOmega << endl;
         LOG(DETAILED) << "Integration test of int_-dT0^dT0(1) returned "
                       << integrate(ones, -m_currentDeltaTheta_Fa, m_currentDeltaTheta_Fa)
-                      << " expected " << 2*m_currentDeltaTheta_Fa << endl;
+                      << ". Expected " << 2*m_currentDeltaTheta_Fa << endl;
         LOG(DETAILED) << "Integration test of int_-1.222^1.222(1) returned "
                       << integrate(ones, -1.222, 1.222)
-                      << " expected " << 2*1.222 << endl;
+                      << ". Expected " << 2*1.222 << endl;
         LOG(DETAILED) << "Integration test of int_-1^1(1) returned "
                       << integrate(ones, -1, 1)
-                      << " expected 2" << endl;
+                      << ". Expected 2" << endl;
     }
     if (is_MPI_rank_0()) {
         LOG(DETAILED) << "Integration test of int(1) returned "
                       << integrate(ones)
-                      << " expected " << m_ly << endl;
+                      << ". Expected " << m_ly << endl;
     }
 }
 
@@ -246,26 +246,26 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                           << " lx = " << m_lx / dT0 << ", ly = " << m_ly / dT0 << ", lz = " << m_lz / dT0 << endl
                       << "---------------------------------------" << endl;
     }
-    if (is_MPI_rank_0()) {
-        int scaleto = 4;
-        double fac = pow(2., int(m_reflevel)-scaleto);
-        LOG(DETAILED) << "::::::---------------------------------------" << endl
-                      << "Mesh info for ref-level " << scaleto << " (this was " << m_reflevel << ", so multiplying by " << fac << "): " << endl
-                          << " dx in [" << mindeltas_verteces.at(0)*fac << "," << maxdeltas_verteces.at(0)*fac << "], " << endl
-                          << " dy in [" << mindeltas_verteces.at(1)*fac << "," << maxdeltas_verteces.at(1)*fac << "], " << endl
-                          << " dz in [" << mindeltas_verteces.at(2)*fac << "," << maxdeltas_verteces.at(2)*fac << "]." << endl
-                      << "Integration point distances: " << endl
-                          << " dx in [" << mindeltas.at(0)*fac << "," << maxdeltas.at(0)*fac << "], " << endl
-                          << " dy in [" << mindeltas.at(1)*fac << "," << maxdeltas.at(1)*fac << "], " << endl
-                          << " dz in [" << mindeltas.at(2)*fac << "," << maxdeltas.at(2)*fac << "]." << endl
-                          << " DOF distance in [" << dofmin*fac << "," << dofmax*fac << "]." << endl
-                      << "normalized by deltaTheta0: " << endl
-                          << " dx in [" << mindeltas.at(0)*fac / dT0 << "," << maxdeltas.at(0)*fac / dT0 << "], " << endl
-                          << " dy in [" << mindeltas.at(1)*fac / dT0 << "," << maxdeltas.at(1)*fac / dT0 << "], " << endl
-                          << " dz in [" << mindeltas.at(2)*fac / dT0 << "," << maxdeltas.at(2)*fac / dT0 << "]." << endl
-                          << " DOF distance in [" << dofmin*fac / dT0 << "," << dofmax*fac / dT0 << "]." << endl
-                      << "---------------------------------------" << endl;
-    }
+//    if (is_MPI_rank_0()) {
+//        int scaleto = 5;
+//        double fac = pow(2., int(m_reflevel)-scaleto);
+//        LOG(DETAILED) << "::::::---------------------------------------" << endl
+//                      << "Mesh info for ref-level " << scaleto << " (this was " << m_reflevel << ", so multiplying by " << fac << "): " << endl
+//                          << " dx in [" << mindeltas_verteces.at(0)*fac << "," << maxdeltas_verteces.at(0)*fac << "], " << endl
+//                          << " dy in [" << mindeltas_verteces.at(1)*fac << "," << maxdeltas_verteces.at(1)*fac << "], " << endl
+//                          << " dz in [" << mindeltas_verteces.at(2)*fac << "," << maxdeltas_verteces.at(2)*fac << "]." << endl
+//                      << "Integration point distances: " << endl
+//                          << " dx in [" << mindeltas.at(0)*fac << "," << maxdeltas.at(0)*fac << "], " << endl
+//                          << " dy in [" << mindeltas.at(1)*fac << "," << maxdeltas.at(1)*fac << "], " << endl
+//                          << " dz in [" << mindeltas.at(2)*fac << "," << maxdeltas.at(2)*fac << "]." << endl
+//                          << " DOF distance in [" << dofmin*fac << "," << dofmax*fac << "]." << endl
+//                      << "normalized by deltaTheta0: " << endl
+//                          << " dx in [" << mindeltas.at(0)*fac / dT0 << "," << maxdeltas.at(0)*fac / dT0 << "], " << endl
+//                          << " dy in [" << mindeltas.at(1)*fac / dT0 << "," << maxdeltas.at(1)*fac / dT0 << "], " << endl
+//                          << " dz in [" << mindeltas.at(2)*fac / dT0 << "," << maxdeltas.at(2)*fac / dT0 << "]." << endl
+//                          << " DOF distance in [" << dofmin*fac / dT0 << "," << dofmax*fac / dT0 << "]." << endl
+//                      << "---------------------------------------" << endl;
+//    }
 }
 
 void ShearLayerStats::updateYValues() {
@@ -623,62 +623,36 @@ double ShearLayerStats::integrate(vector<double> integrand) {
 
 double ShearLayerStats::integrate(vector<double> integrand, double ymin, double ymax) {
     double integral = 0;
-    double window_size, fi, yi, y_upper, y_lower, y_upper2, y_lower2;
+    double window_size, fi, yi, y_upper2, y_lower2, y_upper, y_lower;
     //// TODO: additional extrapolation
     for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
         yi = m_yCoordinates.at(iy);
         window_size = 0;
+        fi = 0;
         if (iy == 0) {
             if ((ymin < yi) and (yi < ymax)) {// left side: trapezoidal rule
-                window_size = (m_yCoordinates.at(iy + 1) - yi);
+                window_size = m_yCoordinates.at(iy + 1) - yi;
                 fi = (integrand.at(iy) + integrand.at(iy + 1)) / 2;
-            } else {
-                fi = 0;
             }
         } else if (iy == m_nofCoordinates - 1) {
             if ((ymin < yi) and (yi < ymax)) {
-                window_size = (yi - m_yCoordinates.at(iy - 1));
+                window_size = yi - m_yCoordinates.at(iy - 1);
                 fi = (integrand.at(iy) + integrand.at(iy - 1)) / 2;
-            } else {
-                fi = 0;
             }
         } else if ((iy > 0) and (iy < m_nofCoordinates - 1)){
             y_upper = m_yCoordinates.at(iy + 1);
             y_lower = m_yCoordinates.at(iy - 1);
-            if ((ymin < y_lower) and (y_upper < ymax)) { // other: simpson rule
-                y_upper2 = (m_yCoordinates.at(iy + 1) + yi) / 2;
-                y_lower2 = (m_yCoordinates.at(iy - 1) + yi) / 2;
+            if ((ymin < y_upper) and (y_lower < ymax)) { // other: simpson rule
+                y_upper2 = (y_upper + yi) / 2;
+                y_lower2 = (y_lower + yi) / 2;
                 fi = (integrand.at(iy - 1) + 4 * integrand.at(iy) + integrand.at(iy + 1)) / 6;
-                window_size = 0.5 * (y_upper - y_lower);
-                if ((ymin < y_lower2) and (y_upper2 < ymax)) {
-                    // no action required
-                } else if (ymin > y_lower2) {
-                    window_size *= (y_upper2 - ymin) / (y_upper2 - y_lower2);
-                } else if (ymin > y_lower2) {
-                    window_size *= (ymax - y_lower2) / (y_upper2 - y_lower2);
-                }
-            } else {
-                fi = 0;
+                window_size = std::min(y_upper2, ymax) - std::max(y_lower2, ymin);
             }
-        } else {
-            fi = 0;
         }
+//        if (is_MPI_rank_0()) {
+//            cout << "yi="<<yi<<",ymin="<<ymin<<",ymax="<<ymax<<",yl2="<<y_lower2<<",yu2="<<y_upper2<<",l="<<window_size<<endl;
+//        }
         integral += window_size * fi;
-//        if (is_MPI_rank_0()) cout << "iy="<<iy<<",yi="<<yi<<"window_size="<<window_size<<"fi="<<fi;
-//        //// additional for outliers
-//        // left
-//        if ((yi < ymin) and (y_upper > ymin)) {
-//            double fac = (y_upper - ymin) / (y_upper - yi);
-//            window_size = fac * 0.5 * (y_upper - y_lower);
-//            fi = (integrand.at(iy - 1) + 4 * integrand.at(iy) + integrand.at(iy + 1)) / 6;
-//        }
-//        // right
-//        if ((yi > ymax) and (y_lower < ymax)) {
-//            double fac = (ymax - y_lower) / (yi - y_lower);
-//            window_size = fac * 0.5 * (y_upper - y_lower);
-//            fi = (integrand.at(iy - 1) + 4 * integrand.at(iy) + integrand.at(iy + 1)) / 6;
-//        }
-//        integral += window_size * fi;
     }
     return integral;
 }

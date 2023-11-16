@@ -17,6 +17,26 @@
 namespace natrium {
 
 template<size_t dim>
+double CFDSolverUtilities::getMinimumDoFDistanceGLL(const Mesh<dim>& tria, const size_t orderOfFiniteElement) {
+    assert(orderOfFiniteElement >= 1);
+    // calculate minimal distance between vertices of the triangulation
+    double min_vertex_distance = CFDSolverUtilities::getMinimumVertexDistance<dim>(tria);
+
+    // calculate distance between closest quadrature nodes on a line
+    dealii::QGaussLobatto<1> quadrature(orderOfFiniteElement + 1);
+    double min_dof_distance = 10000;
+    for (size_t i = 0; i < orderOfFiniteElement + 1; i++) {
+        for (size_t j = i + 1; j < orderOfFiniteElement + 1; j++) {
+            double pointDist = quadrature.get_points().at(i).distance(quadrature.get_points().at(j));
+            min_dof_distance = std::min(pointDist, min_dof_distance);
+        }
+    }
+    return min_vertex_distance * min_dof_distance;
+}
+template double CFDSolverUtilities::getMinimumDoFDistanceGLL<2>(const Mesh<2>& tria, const size_t orderOfFiniteElement);
+template double CFDSolverUtilities::getMinimumDoFDistanceGLL<3>(const Mesh<3>& tria, const size_t orderOfFiniteElement);
+
+template<size_t dim>
 double CFDSolverUtilities::getMinimumDoFDistanceGLC(const Mesh<dim>& tria, const size_t orderOfFiniteElement) {
     assert(orderOfFiniteElement >= 1);
     // calculate minimal distance between vertices of the triangulation

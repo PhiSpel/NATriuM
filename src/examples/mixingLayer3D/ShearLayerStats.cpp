@@ -46,7 +46,7 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
     }
 
     roundtol = pow(10, -solver.getConfiguration()->getCoordsRound())
-            * CFDSolverUtilities::getMinimumDoFDistanceGLL<3>(*m_solver.getProblemDescription()->getMesh(),
+            * CFDSolverUtilities::getMinimumDoFDistanceGLC<3>(*m_solver.getProblemDescription()->getMesh(),
                                                               m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
     calculateDeltas(starting_delta_theta);
     updateYValues();
@@ -206,9 +206,9 @@ void ShearLayerStats::calculateDeltas(double dT0) {
         mindeltas.at(dim) = dealii::Utilities::MPI::min_max_avg(mindeltas.at(dim), MPI_COMM_WORLD).min;
         maxdeltas.at(dim) = dealii::Utilities::MPI::min_max_avg(maxdeltas.at(dim), MPI_COMM_WORLD).max;
     }
-    double dofmin = CFDSolverUtilities::getMinimumDoFDistanceGLL<3>( *m_solver.getProblemDescription()->getMesh(),
+    double dofmin = CFDSolverUtilities::getMinimumDoFDistanceGLC<3>( *m_solver.getProblemDescription()->getMesh(),
                                                                      m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
-    double dofmax = CFDSolverUtilities::getMaximumDoFDistanceGLL<3>( *m_solver.getProblemDescription()->getMesh(),
+    double dofmax = CFDSolverUtilities::getMaximumDoFDistanceGLC<3>( *m_solver.getProblemDescription()->getMesh(),
                                                                      m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
     vector<double> mindeltas_verteces = CFDSolverUtilities::getMinimumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
     vector<double> maxdeltas_verteces = CFDSolverUtilities::getMaximumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
@@ -246,26 +246,34 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                           << " lx = " << m_lx / dT0 << ", ly = " << m_ly / dT0 << ", lz = " << m_lz / dT0 << endl
                       << "---------------------------------------" << endl;
     }
-//    if (is_MPI_rank_0()) {
-//        int scaleto = 5;
-//        double fac = pow(2., int(m_reflevel)-scaleto);
-//        LOG(DETAILED) << "::::::---------------------------------------" << endl
-//                      << "Mesh info for ref-level " << scaleto << " (this was " << m_reflevel << ", so multiplying by " << fac << "): " << endl
-//                          << " dx in [" << mindeltas_verteces.at(0)*fac << "," << maxdeltas_verteces.at(0)*fac << "], " << endl
-//                          << " dy in [" << mindeltas_verteces.at(1)*fac << "," << maxdeltas_verteces.at(1)*fac << "], " << endl
-//                          << " dz in [" << mindeltas_verteces.at(2)*fac << "," << maxdeltas_verteces.at(2)*fac << "]." << endl
-//                      << "Integration point distances: " << endl
-//                          << " dx in [" << mindeltas.at(0)*fac << "," << maxdeltas.at(0)*fac << "], " << endl
-//                          << " dy in [" << mindeltas.at(1)*fac << "," << maxdeltas.at(1)*fac << "], " << endl
-//                          << " dz in [" << mindeltas.at(2)*fac << "," << maxdeltas.at(2)*fac << "]." << endl
-//                          << " DOF distance in [" << dofmin*fac << "," << dofmax*fac << "]." << endl
-//                      << "normalized by deltaTheta0: " << endl
-//                          << " dx in [" << mindeltas.at(0)*fac / dT0 << "," << maxdeltas.at(0)*fac / dT0 << "], " << endl
-//                          << " dy in [" << mindeltas.at(1)*fac / dT0 << "," << maxdeltas.at(1)*fac / dT0 << "], " << endl
-//                          << " dz in [" << mindeltas.at(2)*fac / dT0 << "," << maxdeltas.at(2)*fac / dT0 << "]." << endl
-//                          << " DOF distance in [" << dofmin*fac / dT0 << "," << dofmax*fac / dT0 << "]." << endl
-//                      << "---------------------------------------" << endl;
-//    }
+    if (is_MPI_rank_0()) {
+        for (int scaleto = 2; scaleto < 7; scaleto ++) {
+            double fac = pow(2., int(m_reflevel) - scaleto);
+            LOG(DETAILED) << "::::::---------------------------------------" << endl
+                          << "Mesh info for ref-level " << scaleto << " (this was " << m_reflevel
+                          << ", so multiplying by " << fac << "): " << endl
+                          << " dx in [" << mindeltas_verteces.at(0) * fac << "," << maxdeltas_verteces.at(0) * fac
+                          << "], " << endl
+                          << " dy in [" << mindeltas_verteces.at(1) * fac << "," << maxdeltas_verteces.at(1) * fac
+                          << "], " << endl
+                          << " dz in [" << mindeltas_verteces.at(2) * fac << "," << maxdeltas_verteces.at(2) * fac
+                          << "]." << endl
+                          << "Integration point distances: " << endl
+                          << " dx in [" << mindeltas.at(0) * fac << "," << maxdeltas.at(0) * fac << "], " << endl
+                          << " dy in [" << mindeltas.at(1) * fac << "," << maxdeltas.at(1) * fac << "], " << endl
+                          << " dz in [" << mindeltas.at(2) * fac << "," << maxdeltas.at(2) * fac << "]." << endl
+                          << " DOF distance in [" << dofmin * fac << "," << dofmax * fac << "]." << endl
+                          << "normalized by deltaTheta0: " << endl
+                          << " dx in [" << mindeltas.at(0) * fac / dT0 << "," << maxdeltas.at(0) * fac / dT0 << "], "
+                          << endl
+                          << " dy in [" << mindeltas.at(1) * fac / dT0 << "," << maxdeltas.at(1) * fac / dT0 << "], "
+                          << endl
+                          << " dz in [" << mindeltas.at(2) * fac / dT0 << "," << maxdeltas.at(2) * fac / dT0 << "]."
+                          << endl
+                          << " DOF distance in [" << dofmin * fac / dT0 << "," << dofmax * fac / dT0 << "]." << endl
+                          << "---------------------------------------" << endl;
+        }
+    }
 }
 
 void ShearLayerStats::updateYValues() {

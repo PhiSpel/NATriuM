@@ -169,9 +169,9 @@ int main(int argc, char** argv) {
                 << "-Ma" << floor(Ma*1000)/1000
                 << "-ref" << ref_level
                 << "-p" << configuration->getSedgOrderOfFiniteElement()
-                << "-mesh" << meshname
+                << "-" << meshname
                 << "-randu" << randuname << "x" << floor(randuscaling*1000)/1000
-                << "-uscale" << uscaling
+//                << "-uscale" << uscaling
                 << "-refT" << reference_temperature << "_" << bc;
 //        dirName << "-coll" << static_cast<int>(configuration->getCollisionScheme())
 //                << "-sl" << static_cast<int>(configuration->getAdvectionScheme())
@@ -194,6 +194,8 @@ int main(int argc, char** argv) {
         m_dirname = parser.getArgument<string>("output-dir");
     }
     configuration->setOutputDirectory(m_dirname);
+
+    if (is_MPI_rank_0()) LOG(BASIC) << "Output is in " << m_dirname;
 
     double deltaTheta0 = 0.093;
     // Grid resolution

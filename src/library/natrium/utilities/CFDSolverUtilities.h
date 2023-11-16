@@ -52,6 +52,8 @@ public:
  * @short
  */
 template<size_t dim>
+double getMinimumDoFDistanceGLL(const Mesh<dim>& tria, const size_t orderOfFiniteElement);
+template<size_t dim>
 double getMinimumDoFDistanceGLC(const Mesh<dim>& tria, const size_t orderOfFiniteElement);
 template<size_t dim>
 double getMaximumDoFDistanceGLC(const Mesh<dim>& tria, const size_t orderOfFiniteElement);

@@ -16,7 +16,7 @@
 namespace natrium {
 
 ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string outdir, double starting_delta_theta,
-                                 double starting_Re, size_t reflevel) :
+                                 double starting_Re, size_t reflevel, vector<unsigned int> repetitions) :
         DataProcessor<3>(solver),
         m_Re0(starting_Re), m_u(solver.getVelocity()), m_rho(solver.getDensity()),
         m_outDir(outdir),
@@ -24,7 +24,8 @@ ShearLayerStats::ShearLayerStats(CompressibleCFDSolver<3> &solver, std::string o
         m_vectorfilename(vectoroutfile(solver.getConfiguration()->getOutputDirectory())),
         m_reflevel(reflevel),
         m_currentDeltaTheta_Fa(starting_delta_theta), m_currentDeltaOmega(0.41),
-        m_b11(0), m_b22(0), m_b33(0), m_b12(0), m_b13(0), m_b23(0), m_K_integrated(0), m_no_stats(solver.getConfiguration()->getNoStatsInterval()) {
+        m_b11(0), m_b22(0), m_b33(0), m_b12(0), m_b13(0), m_b23(0), m_K_integrated(0), m_reps(repetitions),
+        m_no_stats(solver.getConfiguration()->getNoStatsInterval()) {
 
     TimerOutput::Scope timer_section(Timing::getTimer(), "Shearlayer Reporter");
 
@@ -212,6 +213,9 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                                                                      m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
     vector<double> mindeltas_verteces = CFDSolverUtilities::getMinimumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
     vector<double> maxdeltas_verteces = CFDSolverUtilities::getMaximumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
+
+    unsigned int nx = m_reps.at(0)*pow(2,m_reflevel), ny = m_reps.at(1)*pow(2,m_reflevel), nz = m_reps.at(2)*pow(2,m_reflevel);
+    unsigned int nxp = m_xCoordinates.size(), nyp = m_xCoordinates.size(), nzp = m_xCoordinates.size();
     if (is_MPI_rank_0()) {
         double xmin, xmax, ymin, ymax, zmin, zmax;
         xmin = *std::min_element(m_xCoordinates.begin(), m_xCoordinates.end());
@@ -229,12 +233,13 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                           << " x in [" << xmin << "," << xmax << "], " << endl
                           << " y in [" << ymin << "," << ymax << "], " << endl
                           << " z in [" << zmin << "," << zmax << "]." << endl
-                          << " lx = " << m_lx << ", ly = " << m_ly << ", lz = " << m_lz << endl
+                          << " ncells = " << nx << "x" << ny << "x" << nz << " = " << nx*ny*nz << endl
                       << "Integration point distances: " << endl
                           << " dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0) << "], " << endl
                           << " dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1) << "], " << endl
                           << " dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
                           << " DOF distance in [" << dofmin << "," << dofmax << "]." << endl
+                          << " nx = " << nxp << ", ny = " << nyp << ", nz = " << nzp << endl
                       << "normalized by deltaTheta0: " << endl
                           << " dx in [" << mindeltas.at(0) / dT0 << "," << maxdeltas.at(0) / dT0 << "], " << endl
                           << " dy in [" << mindeltas.at(1) / dT0 << "," << maxdeltas.at(1) / dT0 << "], " << endl
@@ -258,11 +263,13 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                           << "], " << endl
                           << " dz in [" << mindeltas_verteces.at(2) * fac << "," << maxdeltas_verteces.at(2) * fac
                           << "]." << endl
+                          << " ncells = " << int(nx/fac) << "x" << int(ny/fac) << "x" << int(nz/fac) << " = " << int(nx*nz*nz/pow(fac,3)) << endl
                           << "Integration point distances: " << endl
                           << " dx in [" << mindeltas.at(0) * fac << "," << maxdeltas.at(0) * fac << "], " << endl
                           << " dy in [" << mindeltas.at(1) * fac << "," << maxdeltas.at(1) * fac << "], " << endl
                           << " dz in [" << mindeltas.at(2) * fac << "," << maxdeltas.at(2) * fac << "]." << endl
                           << " DOF distance in [" << dofmin * fac << "," << dofmax * fac << "]." << endl
+                          << " npoints = " << int(nxp/fac) << "x" << int(nyp/fac) << "x" << int(nzp/fac) << " = " << int(nxp*nyp*nzp/pow(fac,3)) << endl
                           << "normalized by deltaTheta0: " << endl
                           << " dx in [" << mindeltas.at(0) * fac / dT0 << "," << maxdeltas.at(0) * fac / dT0 << "], "
                           << endl

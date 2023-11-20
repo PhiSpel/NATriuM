@@ -207,10 +207,18 @@ void ShearLayerStats::calculateDeltas(double dT0) {
         mindeltas.at(dim) = dealii::Utilities::MPI::min_max_avg(mindeltas.at(dim), MPI_COMM_WORLD).min;
         maxdeltas.at(dim) = dealii::Utilities::MPI::min_max_avg(maxdeltas.at(dim), MPI_COMM_WORLD).max;
     }
-    double dofmin = CFDSolverUtilities::getMinimumDoFDistanceGLC<3>( *m_solver.getProblemDescription()->getMesh(),
-                                                                     m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
-    double dofmax = CFDSolverUtilities::getMaximumDoFDistanceGLC<3>( *m_solver.getProblemDescription()->getMesh(),
-                                                                     m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
+    double dofmin, dofmax;
+    if (m_solver.getConfiguration()->getSupportPoints() == GAUSS_LOBATTO_CHEBYSHEV_POINTS) {
+        dofmin = CFDSolverUtilities::getMinimumDoFDistanceGLC<3>(*m_solver.getProblemDescription()->getMesh(),
+                                                                        m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
+        dofmax = CFDSolverUtilities::getMaximumDoFDistanceGLC<3>(*m_solver.getProblemDescription()->getMesh(),
+                                                                        m_solver.getConfiguration()->getSedgOrderOfFiniteElement());
+    } else if (m_solver.getConfiguration()->getSupportPoints() == EQUIDISTANT_POINTS) {
+        dofmin = CFDSolverUtilities::getMinimumVertexDistance<3>(*m_solver.getProblemDescription()->getMesh());
+        dofmax = CFDSolverUtilities::getMinimumVertexDistance<3>(*m_solver.getProblemDescription()->getMesh());
+    } else {
+        dofmin = 0; dofmax = 0;
+    }
     vector<double> mindeltas_verteces = CFDSolverUtilities::getMinimumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
     vector<double> maxdeltas_verteces = CFDSolverUtilities::getMaximumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
 

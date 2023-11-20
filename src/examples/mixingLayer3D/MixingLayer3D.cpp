@@ -360,6 +360,7 @@ boost::shared_ptr<BoundaryCollection<3> > MixingLayer3D::makeBoundaries() {
     else if (m_bc == "PP_BC") {
         boundaries->addBoundary(boost::make_shared<PeriodicBoundary<3> >(2, 3, 1, getMesh()));
     }
+    if (is_MPI_rank_0()) LOG(DETAILED) << "Boundary condition: " << m_bc << endl;
 
     // set a boundary between 0 and 1, and 4 and 5, with direction 0 (x) and 2 (z), respectively
     boundaries->addBoundary(boost::make_shared<PeriodicBoundary<3> >(0, 1, 0, getMesh()));

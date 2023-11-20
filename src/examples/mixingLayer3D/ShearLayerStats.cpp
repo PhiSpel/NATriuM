@@ -215,7 +215,7 @@ void ShearLayerStats::calculateDeltas(double dT0) {
     vector<double> maxdeltas_verteces = CFDSolverUtilities::getMaximumVertexDistanceDirs<3>(*m_solver.getProblemDescription()->getMesh());
 
     unsigned int nx = m_reps.at(0)*pow(2,m_reflevel), ny = m_reps.at(1)*pow(2,m_reflevel), nz = m_reps.at(2)*pow(2,m_reflevel);
-    unsigned int nxp = m_xCoordinates.size(), nyp = m_xCoordinates.size(), nzp = m_xCoordinates.size();
+    unsigned int nxp = m_xCoordinates.size(), nyp = m_yCoordinates.size(), nzp = m_zCoordinates.size();
     if (is_MPI_rank_0()) {
         double xmin, xmax, ymin, ymax, zmin, zmax;
         xmin = *std::min_element(m_xCoordinates.begin(), m_xCoordinates.end());

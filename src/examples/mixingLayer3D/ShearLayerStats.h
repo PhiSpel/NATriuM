@@ -68,6 +68,7 @@ private:
     vector<double> umag_Re, rho_Re, momentumthickness_integrand;
     vector<double> m_number;
     vector<double> m_K;
+    vector<unsigned int> m_reps;
 
     int m_no_stats;
 
@@ -97,7 +98,7 @@ private:
 
 public:
 	ShearLayerStats(CompressibleCFDSolver<3> & solver, string outdir, double starting_delta_theta, double starting_Re,
-                    size_t reflevel);
+                    size_t reflevel, vector<unsigned int> repetitions);
 	void apply() override;
 	~ShearLayerStats() override;
     bool isMYCoordsUpToDate() const;

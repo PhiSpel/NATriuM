@@ -29,13 +29,6 @@ using namespace std;
 using namespace natrium::DealIIExtensions;
 
 double shearlayerthickness = 0.093;
-//double k0 = 23.66 * shearlayerthickness; // peak wave number
-//int n = 5;
-//int kmax = pow(2, n); // [1] C. Pantano and S. Sarkar, “A study of compressibility effects in the high-speed turbulent shear layer using direct simulation,” J. Fluid Mech., vol. 451, pp. 329–371, Jan. 2002, doi: 10.1017/S0022112001006978.
-// kmax = 32
-//int npoints = 32; // number of points in shortest axis of velocity field (lz, presumably)
-//bool print = false;
-//bool recalculate_psi = true;
 
 namespace natrium {
 

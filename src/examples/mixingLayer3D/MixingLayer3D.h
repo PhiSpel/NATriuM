@@ -121,51 +121,6 @@ namespace natrium {
                 return dealii::Point<3>(in(0), trans(in(1)), in(2));
             }
         };
-        struct UnstructuredGridFunc2 {
-            double m_height;
-            double m_center = 0.7;
-            double m_scaling = 1.5;
-            double m_a, m_b, m_c;
-            UnstructuredGridFunc2(double length, double height, double width, double gridDensity = 0.8) :
-                    m_height(height / 2) {
-                (void) length;
-                (void) width;
-                (void) gridDensity;
-                //// this one uses "m_scaling" to fix the outer width of the domain
-                m_a = (1 - m_scaling) / (-m_center*m_center + 2*m_center - 1);
-                m_b = 1 - 2*m_a*m_center;
-                m_c = m_scaling - m_a + 2*m_center*m_a - 1;
-            }
-            double trans(const double y) const {
-                //// tangential transform
-//                double y_norm = y / m_height;
-//                double y_new_norm = std::tan(y_norm);
-//                double y_new = m_height * y_new_norm; // std::tan(std::tan(std::tan(y_norm)));
-//                if (is_MPI_rank_0()) cout << "y_norm = " << y << "/" << m_height << " = " << y_norm
-//                                          << " -> y_new_norm = tan(tan(" << y_norm << ")) = " << y_new_norm
-//                                          << " -> y_new = " << y_new_norm << "*" << m_height << " = " << y_new << endl;
-//                return y_new;
-                //// other trig. functions (asin, power)
-//                double y_norm = y / m_height;
-//                double y_new_norm = std::asin(y_norm); //; std::pow(y_norm, 5);
-//                double y_new = m_height * y_new_norm;
-//                return y_new;
-                //// custom function (linear in 70% of domain, polynomail otherwise)
-                //// this one uses "m_scaling" to fix the outer width of the domain
-                double y_norm = y / m_height;
-                if (std::abs(y_norm) < m_center) return y_norm * m_height;
-                int sign = 1;
-                if (y_norm < 0) {
-                    sign = -1;
-                    y_norm = std::abs(y_norm);
-                }
-                double y_new_norm = m_a*y_norm*y_norm + m_b*y_norm + m_c;
-                return m_height * y_new_norm * sign;
-            }
-            dealii::Point<3> operator()(const dealii::Point<3> &in) const {
-                return dealii::Point<3>(in(0), trans(in(1)), in(2));
-            }
-        };
         virtual void transform(Mesh<3>& mesh) {
             // transform grid to unstructured grid
             dealii::GridTools::transform(UnstructuredGridFunc(ly, m_center, m_scaling), mesh);
@@ -225,28 +180,6 @@ namespace natrium {
             lx = maxx-minx;
             ly = maxy-miny;
             lz = maxz-minz;
-
-//            if (is_MPI_rank_0()) {
-//                LOG(DETAILED) << "---------------------------------------" << endl
-//                << "Mesh info before transform(): " << endl << "dx in [" << mindeltas.at(0) << "," << maxdeltas.at(0)
-//                << "], dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1)
-//                << "], dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl;
-//                //// Print boundary indicators
-//                map<types::boundary_id, unsigned int> boundary_count;
-//                for (auto cell: mesh.active_cell_iterators()) {
-//                    for (unsigned int face = 0; face < GeometryInfo<3>::faces_per_cell; ++face) {
-//                        if (cell->face(face)->at_boundary()) boundary_count[cell->face(face)->boundary_id()]++;
-//                    }
-//                }
-//                LOG(DETAILED) << " domain limits: x in[" << minx << "," << maxx
-//                    << "], y in [" << miny << "," << maxy
-//                    << "], z in [" << minz << "," << maxz << "]" << endl
-//                    << " boundary indicators: ";
-//                for (const pair<const types::boundary_id, unsigned int> &pair: boundary_count) {
-//                    LOG(DETAILED) << pair.first << "(" << pair.second << " times) ";
-//                }
-//                LOG(DETAILED) << endl << "---------------------------------------" << endl;
-//            }
 	    }
         double lx, ly, lz, m_center, m_scaling, deltaTheta0;
 

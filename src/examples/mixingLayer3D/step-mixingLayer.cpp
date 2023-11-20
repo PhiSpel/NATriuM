@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
     parser.setArgument<string>("bc", "Boundary condition. Choose between 'EQ_BC' (equilibrium), 'DN_BC' (do nothing),"
                                      "'FOBB_BC' (First Order Bounce Back),'ThBB_BC' (Thermal Bounce Back), 'VNeq_BC' (Velocity Non-Equilibrium Bounce Back),"
                                      "'PP_BC' (Periodic - meh)", "EQ_BC");
+    parser.setArgument<string>("support", "support points", "glc");
     parser.setArgument<int>("order", "order of finite elements", 4);
     parser.setArgument<int>("ref-level", "Refinement level of the computation grid.", 1);
     parser.setArgument<int>("grid-repetitions",
@@ -85,6 +86,11 @@ int main(int argc, char** argv) {
     if ((bc != "DN_BC") and (bc != "EQ_BC") and (bc != "FOBB_BC") and (bc != "ThBB_BC") and (bc != "VNeq_BC") and (bc != "PP_BC")) {
         if (is_MPI_rank_0()) LOG(BASIC) << "Invalid boundary condition option! Fallback to default (EQ_BC)." << endl << endl;
         bc = "EQ_BC";
+    }
+    auto sup = parser.getArgument<string>("support");
+    if ((sup != "glc") and (sup != "equi")) {
+        if (is_MPI_rank_0()) LOG(BASIC) << "Invalid support points! Fallback to 'glc' (GAUSS_LOBATTO_CHEBYCHEF)." << endl << endl;
+        sup = "glc";
     }
     double randuscaling = parser.getArgument<double>("randuscaling");
     double uscaling = parser.getArgument<double>("uscaling");
@@ -133,7 +139,9 @@ int main(int argc, char** argv) {
     // setup configuration
     boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
     if (restart > 0) configuration->setRestartAtIteration(restart);
-    configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
+    if (sup == "equi") configuration->setSupportPoints(EQUIDISTANT_POINTS);
+    else configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
+    if (is_MPI_rank_0()) LOG(DETAILED) << "Support points set to " << configuration->getSupportPoints() << endl;
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(parser.getArgument<int>("ncheckpoint"));
     configuration->setOutputSolutionInterval(nout);

@@ -84,12 +84,16 @@ int main(int argc, char** argv) {
     auto randuname = parser.getArgument<string>("randuname");
     auto bc = parser.getArgument<string>("bc");
     if ((bc != "DN_BC") and (bc != "EQ_BC") and (bc != "FOBB_BC") and (bc != "ThBB_BC") and (bc != "VNeq_BC") and (bc != "PP_BC")) {
-        if (is_MPI_rank_0()) LOG(BASIC) << "Invalid boundary condition option! Fallback to default (EQ_BC)." << endl << endl;
+        if (is_MPI_rank_0()) {
+            LOG(WELCOME) << "Invalid boundary condition option! Fallback to default (EQ_BC)." << endl << endl;
+        }
         bc = "EQ_BC";
     }
     auto sup = parser.getArgument<string>("support");
     if ((sup != "glc") and (sup != "equi")) {
-        if (is_MPI_rank_0()) LOG(BASIC) << "Invalid support points! Fallback to 'glc' (GAUSS_LOBATTO_CHEBYCHEF)." << endl << endl;
+        if (is_MPI_rank_0()) {
+            LOG(WELCOME) << "Invalid support points! Fallback to 'glc' (GAUSS_LOBATTO_CHEBYCHEF)." << endl << endl;
+        }
         sup = "glc";
     }
     double randuscaling = parser.getArgument<double>("randuscaling");
@@ -141,7 +145,9 @@ int main(int argc, char** argv) {
     if (restart > 0) configuration->setRestartAtIteration(restart);
     if (sup == "equi") configuration->setSupportPoints(EQUIDISTANT_POINTS);
     else configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
-    if (is_MPI_rank_0()) LOG(DETAILED) << "Support points set to " << configuration->getSupportPoints() << endl;
+    if (is_MPI_rank_0()) {
+        LOG(WELCOME) << "Support points set to " << configuration->getSupportPoints() << endl;
+    }
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(parser.getArgument<int>("ncheckpoint"));
     configuration->setOutputSolutionInterval(nout);
@@ -203,8 +209,6 @@ int main(int argc, char** argv) {
     }
     configuration->setOutputDirectory(m_dirname);
 
-    if (is_MPI_rank_0()) LOG(BASIC) << "Output is in " << m_dirname;
-
     double deltaTheta0 = 0.093;
     // Grid resolution
     double len_x = parser.getArgument<double>("lx") * deltaTheta0;
@@ -238,6 +242,7 @@ int main(int argc, char** argv) {
                      << int(repetitions.at(0)*repetitions.at(1)*repetitions.at(2) * pow(2,3*ref_level) * p*p*p) << endl
                      << "               dt  = " << dt << endl
                      << "===================================================" << endl
+                     << "Output is in " << m_dirname
                      << endl;
     }
 //    MixingLayer3D::UnstructuredGridFunc trafo(mixingLayer->lx, mixingLayer->lx, mixingLayer->lx);

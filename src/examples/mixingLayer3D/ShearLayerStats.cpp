@@ -247,7 +247,7 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                           << " dy in [" << mindeltas.at(1) << "," << maxdeltas.at(1) << "], " << endl
                           << " dz in [" << mindeltas.at(2) << "," << maxdeltas.at(2) << "]." << endl
                           << " DOF distance in [" << dofmin << "," << dofmax << "]." << endl
-                          << " nx = " << nxp << ", ny = " << nyp << ", nz = " << nzp << endl
+                          << " npoints = " << nxp << "x" << nyp << "x" << nzp << " = " << nxp*nyp*nzp << endl
                       << "normalized by deltaTheta0: " << endl
                           << " dx in [" << mindeltas.at(0) / dT0 << "," << maxdeltas.at(0) / dT0 << "], " << endl
                           << " dy in [" << mindeltas.at(1) / dT0 << "," << maxdeltas.at(1) / dT0 << "], " << endl
@@ -271,7 +271,7 @@ void ShearLayerStats::calculateDeltas(double dT0) {
                           << "], " << endl
                           << " dz in [" << mindeltas_verteces.at(2) * fac << "," << maxdeltas_verteces.at(2) * fac
                           << "]." << endl
-                          << " ncells = " << int(nx/fac) << "x" << int(ny/fac) << "x" << int(nz/fac) << " = " << int(nx*nz*nz/pow(fac,3)) << endl
+                          << " ncells = " << int(nx/fac) << "x" << int(ny/fac) << "x" << int(nz/fac) << " = " << int(nx*ny*nz/pow(fac,3)) << endl
                           << "Integration point distances: " << endl
                           << " dx in [" << mindeltas.at(0) * fac << "," << maxdeltas.at(0) * fac << "], " << endl
                           << " dy in [" << mindeltas.at(1) * fac << "," << maxdeltas.at(1) * fac << "], " << endl

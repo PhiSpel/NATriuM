@@ -45,13 +45,13 @@ int main(int argc, char** argv) {
     parser.setArgument<double>("Ma", "Mach number", 0.3);
     parser.setArgument<double>("time", "simulation time (s)", 15);
     parser.setArgument<double>("uscaling", "factor to scale U1, i.e. deltaUx", 1);
-    parser.setArgument<double>("CFL", "CFL number. Should be between 0.4 and 2", 1);
+//    parser.setArgument<double>("CFL", "CFL number. Should be between 0.4 and 2", 1);
     parser.setArgument<double>("gamma", "Heat capacity ratio. Should be 1.4", 1.4);
     parser.setArgument<double>("ref-temp", "Reference temperature. Should be between 0.85 and 1 (lower may be more stable).", 1);
     parser.setArgument<double>("lx", "Half length in x-direction (multiples of deltaTheta0)", 160);
     parser.setArgument<double>("ly", "Half length in y-direction (multiples of deltaTheta0)", 80);
     parser.setArgument<double>("lz", "Half length in z-direction (multiples of deltaTheta0)", 40);
-    parser.setArgument<int>("nout", "output vtk every nout steps", 2000);
+//    parser.setArgument<int>("nout", "output vtk every nout steps", 2000);
     parser.setArgument<int>("ncheckpoint", "output checkpoint every ncheckpoint steps", 20000);
     parser.setArgument<int>("n-no-out", "do not output vtk before iteration n-no-out", -1);
     parser.setArgument<int>("n-no-stats", "do not output stats before iteration n-no-stats", -1);
@@ -74,6 +74,7 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("rep-x", "Number of repetitions in x-direction (to refine the grid in steps that are not 2^N).", 4);
     parser.setArgument<int>("rep-y", "cf. rep-x", 2);
     parser.setArgument<int>("rep-z", "cf. rep-x", 1);
+    parser.setArgument<int>("Q", "Number of abscissas. Set to 77 for crazy velocity space", 45);
     parser.setArgument<double>("center", "Central part with high-res grid, choose between 0.1 and 1", 0.7);
     parser.setArgument<double>("dy-scaling", "scale dy to dy-scaling-times the element size (<1 to refine boundaries, >1 to loosen, 1 for equidistant mesh)", 3);
 
@@ -106,7 +107,7 @@ int main(int argc, char** argv) {
     repetitions.at(1) = parser.getArgument<int>("rep-y");
     repetitions.at(2) = parser.getArgument<int>("rep-z");
 
-    long nout = parser.getArgument<int>("nout");
+//    long nout = parser.getArgument<int>("nout");
     auto time = parser.getArgument<double>("time");
     const int restart = parser.getArgument<int>("restart");
     if ((restart > 0) and is_MPI_rank_0()) {
@@ -131,7 +132,7 @@ int main(int argc, char** argv) {
     //const double L = 2 * M_PI;
     const double viscosity = 1.0 / Re;
     const double Ma = parser.getArgument<double>("Ma")*sqrt(1.4);
-    const auto cfl = parser.getArgument<double>("CFL");
+//    const auto cfl = parser.getArgument<double>("CFL");
 //    const double cs = U / Ma;
 
     // chose scaling so that the right Ma-number is achieved
@@ -150,7 +151,7 @@ int main(int argc, char** argv) {
     }
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(parser.getArgument<int>("ncheckpoint"));
-    configuration->setOutputSolutionInterval(nout);
+//    configuration->setOutputSolutionInterval(nout);
     configuration->setNoOutputInterval(parser.getArgument<int>("n-no-out"));
     configuration->setNoStatsInterval(parser.getArgument<int>("n-no-stats"));
     configuration->setSimulationEndTime(time);
@@ -161,14 +162,18 @@ int main(int argc, char** argv) {
     configuration->setOutputShearLayerInterval(parser.getArgument<int>("nstats"));
     configuration->setMachNumber(Ma);
     configuration->setStencilScaling(scaling);
-    configuration->setStencil(Stencil_D3Q45);
+    if (parser.getArgument<int>("Q") == 77) {
+        configuration->setStencil(Stencil_D3Q77);
+    } else {
+        configuration->setStencil(Stencil_D3Q45);
+    }
     configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
     configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
     configuration->setHeatCapacityRatioGamma(gamma);
     configuration->setReferenceTemperature(reference_temperature);
     configuration->setPrandtlNumber(0.71);
     configuration->setSedgOrderOfFiniteElement(parser.getArgument<int>("order")); // TODO: set to 4
-    configuration->setCFL(cfl); // TODO: should be 0.4<CFL<2
+//    configuration->setCFL(cfl); // TODO: should be 0.4<CFL<2
     configuration->setServerEndTime(parser.getArgument<int>("server-end"));
 //    configuration->setInitializationScheme(COMPRESSIBLE_ITERATIVE);
 
@@ -204,10 +209,10 @@ int main(int argc, char** argv) {
             dirName << "-relax" << static_cast<int>(configuration->getMRTRelaxationTimes());
         }
         m_dirname = dirName.str();
-    } else {
-        m_dirname = parser.getArgument<string>("output-dir");
-    }
-    configuration->setOutputDirectory(m_dirname);
+        configuration->setOutputDirectory(m_dirname);
+    } //else {
+//        m_dirname = parser.getArgument<string>("output-dir");
+//    }
 
     double deltaTheta0 = 0.093;
     // Grid resolution

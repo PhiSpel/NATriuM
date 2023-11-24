@@ -40,7 +40,7 @@ private:
 
 public:
 	CompressibleCFDSolver(boost::shared_ptr<SolverConfiguration> configuration,
-			boost::shared_ptr<ProblemDescription<dim> > problemDescription) :
+			boost::shared_ptr<ProblemDescription<dim>> problemDescription) :
             CFDSolver<dim>(configuration, problemDescription) {
 
         m_tstart = clock();

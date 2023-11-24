@@ -23,8 +23,8 @@ namespace natrium {
 
 
 DiamondObstacle2D::DiamondObstacle2D(double velocity, double viscosity,
-		size_t refinementLevel) :
-		ProblemDescription<2>(makeGrid(refinementLevel), viscosity, 1.0), m_meanInflowVelocity(
+		size_t refinementLevel, int aoa) :
+		ProblemDescription<2>(makeGrid(refinementLevel, aoa), viscosity, 1.0), m_meanInflowVelocity(
 				velocity), m_refinementLevel(refinementLevel) {
 
 	/// apply boundary values
@@ -35,17 +35,12 @@ DiamondObstacle2D::DiamondObstacle2D(double velocity, double viscosity,
 	F[0] = Fx;
 			F[0] = Fx*0.04;
 	//setExternalForce(boost::make_shared<ConstantExternalForce<2> >(F));
-
 			this->setInitialU(boost::make_shared<InitialVelocity>(this));
 			this->setInitialRho(boost::make_shared<InitialDensity>(this));
 		    this->setInitialT(boost::make_shared<InitialTemperature>(this));
-
-
 }
 
-DiamondObstacle2D::~DiamondObstacle2D() {
-}
-
+DiamondObstacle2D::~DiamondObstacle2D() {}
 
 /**
  * @short Read the mesh given in deal.ii's step-35
@@ -53,31 +48,26 @@ DiamondObstacle2D::~DiamondObstacle2D() {
  */
 double DiamondObstacle2D::InitialVelocity::value(const dealii::Point<2>& x,
 		const unsigned int component) const {
-    if (component == 0) {
-    return this->m_flow->m_meanInflowVelocity;
-    }
-	if (component == 1) {
-	return this->m_flow->m_meanInflowVelocity*sin(x[1]*1.3+0.1)*0.1;}
-
+    assert (component < 2);
+    if (component == 0) return this->m_flow->m_meanInflowVelocity;
+	else return this->m_flow->m_meanInflowVelocity*sin(x[1]*1.3+0.1)*0.1;
 }
 
 double DiamondObstacle2D::InitialDensity::value(const dealii::Point<2>& x, const unsigned int component) const {
-
-
-                return 1.0;
-
-
-
-
+    (void) x;
+    (void) component;
+    return 1.0;
 }
 
 double DiamondObstacle2D::InitialTemperature::value(const dealii::Point<2>& x, const unsigned int component) const {
-
-return 1.0;
+    (void) x;
+    (void) component;
+    return 1.0;
 }
 
 boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
-		size_t refinementLevel) {
+		size_t refinementLevel, int aoa) {
+    (void) refinementLevel;
 	//Read in grid
 	//Taken from step-35 in deal.ii
 	dealii::GridIn<2> grid_in;
@@ -85,14 +75,15 @@ boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
 	grid_in.attach_triangulation(*mesh);
 	{
 		std::stringstream filename;
-		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/naca12_2d.msh";
+		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/NACA0012_" << aoa << "deg.msh";
 		std::ifstream file(filename.str().c_str());
 		assert(file);
+        cout << "Reading " << filename.str() << endl;
 		grid_in.read_msh(file);
 	}
 	// mesh->refine_global (refinementLevel);
-	 mesh->get_boundary_ids();
-
+    cout << "Getting boundaries" << endl;
+    mesh->get_boundary_ids();
 	return mesh;
 }
 
@@ -104,40 +95,32 @@ boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
 boost::shared_ptr<BoundaryCollection<2> > DiamondObstacle2D::makeBoundaries() {
 
 	// make boundary description
-	boost::shared_ptr<BoundaryCollection<2> > boundaries = boost::make_shared<
-			BoundaryCollection<2> >();
-	dealii::Vector<double> zeroVector(2);
-	zeroVector[0]=m_meanInflowVelocity;
-	zeroVector[1]=0.0;
+	boost::shared_ptr<BoundaryCollection<2>> boundaries = boost::make_shared<BoundaryCollection<2>>();
+	dealii::Vector<double> inflow(2);
+	inflow[0]=m_meanInflowVelocity;
+	inflow[1]=0.0;
 
     dealii::Tensor<1, 2> u;
-    u[0] = zeroVector(0);
-    u[1] = zeroVector(1);
+    u[0] = inflow(0);
+    u[1] = inflow(1);
 
+    dealii::Tensor<1, 2> profile;
+        profile[0] = 0.0;
+        profile[1] = 0.0;
 
-    dealii::Tensor<1, 2> v;
-    v[0] = 0.0;
-    v[1] = 0.0;
+	std::vector<double> oneVector = {m_meanInflowVelocity, 1.0};
+//    oneVector[0]=m_meanInflowVelocity;
+//    oneVector[1]=1.0;
+	boost::shared_ptr<dealii::Function<2>> boundary_density = boost::make_shared<dealii::Functions::ConstantFunction<2>> (1.0);
+	boost::shared_ptr<dealii::Function<2>> boundary_velocity = boost::make_shared<InflowVelocity> (m_meanInflowVelocity);
 
-
-	dealii::Vector<double> oneVector(2);
-		oneVector[0]=m_meanInflowVelocity;
-        oneVector[1]=1.0;
-	boost::shared_ptr<dealii::Function<2> > boundary_density = boost::make_shared<
-			dealii::ConstantFunction<2> > (1.0);
-	boost::shared_ptr<dealii::Function<2> > boundary_velocity = boost::make_shared<
-			InflowVelocity> (m_meanInflowVelocity);
-	boundaries->addBoundary(
-            boost::make_shared<SLEquilibriumBoundary<2> >(101, zeroVector));
-	//boundaries->addBoundary(
-        //    boost::make_shared<DoNothingBoundary<2> >(102));
-	//boundaries->addBoundary(
-        //    boost::make_shared<DoNothingBoundary<2> >(103));
-	boundaries->addBoundary(
-            boost::make_shared<DoNothingBoundary<2> >(104));
-
-	boundaries->addBoundary(
-            boost::make_shared<VelocityNeqBounceBack<2> >(100, v));
+    boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<2>>(300, inflow));
+    boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<2>>(302, inflow)); // outflow
+	//boundaries->addBoundary(boost::make_shared<DoNothingBoundary<2> >(102));
+	//boundaries->addBoundary(boost::make_shared<DoNothingBoundary<2> >(103));
+	boundaries->addBoundary(boost::make_shared<DoNothingBoundary<2>>(301)); // sponge
+    boundaries->addBoundary(boost::make_shared<VelocityNeqBounceBack<2>>(303, profile));
+//    boundaries->addBoundary(boost::make_shared<Bounce<2>>(2, profile));
 
 	// Get the triangulation object (which belongs to the parent class).
 	boost::shared_ptr<Mesh<2> > tria_pointer = getMesh();

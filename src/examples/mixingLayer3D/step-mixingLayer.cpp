@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
                             "Number of grid cells along each axis before global refinement; "
                             "to produce grids with refinements that are not powers of two.", 1);
     parser.setArgument<int>("restart", "Restart at iteration ...", 0);
-    parser.setArgument<int>("server-end", "Maximum server time [s]", 82800);
+    parser.setArgument<int>("server-end", "Maximum server time [s]", 70000);
     parser.setArgument<int>("rep-x", "Number of repetitions in x-direction (to refine the grid in steps that are not 2^N).", 4);
     parser.setArgument<int>("rep-y", "cf. rep-x", 2);
     parser.setArgument<int>("rep-z", "cf. rep-x", 1);

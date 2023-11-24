@@ -35,9 +35,9 @@ int main(int argc, char** argv) {
     CommandLineParser parser(argc, argv);
     parser.setArgument<double>("Ma", "Mach number", 0.1);
     parser.setArgument<int>("Re", "Reynolds number", 100);
-    parser.setArgument<int>("ref-level", "Refinement level", 1);
+    parser.setArgument<int>("ref-level", "Refinement level", 0);
     parser.setArgument<int>("aoa", "Angle of attack", 0);
-
+    parser.setArgument<int>("server-end", "Maximum server time [s]", 70000);
 
     try {
         parser.importOptions();
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    LOG(WELCOME) << "Starting NATriuM step-grid-in..." << endl;
+    if (is_MPI_rank_0()) LOG(WELCOME) << "Starting NATriuM step-grid-in..." << endl;
     const int refLevel = parser.getArgument<int>("ref-level");
 
     // set Reynolds and Mach number
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 	configuration->setOutputDirectory(dirname.str());
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(10000);
-	configuration->setOutputSolutionInterval(100);
+	configuration->setOutputSolutionInterval(250);
     configuration->setStencilScaling(scaling);
 	configuration->setNumberOfTimeSteps(200000);
 	//configuration->setTimeIntegrator(EXPONENTIAL);
@@ -84,13 +84,14 @@ int main(int argc, char** argv) {
 	configuration->setStencil(Stencil_D2Q25H);
     configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
     configuration->setCollisionScheme(BGK_STANDARD);
+    configuration->setServerEndTime(parser.getArgument<int>("server-end"));
 
     parser.applyToSolverConfiguration(*configuration);
 
     CompressibleCFDSolver<2> solver(configuration, obstacle_flow);
     solver.run();
 
-    LOG(WELCOME) << "NATriuM step-grid-in terminated." << endl;
+    if (is_MPI_rank_0()) LOG(WELCOME) << "NATriuM step-grid-in terminated." << endl;
 
 	return 0;
 }

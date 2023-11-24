@@ -20,18 +20,17 @@ namespace natrium {
  * @short Description of a flow around a diamond-shaped obstacle
  */
 class DiamondObstacle2D: public ProblemDescription<2> {
+
 private:
 	double m_meanInflowVelocity;
 	size_t m_refinementLevel;
-public:
 
+public:
 	class InitialVelocity: public dealii::Function<2> {
 	private:
 		DiamondObstacle2D* m_flow;
 	public:
-		InitialVelocity(DiamondObstacle2D* flow) :
-				m_flow(flow) {
-		}
+		InitialVelocity(DiamondObstacle2D* flow) : m_flow(flow) { }
 		virtual double value(const dealii::Point<2>& x, const unsigned int component=0) const;
 	};
 
@@ -39,12 +38,8 @@ public:
 	private:
 		DiamondObstacle2D* m_flow;
 	public:
-		InitialDensity(DiamondObstacle2D* flow) :
-				m_flow(flow) {
-		}
+		InitialDensity(DiamondObstacle2D* flow) : m_flow(flow) { }
 		virtual double value(const dealii::Point<2>& x, const unsigned int component=0) const;
-
-
 	};
 
 	class InitialTemperature: public dealii::Function<2> {
@@ -61,65 +56,40 @@ public:
 	private:
 		double m_averageU;
 	public:
-		InflowVelocity(double av_U) :
-				m_averageU(av_U) {
-
-		}
-		virtual double value(const dealii::Point<2> &x,
-				const unsigned int component) const {
-			double H = 4.1;
+		InflowVelocity(double av_U) : m_averageU(av_U) {}
+		virtual double value(const dealii::Point<2> &x, const unsigned int component) const {
+//			double H = 4.1;
+            (void) x;
 			if (component == 0) {
 				//return 4 * m_averageU * x(1) * (H - x(1)) / (H * H);
 				return m_averageU;
 			}
 			return 0.0;
 		}
-		virtual void vector_value(const dealii::Point<2> &x,
-				dealii::Vector<double> &return_value) const {
+		virtual void vector_value(const dealii::Point<2> &x, dealii::Vector<double> &return_value) const {
 			return_value(0) = value(x, 0);
 			return_value(1) = 0.0;
 		}
 	};
 	/// constructor
-	DiamondObstacle2D(double velocity, double viscosity,
-			size_t refinementLevel);
+	DiamondObstacle2D(double velocity, double viscosity, size_t refinementLevel, int aoa);
 
 	/// destructor
 	virtual ~DiamondObstacle2D();
-
 	virtual double getCharacteristicVelocity() const {
 		return m_meanInflowVelocity;
 	}
-
 	virtual void refine(Mesh<2>& mesh) {
 		mesh.refine_global(m_refinementLevel);
 	}
-	virtual void transform(Mesh<2>& ){
-
-	}
+	virtual void transform(Mesh<2>& ){}
 	virtual bool isCartesian(){
 		return false;
 	}
+
 private:
-
-	/**
-	 * @short create triangulation for lid-driven cavity flow.
-	 * @param refinementLevel (denoted as N) The grid will have 2^n*2^n even-sized square cells
-	 * @return shared pointer to a triangulation instance
-	 */
-	boost::shared_ptr<Mesh<2> > makeGrid(size_t refinementLevel);
-
-	/**
-	 * @short create boundaries for lid-driven cavity flow
-	 * @return shared pointer to BoundaryCollection. BoundaryCollection is a container class for
-	 *         the specified boundary conditions.
-	 * @note All boundary types are inherited of the class Boundary
-	 *       Here, we have four wall boundaries. One of them (the upper one)
-	 *       has a tangential speed.
-	 */
+	boost::shared_ptr<Mesh<2> > makeGrid(size_t refinementLevel, int aoa);
 	boost::shared_ptr<BoundaryCollection<2> > makeBoundaries();
-
-
 };
 
 } /* namespace natrium */

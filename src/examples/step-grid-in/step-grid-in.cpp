@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
     parser.setArgument<double>("Ma", "Mach number", 0.1);
     parser.setArgument<int>("Re", "Reynolds number", 100);
     parser.setArgument<int>("ref-level", "Refinement level", 1);
-    parser.setArgument<int>("compressible", "Compressible CFD solver needed?", 0);
+    parser.setArgument<int>("aoa", "Angle of attack", 0);
 
 
     try {
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    pout << "Starting NATriuM step-grid-in..." << endl;
+    LOG(WELCOME) << "Starting NATriuM step-grid-in..." << endl;
     const int refLevel = parser.getArgument<int>("ref-level");
 
     // set Reynolds and Mach number
@@ -135,24 +135,20 @@ int main(int argc, char** argv) {
 
     // set Problem so that the right Re and Ma are achieved
     double U = 1;
-    double scaling = 1;
-    if(static_cast<bool>(parser.getArgument<int>("compressible"))==true) {
-        scaling /= sqrt(gamma);
-    }
-    scaling*=sqrt(3)/Ma;
+    double scaling = sqrt(3)/ (Ma * sqrt(gamma));
     const double viscosity = U / Re; // (because L = 1)
+    int aoa = parser.getArgument<int>("aoa");
 
     // make problem and solver objects
-	boost::shared_ptr<ProblemDescription<2> >  obstacle_flow = boost::make_shared<
-			DiamondObstacle2D>(U, viscosity, refLevel);
+	boost::shared_ptr<ProblemDescription<2>> obstacle_flow
+        = boost::make_shared<DiamondObstacle2D>(U, viscosity, refLevel, aoa);
 	//! [Problem]
 
 	//! [Configuration]
 	std::stringstream dirname;
-    dirname << getenv("NATRIUM_HOME") << "/step-grid-in/Re" << Re << "-Ma" << Ma << "-reflevel" << refLevel << "-time"
-            << std::time(0);
-	boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<
-			SolverConfiguration>();
+    dirname << getenv("NATRIUM_HOME") << "/step-grid-in/Re" << Re << "-Ma" << Ma << "-reflevel" << refLevel
+            << "-aoa" << aoa << "-time" << std::time(nullptr);
+	boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
 	configuration->setOutputDirectory(dirname.str());
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(10000);
@@ -162,21 +158,14 @@ int main(int argc, char** argv) {
 	//configuration->setTimeIntegrator(EXPONENTIAL);
 	configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
 	configuration->setForcingScheme(NO_FORCING);
-	configuration->setStencil(Stencil_D2Q9);
+	configuration->setStencil(Stencil_D2Q19V);
 
     parser.applyToSolverConfiguration(*configuration);
 
-    if(static_cast<bool>(parser.getArgument<int>("compressible"))!=true) {
-        CFDSolver<2> solver(configuration, obstacle_flow);
-        solver.run();
-    }
-    else
-    {
-        CompressibleCFDSolver<2> solver(configuration, obstacle_flow);
-        solver.run();
-    }
+    CompressibleCFDSolver<2> solver(configuration, obstacle_flow);
+    solver.run();
 
-	pout << "NATriuM step-grid-in terminated." << endl;
+    LOG(WELCOME) << "NATriuM step-grid-in terminated." << endl;
 
 	return 0;
 }

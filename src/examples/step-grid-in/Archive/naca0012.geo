@@ -639,3 +639,5 @@ Physical Line(15) = {9, 10, 12};
 Physical Line(16) = {11};
 Physical Line(17) = {6, 7};
 Physical Surface(18) = {14};
+//+
+Transfinite Surface {14};

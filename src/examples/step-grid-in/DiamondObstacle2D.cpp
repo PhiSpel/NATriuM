@@ -71,11 +71,11 @@ boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
 	//Read in grid
 	//Taken from step-35 in deal.ii
 	dealii::GridIn<2> grid_in;
-	boost::shared_ptr<Mesh<2> > mesh = boost::make_shared<Mesh<2> >(MPI_COMM_WORLD);
+	boost::shared_ptr<Mesh<2>> mesh = boost::make_shared<Mesh<2>>(MPI_COMM_WORLD);
 	grid_in.attach_triangulation(*mesh);
 	{
 		std::stringstream filename;
-		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/NACA0012_" << aoa << "deg.msh";
+		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/NACA0012_" << aoa << "deg.msh"; // "/src/examples/step-grid-in/Archive/naca0012_supersonic.msh";//
 		std::ifstream file(filename.str().c_str());
 		assert(file);
         cout << "Reading " << filename.str() << endl;

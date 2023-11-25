@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
 
     MPIGuard::getInstance();
     CommandLineParser parser(argc, argv);
-    parser.setArgument<double>("Ma", "Mach number", 0.1);
-    parser.setArgument<int>("Re", "Reynolds number", 100);
+    parser.setArgument<double>("Ma", "Mach number", 1.5);
+    parser.setArgument<int>("Re", "Reynolds number", 10000);
     parser.setArgument<int>("ref-level", "Refinement level", 0);
     parser.setArgument<int>("aoa", "Angle of attack", 0);
     parser.setArgument<int>("server-end", "Maximum server time [s]", 70000);

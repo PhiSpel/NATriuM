@@ -74,17 +74,18 @@ int main(int argc, char** argv) {
 	boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
 	configuration->setOutputDirectory(dirname.str());
     configuration->setUserInteraction(false);
-    configuration->setOutputCheckpointInterval(10000);
-	configuration->setOutputSolutionInterval(250);
+    configuration->setOutputCheckpointInterval(100000);
+	configuration->setOutputSolutionInterval(10000);
     configuration->setStencilScaling(scaling);
 	configuration->setNumberOfTimeSteps(200000);
 	//configuration->setTimeIntegrator(EXPONENTIAL);
 	configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
     configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
-	configuration->setForcingScheme(NO_FORCING);
+	// configuration->setForcingScheme(NO_FORCING);
 	configuration->setStencil(Stencil_D2Q25H);
-    configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
+    // configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
     configuration->setCollisionScheme(BGK_STANDARD);
+    // configuration->setSimulationEndTime(30);
     configuration->setServerEndTime(parser.getArgument<int>("server-end"));
 
     parser.applyToSolverConfiguration(*configuration);

@@ -1,5 +1,7 @@
 import numpy as np
 
+nonUni = True
+
 
 def rotate_points(content: str, aoa_deg: float):
     aoa_pi = aoa_deg/360*np.pi
@@ -30,21 +32,23 @@ nth_point_to_top = 30  # this point will be connected to inlet circle
 n_points_profile = 100
 point_id_top     = n_points_profile - nth_point_to_top
 point_id_bot     = n_points_profile + nth_point_to_top
-n_channel        = 2*n_points_profile
+n_channel        = int(1.5*n_points_profile)
+inlet_center     = 0.13 if nonUni else 0.2
 
 for deg in range(6):
     correction_bot = 1
-    filename = f"NACA0012"
+    filename = f"NACA0012{'_nonUni' if nonUni else ''}"
     # with open(filename + ".geo", 'r') as oldfile:
     content = open(filename + ".geo", 'r').read()
     content = rotate_points(content, deg)
     # content = content.replace(", 1};", ", size_foil};")  # set element size to 1e-2 at airfoil
     setup_string = f"""
-inlet_r      = 3; // up to 7 outside!
-inlet_c      = 0.3;
-outlet_c     = 9;
+inlet_r      = 5;
+inlet_front  = 3;
+inlet_c      = {inlet_center};
+outlet_c     = 6;
 outlet_h     = inlet_r;
-sponge_h     = 5;
+sponge_h     = inlet_r + 3;
 size_foil    = 0.1;
 size_in_out  = 1;
 size_sponge  = 10;
@@ -67,13 +71,13 @@ progression_around = 1.5;
     f.write("\n/// INLET\n")
     f.write("Point(200) = {inlet_c, inlet_r, 0, size_in_out};       // inlet top\n")
     f.write("Point(201) = {inlet_c, -inlet_r, 0, size_in_out};      // inlet bottom\n")
-    f.write("Point(202) = {inlet_c-inlet_r, 0, 0, size_in_out};     // inlet front\n")
+    f.write("Point(202) = {inlet_c-inlet_front, 0, 0, size_in_out};     // inlet front\n")
     f.write("Point(203) = {inlet_c, 0, 0};                          // inlet center\n")
     f.write("Line(200)  = {100, 202};                               // inlet front line\n")
     f.write("Line(201)  = {200, point_id_top};                      // inlet top line\n")
     f.write("Line(202)  = {201, point_id_bot};                      // inlet bottom line\n")
-    f.write("Circle(203) = {200, 203, 202};                         // inlet circle line top\n")
-    f.write("Circle(204) = {202, 203, 201};                         // inlet circle line bottom\n")
+    f.write("Ellipse(203) = {200, 203, 203, 202};                   // inlet circle line top\n")
+    f.write("Ellipse(204) = {202, 203, 203, 201};                   // inlet circle line bottom\n")
     f.write("Transfinite Curve {200, -201, -202} = n_around Using Progression progression_around;  // inlet lines points\n")
     f.write("Transfinite Curve {203, 204} = n_inlet Using Progression 1;        // inlet circle points\n")
     transfinite_curve = "Transfinite Curve {"
@@ -190,12 +194,12 @@ progression_around = 1.5;
     #     meshsize_airfoil += f"{point_id}, "
     # meshsize_airfoil = meshsize_airfoil.removesuffix(", ") + "} = size_foil; // mesh size airfoil nodes\n"
     # f.write(meshsize_airfoil)
-    f.write("Mesh.Algorithm = 6;\n")
-    f.write("Mesh.SubdivisionAlgorithm = 1;\n")
+    f.write("Mesh.Algorithm =6;\n")
+    f.write("Mesh.SubdivisionAlgorithm = 0;\n")
     f.write("Mesh.RecombineAll = 1;\n")
     # f.write("Mesh.QualityFactor = 0.00001;\n")
-    f.write("Mesh.Optimize = 1;\n")
-    f.write("Mesh.OptimizeNetgen = 1;\n")
+    # f.write("Mesh.Optimize = 1;\n")
+    # f.write("Mesh.OptimizeNetgen = 1;\n")
     # meshsize_around = "MeshSize {"
     # for point_id in np.arange(200, 240):
     #     meshsize_around += f"{point_id}, "

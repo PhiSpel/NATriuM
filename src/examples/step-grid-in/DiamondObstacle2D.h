@@ -80,7 +80,8 @@ public:
 		return m_meanInflowVelocity;
 	}
 	virtual void refine(Mesh<2>& mesh) {
-		mesh.refine_global(m_refinementLevel);
+        if (is_MPI_rank_0()) LOG(WELCOME) << "Globally refining " << m_refinementLevel << " times." << endl;
+        mesh.refine_global(m_refinementLevel);
 	}
 	virtual void transform(Mesh<2>& ){}
 	virtual bool isCartesian(){

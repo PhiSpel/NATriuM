@@ -22,10 +22,9 @@ namespace natrium {
 
 
 
-DiamondObstacle2D::DiamondObstacle2D(double velocity, double viscosity,
-		size_t refinementLevel, int aoa) :
-		ProblemDescription<2>(makeGrid(refinementLevel, aoa), viscosity, 1.0), m_meanInflowVelocity(
-				velocity), m_refinementLevel(refinementLevel) {
+DiamondObstacle2D::DiamondObstacle2D(double velocity, double viscosity, size_t refinementLevel, int aoa):
+		ProblemDescription<2>(makeGrid(refinementLevel, aoa), viscosity, 1.0), m_meanInflowVelocity(velocity),
+        m_refinementLevel(refinementLevel) {
 
 	/// apply boundary values
 	setBoundaries(makeBoundaries());
@@ -33,11 +32,11 @@ DiamondObstacle2D::DiamondObstacle2D(double velocity, double viscosity,
 	//pout << "F: " << Fx << endl;
 	dealii::Tensor<1, 2> F;
 	F[0] = Fx;
-			F[0] = Fx*0.04;
+    F[0] = Fx*0.04;
 	//setExternalForce(boost::make_shared<ConstantExternalForce<2> >(F));
-			this->setInitialU(boost::make_shared<InitialVelocity>(this));
-			this->setInitialRho(boost::make_shared<InitialDensity>(this));
-		    this->setInitialT(boost::make_shared<InitialTemperature>(this));
+    this->setInitialU(boost::make_shared<InitialVelocity>(this));
+    this->setInitialRho(boost::make_shared<InitialDensity>(this));
+    this->setInitialT(boost::make_shared<InitialTemperature>(this));
 }
 
 DiamondObstacle2D::~DiamondObstacle2D() {}
@@ -78,9 +77,11 @@ boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
 		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/NACA0012_nonUni_" << aoa << "deg.msh"; // "/src/examples/step-grid-in/Archive/naca0012_supersonic.msh";//
 		std::ifstream file(filename.str().c_str());
 		assert(file);
-		grid_in.read_msh(file);
+        if (is_MPI_rank_0()) LOG(WELCOME) << "Reading mesh from " << filename.str() << endl;
+        grid_in.read_msh(file);
 	}
 	// mesh->refine_global (refinementLevel);
+    if (is_MPI_rank_0()) LOG(WELCOME) << "Getting boundary IDs." << endl;
     mesh->get_boundary_ids();
 	return mesh;
 }
@@ -91,7 +92,7 @@ boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
  * @note All boundary types are inherited of BoundaryDescription; e.g. PeriodicBoundary
  */
 boost::shared_ptr<BoundaryCollection<2> > DiamondObstacle2D::makeBoundaries() {
-
+    if (is_MPI_rank_0()) LOG(WELCOME) << "Making boundaries." << endl;
 	// make boundary description
 	boost::shared_ptr<BoundaryCollection<2>> boundaries = boost::make_shared<BoundaryCollection<2>>();
 	dealii::Vector<double> inflow(2);

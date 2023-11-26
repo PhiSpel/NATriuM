@@ -40,9 +40,9 @@ for deg in range(6):
     content = rotate_points(content, deg)
     # content = content.replace(", 1};", ", size_foil};")  # set element size to 1e-2 at airfoil
     setup_string = f"""
-inlet_r      = 2;
+inlet_r      = 3; // up to 7 outside!
 inlet_c      = 0.3;
-outlet_c     = 7;
+outlet_c     = 9;
 outlet_h     = inlet_r;
 sponge_h     = 5;
 size_foil    = 0.1;

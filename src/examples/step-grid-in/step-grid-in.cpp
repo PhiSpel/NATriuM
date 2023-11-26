@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     const int refLevel = parser.getArgument<int>("ref-level");
 
     // set Reynolds and Mach number
-    const double Ma = parser.getArgument<double>("Ma");
+    const double Ma = parser.getArgument<double>("Ma")*sqrt(1.4);
     const double gamma = 1.4;
     // increase velocity to gain correct speed
 
@@ -57,7 +57,8 @@ int main(int argc, char** argv) {
 
     // set Problem so that the right Re and Ma are achieved
     double U = 1;
-    double scaling = sqrt(3)/ (Ma * sqrt(gamma));
+    double reference_temperature = 1;
+    double scaling = sqrt(3) * U / (Ma * sqrt(gamma*reference_temperature));
     const double viscosity = U / Re; // (because L = 1)
     int aoa = parser.getArgument<int>("aoa");
 

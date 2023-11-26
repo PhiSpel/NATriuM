@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
     // Re = 1/nu,L=2pi, U = 1 und D = [0,2pi*L]^3
     const double U = 1 * uscaling;
     //const double L = 2 * M_PI;
-    const double viscosity = 1.0 / Re;
+    const double viscosity = U / Re;
     const double Ma = parser.getArgument<double>("Ma")*sqrt(1.4);
 //    const auto cfl = parser.getArgument<double>("CFL");
 //    const double cs = U / Ma;

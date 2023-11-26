@@ -75,7 +75,7 @@ boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
 	grid_in.attach_triangulation(*mesh);
 	{
 		std::stringstream filename;
-		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/NACA0012_" << aoa << "deg.msh"; // "/src/examples/step-grid-in/Archive/naca0012_supersonic.msh";//
+		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/NACA0012_nonUni_" << aoa << "deg.msh"; // "/src/examples/step-grid-in/Archive/naca0012_supersonic.msh";//
 		std::ifstream file(filename.str().c_str());
 		assert(file);
 		grid_in.read_msh(file);

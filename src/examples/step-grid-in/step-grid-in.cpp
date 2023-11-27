@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("ref-level", "Refinement level", 0);
     parser.setArgument<int>("aoa", "Angle of attack", 0);
     parser.setArgument<int>("server-end", "Maximum server time [s]", 70000);
+    parser.setArgument<string>("foilname", "Folder of domain mesh", "circleInlet");
 
     try {
         parser.importOptions();
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
 
     // make problem and solver objects
 	boost::shared_ptr<ProblemDescription<2>> obstacle_flow
-        = boost::make_shared<DiamondObstacle2D>(U, viscosity, refLevel, aoa);
+        = boost::make_shared<DiamondObstacle2D>(U, viscosity, refLevel, aoa, parser.getArgument<string>("foilname"));
 	//! [Problem]
 
 	//! [Configuration]
@@ -81,9 +82,9 @@ int main(int argc, char** argv) {
 	//configuration->setTimeIntegrator(EXPONENTIAL);
 	configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
     configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
-	// configuration->setForcingScheme(NO_FORCING);
+//	 configuration->setForcingScheme(NO_FORCING);
 	configuration->setStencil(Stencil_D2Q25H);
-    // configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
+//     configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
     configuration->setCollisionScheme(BGK_STANDARD);
     // configuration->setSimulationEndTime(30);
     configuration->setServerEndTime(parser.getArgument<int>("server-end"));

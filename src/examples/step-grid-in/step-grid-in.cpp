@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
 	configuration->setOutputSolutionInterval(10000);
     configuration->setStencilScaling(scaling);
 	configuration->setNumberOfTimeSteps(200000);
+    configuration->setHeatCapacityRatioGamma(gamma);
 	//configuration->setTimeIntegrator(EXPONENTIAL);
 	configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
     configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);

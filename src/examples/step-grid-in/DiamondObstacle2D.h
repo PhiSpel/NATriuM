@@ -24,7 +24,6 @@ class DiamondObstacle2D: public ProblemDescription<2> {
 private:
 	double m_meanInflowVelocity;
 	size_t m_refinementLevel;
-    string foilname;
 
 public:
 	class InitialVelocity: public dealii::Function<2> {
@@ -90,7 +89,7 @@ public:
 	}
 
 private:
-	boost::shared_ptr<Mesh<2> > makeGrid(size_t refinementLevel, int aoa);
+	boost::shared_ptr<Mesh<2> > makeGrid(size_t refinementLevel, int aoa, string foilname);
 	boost::shared_ptr<BoundaryCollection<2> > makeBoundaries();
 };
 

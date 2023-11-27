@@ -487,7 +487,7 @@ Plane Surface(7) = {230};                               // sponge top
 Plane Surface(8) = {231};                               // sponge bottom
 
 /// MESH SIZES
-Mesh.Algorithm =6;
+Mesh.Algorithm = 8;
 Mesh.SubdivisionAlgorithm = 0;
 Mesh.RecombineAll = 1;
 

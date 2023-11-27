@@ -24,6 +24,7 @@ class DiamondObstacle2D: public ProblemDescription<2> {
 private:
 	double m_meanInflowVelocity;
 	size_t m_refinementLevel;
+    string foilname;
 
 public:
 	class InitialVelocity: public dealii::Function<2> {
@@ -72,7 +73,7 @@ public:
 		}
 	};
 	/// constructor
-	DiamondObstacle2D(double velocity, double viscosity, size_t refinementLevel, int aoa);
+	DiamondObstacle2D(double velocity, double viscosity, size_t refinementLevel, int aoa, string foilname);
 
 	/// destructor
 	virtual ~DiamondObstacle2D();

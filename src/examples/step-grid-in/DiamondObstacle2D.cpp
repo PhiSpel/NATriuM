@@ -22,9 +22,9 @@ namespace natrium {
 
 
 
-DiamondObstacle2D::DiamondObstacle2D(double velocity, double viscosity, size_t refinementLevel, int aoa):
+DiamondObstacle2D::DiamondObstacle2D(double velocity, double viscosity, size_t refinementLevel, int aoa, string foilname):
 		ProblemDescription<2>(makeGrid(refinementLevel, aoa), viscosity, 1.0), m_meanInflowVelocity(velocity),
-        m_refinementLevel(refinementLevel) {
+        m_refinementLevel(refinementLevel), foilname(foilname) {
 
 	/// apply boundary values
 	setBoundaries(makeBoundaries());
@@ -74,7 +74,7 @@ boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
 	grid_in.attach_triangulation(*mesh);
 	{
 		std::stringstream filename;
-		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/NACA0012_nonUni_" << aoa << "deg.msh"; // "/src/examples/step-grid-in/Archive/naca0012_supersonic.msh";//
+		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/" << foilname << "/NACA0012_" << aoa << "deg.msh"; // "/src/examples/step-grid-in/Archive/naca0012_supersonic.msh";//
 		std::ifstream file(filename.str().c_str());
 		assert(file);
         if (is_MPI_rank_0()) LOG(WELCOME) << "Reading mesh from " << filename.str() << endl;

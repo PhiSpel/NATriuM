@@ -1,7 +1,7 @@
 import numpy as np
 
 nonUni = True
-
+closed = True
 
 def rotate_points(content: str, aoa_deg: float):
     aoa_pi = aoa_deg/360*np.pi
@@ -36,10 +36,11 @@ n_channel        = int(1.5*n_points_profile)
 inlet_center     = 0.13 if nonUni else 0.2
 
 for deg in range(6):
-    correction_bot = 1
-    filename = f"NACA0012{'_nonUni' if nonUni else ''}"
+    correction_bot = 1 if not closed else 0
+    directoryname = f"{'nonUni' if nonUni else 'uni'}_{'closed' if closed else 'open'}/"
+    filename = "NACA0012"
     # with open(filename + ".geo", 'r') as oldfile:
-    content = open(filename + ".geo", 'r').read()
+    content = open(directoryname + filename + ".geo", 'r').read()
     content = rotate_points(content, deg)
     # content = content.replace(", 1};", ", size_foil};")  # set element size to 1e-2 at airfoil
     setup_string = f"""
@@ -65,7 +66,7 @@ n_channel_bot= n_channel+{correction_bot};
 n_outlet_center = n_channel - {point_id_top};
 progression_around = 1.5;
     """
-    f = open(filename + f"_{deg}deg.geo", 'w')
+    f = open(directoryname + filename + f"_{deg}deg.geo", 'w')
     f.write(setup_string + '\n' + content + '\n')
     ### INLET
     f.write("\n/// INLET\n")
@@ -143,7 +144,7 @@ progression_around = 1.5;
     transfinite_curve = transfinite_curve.removesuffix(", ") + "} = 2 Using Progression 1; // channel foil points top\n"
     f.write(transfinite_curve)
     transfinite_curve = "Transfinite Curve {"
-    for point_id in np.arange(point_id_bot, 2*n_points_profile-1):
+    for point_id in np.arange(point_id_bot, 2*n_points_profile):
         transfinite_curve += f"{point_id}, "
     transfinite_curve = transfinite_curve.removesuffix(", ") + "} = 2 Using Progression 1; // channel foil points bottom\n"
     f.write(transfinite_curve)
@@ -194,7 +195,7 @@ progression_around = 1.5;
     #     meshsize_airfoil += f"{point_id}, "
     # meshsize_airfoil = meshsize_airfoil.removesuffix(", ") + "} = size_foil; // mesh size airfoil nodes\n"
     # f.write(meshsize_airfoil)
-    f.write("Mesh.Algorithm =6;\n")
+    f.write("Mesh.Algorithm = 8;\n")
     f.write("Mesh.SubdivisionAlgorithm = 0;\n")
     f.write("Mesh.RecombineAll = 1;\n")
     # f.write("Mesh.QualityFactor = 0.00001;\n")
@@ -210,7 +211,7 @@ progression_around = 1.5;
     f.write('Physical Curve("Inlet", 300) = {233, 204, 203, 232};\n')
     f.write('Physical Curve("Sponge", 301) = {234, 235};\n')
     f.write('Physical Curve("Outlet", 302) = {231, 212, 211, 230};\n')
-    f.write('Physical Curve("BB_BC", 303) = {1:199};\n')
+    f.write('Physical Curve("BB_BC", 303) = {1:198};\n')
     f.write("Physical Surface(236) = {1, 2, 6, 5, 7, 8};\n")
 
     # f.write('Mesh.MeshSizeMin = 0\n')

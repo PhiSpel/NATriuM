@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     CommandLineParser parser(argc, argv);
     parser.setArgument<double>("Ma", "Mach number", 1.5);
     parser.setArgument<int>("Re", "Reynolds number", 10000);
-    parser.setArgument<int>("ref-level", "Refinement level", 0);
+    parser.setArgument<int>("ref-level", "Refinement level", 1);
     parser.setArgument<int>("aoa", "Angle of attack", 0);
     parser.setArgument<int>("server-end", "Maximum server time [s]", 70000);
     parser.setArgument<string>("foilname", "Folder of domain mesh", "circleInlet");
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     const double gamma = 1.4;
     // increase velocity to gain correct speed
 
-    const double Re = parser.getArgument<int>("Re");;
+    const double Re = parser.getArgument<int>("Re");
 
     // set Problem so that the right Re and Ma are achieved
     double U = 1;

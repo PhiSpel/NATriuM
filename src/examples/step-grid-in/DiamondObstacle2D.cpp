@@ -23,17 +23,17 @@ namespace natrium {
 
 
 DiamondObstacle2D::DiamondObstacle2D(double velocity, double viscosity, size_t refinementLevel, int aoa, string foilname):
-		ProblemDescription<2>(makeGrid(refinementLevel, aoa), viscosity, 1.0), m_meanInflowVelocity(velocity),
-        m_refinementLevel(refinementLevel), foilname(foilname) {
+		ProblemDescription<2>(makeGrid(refinementLevel, aoa, foilname), viscosity, 1.0), m_meanInflowVelocity(velocity),
+        m_refinementLevel(refinementLevel) {
 
 	/// apply boundary values
 	setBoundaries(makeBoundaries());
-	double Fx = 8 * velocity * viscosity;
-	//pout << "F: " << Fx << endl;
-	dealii::Tensor<1, 2> F;
-	F[0] = Fx;
-    F[0] = Fx*0.04;
-	//setExternalForce(boost::make_shared<ConstantExternalForce<2> >(F));
+//	double Fx = 8 * velocity * viscosity;
+//  if(is_MPI_rank_0()) LOG(DETAILED) << "F: " << Fx << endl;
+//	dealii::Tensor<1, 2> F;
+//	F[0] = Fx;
+//  F[0] = Fx*0.04;
+//  setExternalForce(boost::make_shared<ConstantExternalForce<2> >(F));
     this->setInitialU(boost::make_shared<InitialVelocity>(this));
     this->setInitialRho(boost::make_shared<InitialDensity>(this));
     this->setInitialT(boost::make_shared<InitialTemperature>(this));
@@ -64,11 +64,11 @@ double DiamondObstacle2D::InitialTemperature::value(const dealii::Point<2>& x, c
     return 1.0;
 }
 
-boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
-		size_t refinementLevel, int aoa) {
+boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(size_t refinementLevel, int aoa, string foilname) {
     (void) refinementLevel;
 	//Read in grid
 	//Taken from step-35 in deal.ii
+    if (is_MPI_rank_0()) LOG(WELCOME) << "Mesh name set to " << foilname << endl;
 	dealii::GridIn<2> grid_in;
 	boost::shared_ptr<Mesh<2>> mesh = boost::make_shared<Mesh<2>>(MPI_COMM_WORLD);
 	grid_in.attach_triangulation(*mesh);
@@ -76,8 +76,8 @@ boost::shared_ptr<Mesh<2> > DiamondObstacle2D::makeGrid(
 		std::stringstream filename;
 		filename << getenv("NATRIUM_DIR") << "/src/examples/step-grid-in/mesh/" << foilname << "/NACA0012_" << aoa << "deg.msh"; // "/src/examples/step-grid-in/Archive/naca0012_supersonic.msh";//
 		std::ifstream file(filename.str().c_str());
-		assert(file);
         if (is_MPI_rank_0()) LOG(WELCOME) << "Reading mesh from " << filename.str() << endl;
+		assert(file);
         grid_in.read_msh(file);
 	}
 	// mesh->refine_global (refinementLevel);

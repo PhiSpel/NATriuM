@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("ref-level", "Refinement level", 1);
     parser.setArgument<int>("aoa", "Angle of attack", 0);
     parser.setArgument<int>("server-end", "Maximum server time [s]", 70000);
-    parser.setArgument<string>("foilname", "Folder of domain mesh", "circleInlet");
+    parser.setArgument<string>("foilname", "Folder of domain mesh", "nonUni_closed");
 
     try {
         parser.importOptions();

@@ -10,6 +10,7 @@
 
 #include "natrium/stencils/D2Q9.h"
 #include "natrium/stencils/D2Q25H.h"
+#include "natrium/stencils/D2Q25V.h"
 #include "natrium/solver/CFDSolver.h"
 #include "natrium/solver/CompressibleCFDSolver.h"
 #include "natrium/solver/SolverConfiguration.h"
@@ -84,8 +85,9 @@ int main(int argc, char** argv) {
 	configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
     configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
 //	 configuration->setForcingScheme(NO_FORCING);
-	configuration->setStencil(Stencil_D2Q25H);
-//     configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
+	configuration->setStencil(Stencil_D2Q25V);
+	configuration->setMachNumber(Ma);
+     configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
     configuration->setCollisionScheme(BGK_STANDARD);
     // configuration->setSimulationEndTime(30);
     configuration->setServerEndTime(parser.getArgument<int>("server-end"));

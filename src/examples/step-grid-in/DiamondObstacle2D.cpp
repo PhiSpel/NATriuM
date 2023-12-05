@@ -49,7 +49,7 @@ double DiamondObstacle2D::InitialVelocity::value(const dealii::Point<2>& x,
 		const unsigned int component) const {
     assert (component < 2);
     if (component == 0) return this->m_flow->m_meanInflowVelocity;
-	else return this->m_flow->m_meanInflowVelocity*sin(x[1]*1.3+0.1)*0.1;
+	else return this->m_flow->m_meanInflowVelocity*sin(x[1]*1.7+0.1)*0.1;
 }
 
 double DiamondObstacle2D::InitialDensity::value(const dealii::Point<2>& x, const unsigned int component) const {
@@ -114,12 +114,10 @@ boost::shared_ptr<BoundaryCollection<2> > DiamondObstacle2D::makeBoundaries() {
 	boost::shared_ptr<dealii::Function<2>> boundary_velocity = boost::make_shared<InflowVelocity> (m_meanInflowVelocity);
 
     boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<2>>(300, inflow));
-    boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<2>>(302, inflow)); // outflow
-	//boundaries->addBoundary(boost::make_shared<DoNothingBoundary<2> >(102));
-	//boundaries->addBoundary(boost::make_shared<DoNothingBoundary<2> >(103));
+//    boundaries->addBoundary(boost::make_shared<SLEquilibriumBoundary<2>>(302, inflow)); // outflow
+	boundaries->addBoundary(boost::make_shared<DoNothingBoundary<2>>(302)); // outflow
 	boundaries->addBoundary(boost::make_shared<DoNothingBoundary<2>>(301)); // sponge
     boundaries->addBoundary(boost::make_shared<VelocityNeqBounceBack<2>>(303, profile));
-//    boundaries->addBoundary(boost::make_shared<Bounce<2>>(2, profile));
 
 	// Get the triangulation object (which belongs to the parent class).
 	boost::shared_ptr<Mesh<2> > tria_pointer = getMesh();

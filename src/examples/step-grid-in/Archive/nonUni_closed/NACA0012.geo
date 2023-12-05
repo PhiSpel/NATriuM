@@ -1,28 +1,4 @@
-
-inlet_r      = 5;
-inlet_front  = 3;
-inlet_c      = 0.3;
-outlet_c     = 6;
-outlet_h     = inlet_r;
-sponge_h     = inlet_r + 3;
-size_foil    = 0.1;
-size_in_out  = 1;
-size_sponge  = 10;
-point_id_top = 70;
-point_id_bot = 130;
-n_around     = 40;
-n_inlet      = 100 - point_id_top + 1;
-n_sponge     = 9;
-channel_l    = 1.5;
-channel_h    = inlet_r;
-n_channel    = 150;
-n_channel_top= n_channel-1;
-n_channel_bot= n_channel+-1;
-n_outlet_center = n_channel - 70;
-progression_around = 1.3;
-progression_sponge = 1.2;
-    
-Point(1) = {1.0, -1.66533e-17, 0, 1};
+Point(1) = {1, -1.66533e-17, 0, 1};
 Point(2) = {0.999748, 3.65828e-05, 0, 1};
 Point(3) = {0.998993, 0.000146223, 0, 1};
 Point(4) = {0.997736, 0.000328595, 0, 1};
@@ -121,7 +97,7 @@ Point(96) = {0.00402259, 0.0109908, 0, 1};
 Point(97) = {0.00226404, 0.008304, 0, 1};
 Point(98) = {0.00100666, 0.0055757, 0, 1};
 Point(99) = {0.000251729, 0.00280732, 0, 1};
-Point(100) = {0.0, 0.0, 0, 1};
+Point(100) = {0, 0, 0, 1};
 Point(101) = {0.000251729, -0.00280732, 0, 1};
 Point(102) = {0.00100666, -0.0055757, 0, 1};
 Point(103) = {0.00226404, -0.008304, 0, 1};
@@ -220,6 +196,7 @@ Point(195) = {0.995977, -0.00058316, 0, 1};
 Point(196) = {0.997736, -0.000328595, 0, 1};
 Point(197) = {0.998993, -0.000146223, 0, 1};
 Point(198) = {0.999748, -3.65828e-05, 0, 1};
+Point(199) = {1, 1.66533e-17, 0, 1};
 Line(1) = {1, 2};
 Line(2) = {2, 3};
 Line(3) = {3, 4};
@@ -417,84 +394,5 @@ Line(194) = {194, 195};
 Line(195) = {195, 196};
 Line(196) = {196, 197};
 Line(197) = {197, 198};
-Line(198) = {198, 1};
-
-
-/// INLET
-Point(200) = {0, inlet_r, 0, size_in_out};       // inlet top
-Point(201) = {0, -inlet_r, 0, size_in_out};      // inlet bottom
-Point(202) = {inlet_c-inlet_front, 0, 0, size_in_out};     // inlet front
-Point(203) = {inlet_c, 0, 0};                          // inlet center
-Line(200)  = {100, 202};                               // inlet front line
-Line(201)  = {200, point_id_top};                      // inlet top line
-Line(202)  = {201, point_id_bot};                      // inlet bottom line
-Ellipse(203) = {200, 203, 203, 202};                   // inlet circle line top
-Ellipse(204) = {202, 203, 203, 201};                   // inlet circle line bottom
-Transfinite Curve {200, -201, -202} = n_around Using Progression progression_around;  // inlet lines points
-Transfinite Curve {203, 204} = n_inlet Using Progression 1;        // inlet circle points
-Transfinite Curve {70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99} = 2 Using Progression 1; // inlet foil points top
-Transfinite Curve {100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129} = 2 Using Progression 1; // inlet foil points bottom
-Curve Loop (200) = {-203, 201, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 200}; // inlet loop top
-Curve Loop (201) = {-200, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, -202, -204}; // inlet loop bottom
-Plane Surface(1) = {200};                                // inlet surface top
-Plane Surface(2) = {201};                                // inlet surface bottom
-Transfinite Surface {1} = {202, 100, 70, 200};           // inlet surface top
-Transfinite Surface {2} = {202, 201, 130, 100};          // inlet surface bottom
-
-/// OUTLET
-Point(210) = {outlet_c, outlet_h, 0, size_in_out};     // outlet top
-Point(211) = {outlet_c, -outlet_h, 0, size_in_out};    // outlet bottom
-Point(212) = {outlet_c, 0, 0, size_foil};              // outlet center
-Line(210)  = {1, 212};                                 // outlet center line
-Line(211)  = {210, 212};                               // outlet end top line
-Line(212)  = {211, 212};                               // outlet end bottom line
-Transfinite Curve {210, 213, 214} = n_outlet_center Using Progression 1;  // outlet center lines points
-Transfinite Curve {-211, -212} = n_around Using Progression progression_around;              // outlet end lines points
-
-/// CHANNEL
-Line(220)  = {200, 210};                               // channel top line
-Line(221)  = {201, 211};                               // channel bottom line
-Transfinite Curve {220} = n_channel_top Using Progression 1;      // channel top points
-Transfinite Curve {221} = n_channel_bot Using Progression 1;      // channel bottom points
-Transfinite Curve {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69} = 2 Using Progression 1; // channel foil points top
-Transfinite Curve {130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198} = 2 Using Progression 1; // channel foil points bottom
-
-/// OUTLET / CHANNEL SURFACES
-Curve Loop(222) = {-201, 220, 211, -210, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69}; // channel top
-Curve Loop(223) = {202, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 210, -212, -221}; // channel bottom
-Plane Surface(5) = {222};                               // channel top
-Plane Surface(6) = {223};                               // channel bottom
-Transfinite Surface {5} = {point_id_top, 212, 210, 200}; // channel surface top
-Transfinite Surface {6} = {point_id_bot, 201, 211, 212}; // channel surface bottom
-
-/// SPONGE
-Point(230) = {outlet_c, sponge_h, 0, size_sponge};      // sponge top back
-Point(231) = {outlet_c, -sponge_h, 0, size_sponge};     // sponge bottom back
-Point(232) = {outlet_c/2, sponge_h, 0, size_sponge};    // sponge top front
-Point(233) = {outlet_c/2, -sponge_h, 0, size_sponge};   // sponge bottom front
-Line(230)  = {210, 230};                                // sponge outlet top line
-Line(231)  = {211, 231};                                // sponge outlet bottom line
-Line(232)  = {200, 232};                                // sponge top line
-Line(233)  = {201, 233};                                // sponge bottom line
-Line(234)  = {232, 230};                                // sponge front top line
-Line(235)  = {233, 231};                                // sponge front bottom line
-Curve Loop(230) = {232, 234, -230, -220};               // sponge surface top
-Curve Loop(231) = {221, 231, -235, -233};               // sponge surface top
-Transfinite Curve {230, 231, 232, 233} = n_sponge*2 Using Progression progression_sponge;  // sponge lines points
-Transfinite Curve {234, 235} = n_sponge Using Progression 1; // sponge top lines points
-Plane Surface(7) = {230};                               // sponge top
-Plane Surface(8) = {231};                               // sponge bottom
-
-/// MESH SIZES
-Mesh.Algorithm = 6;
-Mesh.SubdivisionAlgorithm = 0;
-Mesh.RecombineAll = 1;
-
-/// BOUNDARIES
-Physical Curve("Inlet", 300) = {233, 204, 203, 232};
-Physical Curve("Sponge", 301) = {234, 235};
-Physical Curve("Outlet", 302) = {231, 212, 211, 230};
-Physical Curve("BB_BC", 303) = {1:198};
-Physical Surface(236) = {1, 2, 6, 5, 7, 8};
-Mesh 2;
-Save "NACA0012_0deg.msh";
+Line(198) = {198, 199};
+Line(199) = {199, 1};

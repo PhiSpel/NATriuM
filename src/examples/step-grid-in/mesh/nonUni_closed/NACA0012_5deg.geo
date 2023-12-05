@@ -1,7 +1,7 @@
 
 inlet_r      = 5;
 inlet_front  = 3;
-inlet_c      = 0.13;
+inlet_c      = 0.3;
 outlet_c     = 6;
 outlet_h     = inlet_r;
 sponge_h     = inlet_r + 3;
@@ -10,7 +10,7 @@ size_in_out  = 1;
 size_sponge  = 10;
 point_id_top = 70;
 point_id_bot = 130;
-n_around     = 15;
+n_around     = 40;
 n_inlet      = 100 - point_id_top + 1;
 n_sponge     = 9;
 channel_l    = 1.5;
@@ -19,7 +19,8 @@ n_channel    = 150;
 n_channel_top= n_channel-1;
 n_channel_bot= n_channel+-1;
 n_outlet_center = n_channel - 70;
-progression_around = 1.5;
+progression_around = 1.3;
+progression_sponge = 1.2;
     
 Point(1) = {0.9990482215818578, -0.043619387365336014, 0, 1};
 Point(2) = {0.9987980571493432, -0.04357184729843945, 0, 1};
@@ -420,8 +421,8 @@ Line(198) = {198, 1};
 
 
 /// INLET
-Point(200) = {inlet_c, inlet_r, 0, size_in_out};       // inlet top
-Point(201) = {inlet_c, -inlet_r, 0, size_in_out};      // inlet bottom
+Point(200) = {0, inlet_r, 0, size_in_out};       // inlet top
+Point(201) = {0, -inlet_r, 0, size_in_out};      // inlet bottom
 Point(202) = {inlet_c-inlet_front, 0, 0, size_in_out};     // inlet front
 Point(203) = {inlet_c, 0, 0};                          // inlet center
 Line(200)  = {100, 202};                               // inlet front line
@@ -479,7 +480,7 @@ Line(234)  = {232, 230};                                // sponge front top line
 Line(235)  = {233, 231};                                // sponge front bottom line
 Curve Loop(230) = {232, 234, -230, -220};               // sponge surface top
 Curve Loop(231) = {221, 231, -235, -233};               // sponge surface top
-Transfinite Curve {230, 231, 232, 233} = n_sponge*2 Using Progression 1.2;  // sponge lines points
+Transfinite Curve {230, 231, 232, 233} = n_sponge*2 Using Progression progression_sponge;  // sponge lines points
 Transfinite Curve {234, 235} = n_sponge Using Progression 1; // sponge top lines points
 Plane Surface(7) = {230};                               // sponge top
 Plane Surface(8) = {231};                               // sponge bottom
@@ -495,6 +496,5 @@ Physical Curve("Sponge", 301) = {234, 235};
 Physical Curve("Outlet", 302) = {231, 212, 211, 230};
 Physical Curve("BB_BC", 303) = {1:198};
 Physical Surface(236) = {1, 2, 6, 5, 7, 8};
-Mesh 1;
 Mesh 2;
 Save "NACA0012_5deg.msh";

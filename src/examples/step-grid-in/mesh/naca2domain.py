@@ -1,6 +1,8 @@
+import os.path
+
 import numpy as np
 
-nonUni = False
+nonUni = True
 closed = True
 ellipse= True
 
@@ -41,7 +43,7 @@ n_points_profile = 100
 point_id_top     = n_points_profile - nth_point_to_top
 point_id_bot     = n_points_profile + nth_point_to_top
 n_channel        = int(1.5*n_points_profile)
-inlet_center     = 0.13 if nonUni else 0.2
+inlet_center     = 0.3 if nonUni else 0.4
 
 for deg in range(6):
     correction_bot = 1 if not closed else -1
@@ -63,7 +65,7 @@ size_in_out  = 1;
 size_sponge  = 10;
 point_id_top = {point_id_top};
 point_id_bot = {point_id_bot};
-n_around     = 15;
+n_around     = 40;
 n_inlet      = 100 - point_id_top + 1;
 n_sponge     = 9;
 channel_l    = 1.5;
@@ -72,14 +74,15 @@ n_channel    = {n_channel};
 n_channel_top= n_channel-1;
 n_channel_bot= n_channel+{correction_bot};
 n_outlet_center = n_channel - {point_id_top};
-progression_around = 1.5;
+progression_around = 1.3;
+progression_sponge = 1.2;
     """
     f = open(directoryname + filename + f"_{deg}deg.geo", 'w')
     f.write(setup_string + '\n' + content + '\n')
     ### INLET
     f.write("\n/// INLET\n")
-    f.write("Point(200) = {inlet_c, inlet_r, 0, size_in_out};       // inlet top\n")
-    f.write("Point(201) = {inlet_c, -inlet_r, 0, size_in_out};      // inlet bottom\n")
+    f.write("Point(200) = {0, inlet_r, 0, size_in_out};       // inlet top\n")
+    f.write("Point(201) = {0, -inlet_r, 0, size_in_out};      // inlet bottom\n")
     f.write("Point(202) = {inlet_c-inlet_front, 0, 0, size_in_out};     // inlet front\n")
     f.write("Point(203) = {inlet_c, 0, 0};                          // inlet center\n")
     f.write("Line(200)  = {100, 202};                               // inlet front line\n")
@@ -194,7 +197,7 @@ progression_around = 1.5;
     f.write("Line(235)  = {233, 231};                                // sponge front bottom line\n")
     f.write("Curve Loop(230) = {232, 234, -230, -220};               // sponge surface top\n")
     f.write("Curve Loop(231) = {221, 231, -235, -233};               // sponge surface top\n")
-    f.write("Transfinite Curve {230, 231, 232, 233} = n_sponge*2 Using Progression 1.2;  // sponge lines points\n")
+    f.write("Transfinite Curve {230, 231, 232, 233} = n_sponge*2 Using Progression progression_sponge;  // sponge lines points\n")
     f.write("Transfinite Curve {234, 235} = n_sponge Using Progression 1; // sponge top lines points\n")
     f.write("Plane Surface(7) = {230};                               // sponge top\n")
     f.write("Plane Surface(8) = {231};                               // sponge bottom\n")
@@ -228,7 +231,7 @@ progression_around = 1.5;
 
     # f.write('Mesh.MeshSizeMin = 0\n')
     # f.write('Mesh.MeshSizeMax = 1e+22;\n')
-    f.write("Mesh 1;\n")
+    # f.write("Mesh 1;\n")
     f.write("Mesh 2;\n")
     f.write(f'Save "{filename+f"_{deg}deg"}.msh";')
     # f.write("Exit;\n")

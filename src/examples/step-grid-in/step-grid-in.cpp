@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 //	 configuration->setForcingScheme(NO_FORCING);
 	configuration->setStencil(Stencil_D2Q19V);
 	configuration->setMachNumber(Ma);
-     configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
+    configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
     configuration->setCollisionScheme(BGK_STANDARD);
     // configuration->setSimulationEndTime(30);
     configuration->setServerEndTime(parser.getArgument<int>("server-end"));

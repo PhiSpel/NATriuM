@@ -60,10 +60,14 @@ MixingLayer3D::MixingLayer3D(double viscosity, size_t refinementLevel, vector<un
 	LOG(BASIC) << "... Number of total grid points: " << noGridPoints << endl;
     */
     /// apply boundary values
+    if (is_MPI_rank_0()) LOG(DETAILED) << "Setting boundaries." << endl;
     setBoundaries(makeBoundaries());
     // apply analytic solution
+    if (is_MPI_rank_0()) LOG(DETAILED) << "Setting initial velocity." << endl;
     this->setInitialU(boost::make_shared<InitialVelocity>(this, randu_scaling, randuname));
+    if (is_MPI_rank_0()) LOG(DETAILED) << "Setting initial density." << endl;
     this->setInitialRho(boost::make_shared<InitialDensity>(this));
+    if (is_MPI_rank_0()) LOG(DETAILED) << "Setting initial temperature." << endl;
     this->setInitialT(boost::make_shared<InitialTemperature>(this));
 }
 
@@ -114,7 +118,7 @@ m_flow(flow), m_randu_scaling(randu_scaling) {
     double dT0  = m_flow->deltaTheta0;
 
     if (is_MPI_rank_0()) {
-        LOG(WELCOME) << "Creating linspaces x, y, z for interpolation from random_u." << endl
+        LOG(DETAILED) << "Creating linspaces x, y, z for interpolation from random_u." << endl
                      << "nx: " << nx << ", ny: " << ny << ", nz: " << nz << endl
                      << "lx: " << lx_u << ", ly: " << ly_u << ", lz: " << lz_u << endl
                      << "lx/dTh0: " << lx_u / dT0 << ", ly/dTh0: " << ly_u / dT0 << ", lz/dTh0: " << lz_u / dT0 << endl;

@@ -74,8 +74,8 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("rep-x", "Number of repetitions in x-direction (to refine the grid in steps that are not 2^N).", 4);
     parser.setArgument<int>("rep-y", "cf. rep-x", 2);
     parser.setArgument<int>("rep-z", "cf. rep-x", 1);
-    parser.setArgument<double>("center", "Central part with high-res grid, choose between 0.1 and 1", 0.7);
-    parser.setArgument<double>("dy-scaling", "scale dy to dy-scaling-times the element size (<1 to refine boundaries, >1 to loosen, 1 for equidistant mesh)", 3);
+    parser.setArgument<double>("center", "Central part with high-res grid, choose between 0.1 and 1", 0.8);
+    parser.setArgument<double>("dy-scaling", "scale dy to dy-scaling-times the element size (<1 to refine boundaries, >1 to loosen, 1 for equidistant mesh)", 2);
 
     try { parser.importOptions();
     } catch (HelpMessageStop&) { return 0;
@@ -218,8 +218,10 @@ int main(int argc, char** argv) {
     double dy_scaling = parser.getArgument<double>("dy-scaling");
     boost::shared_ptr<MixingLayer3D> mixingLayer = boost::make_shared<MixingLayer3D>
             (viscosity, ref_level, repetitions, randuscaling, randuname, len_x, len_y, len_z, meshname, center, dy_scaling, deltaTheta0, U * uscaling, reference_temperature, bc);
-    MixingLayer3D::UnstructuredGridFunc trafo(len_y);
+    if (is_MPI_rank_0()) LOG(DETAILED) << "Calculating unstructured grid." << endl;
+    MixingLayer3D::UnstructuredGridFunc trafo(len_y, center, dy_scaling);
 
+    if (is_MPI_rank_0()) LOG(DETAILED) << "Preparing initialization summary." << endl;
     double ymin = trafo.trans(len_y / repetitions.at(1) / pow(2, ref_level));
     const double p = configuration->getSedgOrderOfFiniteElement();
     const double dt = configuration->getCFL() / (p * p) / (sqrt(2) * scaling) * ymin;

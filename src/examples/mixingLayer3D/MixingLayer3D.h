@@ -98,7 +98,7 @@ namespace natrium {
             double m_center;
             double m_scaling;
             double m_a, m_b, m_c;
-            UnstructuredGridFunc(double height, double center = 0.7, double scaling = 3) :
+            UnstructuredGridFunc(double height, double center = 0.8, double scaling = 2) :
                     m_height(height / 2), m_center(center), m_scaling(scaling) {
                 //// this one uses "m_scaling" to fix the maximum grid point distance (times the distance in the centre)
                 m_a = (m_scaling - 1) / (2 - 2 * m_center);

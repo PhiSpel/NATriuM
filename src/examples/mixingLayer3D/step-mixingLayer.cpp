@@ -74,7 +74,6 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("rep-x", "Number of repetitions in x-direction (to refine the grid in steps that are not 2^N).", 4);
     parser.setArgument<int>("rep-y", "cf. rep-x", 2);
     parser.setArgument<int>("rep-z", "cf. rep-x", 1);
-    parser.setArgument<int>("Q", "Number of abscissas. Set to 77 for crazy velocity space", 45);
     parser.setArgument<double>("center", "Central part with high-res grid, choose between 0.1 and 1", 0.7);
     parser.setArgument<double>("dy-scaling", "scale dy to dy-scaling-times the element size (<1 to refine boundaries, >1 to loosen, 1 for equidistant mesh)", 3);
 
@@ -162,11 +161,7 @@ int main(int argc, char** argv) {
     configuration->setOutputShearLayerInterval(parser.getArgument<int>("nstats"));
     configuration->setMachNumber(Ma);
     configuration->setStencilScaling(scaling);
-    if (parser.getArgument<int>("Q") == 77) {
-        configuration->setStencil(Stencil_D3Q77);
-    } else {
-        configuration->setStencil(Stencil_D3Q45);
-    }
+    configuration->setStencil(Stencil_D3Q45);
     configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
     configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
     configuration->setHeatCapacityRatioGamma(gamma);

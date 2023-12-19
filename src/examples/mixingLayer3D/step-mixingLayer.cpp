@@ -24,7 +24,7 @@
 
 using namespace natrium;
 
-double shearLayerThickness = 0.093;
+//double shearLayerThickness = 0.093;
 //int dft_points = 20;
 
 // Main function
@@ -76,6 +76,7 @@ int main(int argc, char** argv) {
     parser.setArgument<int>("rep-z", "cf. rep-x", 1);
     parser.setArgument<double>("center", "Central part with high-res grid, choose between 0.1 and 1", 0.8);
     parser.setArgument<double>("dy-scaling", "scale dy to dy-scaling-times the element size (<1 to refine boundaries, >1 to loosen, 1 for equidistant mesh)", 2);
+    parser.setArgument<double>("dT0", "deltaTheta0", 0.093);
 
     try { parser.importOptions();
     } catch (HelpMessageStop&) { return 0;
@@ -209,7 +210,7 @@ int main(int argc, char** argv) {
 //        m_dirname = parser.getArgument<string>("output-dir");
 //    }
 
-    double deltaTheta0 = 0.093;
+    double deltaTheta0 = parser.getArgument<double>("dT0");
     // Grid resolution
     double len_x = parser.getArgument<double>("lx") * deltaTheta0;
     double len_y = parser.getArgument<double>("ly") * deltaTheta0;
@@ -254,7 +255,7 @@ int main(int argc, char** argv) {
     CompressibleCFDSolver<3> solver(configuration, mixingLayer);
     const size_t table_output_lines_per_10s = 300;
     configuration->setOutputTableInterval(1 + 10.0 / solver.getTimeStepSize() / table_output_lines_per_10s);
-    solver.appendDataProcessor(boost::make_shared<ShearLayerStats>(solver, configuration->getOutputDirectory(), shearLayerThickness, Re, ref_level, repetitions));
+    solver.appendDataProcessor(boost::make_shared<ShearLayerStats>(solver, configuration->getOutputDirectory(), deltaTheta0, Re, ref_level, repetitions));
     solver.run();
     pout << "step-mixingLayer terminated." << endl;
     return 0;

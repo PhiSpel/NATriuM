@@ -496,11 +496,12 @@ void compressibleFilter() {
             if (((iteration % this->m_configuration->getOutputSolutionInterval() == 0)
                  and (this->m_configuration->getOutputSolutionInterval() <= 1e8))
                 or (is_final)
-                or (maxP > 0.6)) {
-                if (maxP > 0.6) {
-                    LOG(DETAILED) << "Doing VTK output at " << iteration << " because MaxP = " << maxP
-                                  << "; MinP = " << this->m_solverStats->getMinP() << endl;
-                }
+//                or (maxP > 0.6)) {
+//                if (maxP > 0.6) {
+//                    LOG(DETAILED) << "Doing VTK output at " << iteration << " because MaxP = " << maxP
+//                                  << "; MinP = " << this->m_solverStats->getMinP() << endl;
+//                }
+                    ){
                 // save local part of the solution
                 std::stringstream str;
                 str << this->m_configuration->getOutputDirectory().c_str() << "/vtk/t_"

@@ -511,7 +511,7 @@ void ShearLayerStats::calculateRhoU() {
     auto [minUx, maxUx] = std::minmax_element(begin(ux_Fa), end(ux_Fa));
     m_dUx = *maxUx - *minUx;
     for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
-        momentumthickness_integrand.at(iy) = rho_Re.at(iy) * (m_dUx / 2 - ux_Fa.at(iy)) * (m_dUx / 2 + ux_Fa.at(iy));
+        momentumthickness_integrand.at(iy) = rho_Re.at(iy) * (m_dU0 / 2 - ux_Fa.at(iy)) * (m_dU0 / 2 + ux_Fa.at(iy));
     }
 
     // calculate flux of ux, uy, uz at all points
@@ -595,12 +595,12 @@ void ShearLayerStats::calculateRhoU() {
         double growthrate_integral = integrate(growthrate_integrand);
 
         // calculate vorticity thickness
-        m_currentDeltaOmega = m_dUx /*dU*/ / *max_element(begin(dUdy_abs), end(dUdy_abs));
+        m_currentDeltaOmega = m_dU0 /*dU*/ / *max_element(begin(dUdy_abs), end(dUdy_abs));
         m_ReOmega = rho0 * m_Re0 * m_dU0 * m_currentDeltaOmega;
 
         // calculate momentum thickness
-        m_currentDeltaTheta_Fa = momentumthickness_integral_Fa / (rho0 * pow(m_dUx, 2));
-        m_deltaThetaGrowth = growthrate_integral * (-2) / (rho0 * pow(m_dUx, 3));
+        m_currentDeltaTheta_Fa = momentumthickness_integral_Fa / (rho0 * pow(m_dU0, 2));
+        m_deltaThetaGrowth = growthrate_integral * (-2) / (rho0 * pow(m_dU0, 3));
 
         // integrate bij over vorticity thickness
         for (size_t ij = 0; ij < 6; ij++) {

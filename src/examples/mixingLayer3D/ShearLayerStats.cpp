@@ -683,6 +683,8 @@ double ShearLayerStats::integrate(vector<double> integrand, double ymin, double 
 vector<double> ShearLayerStats::derivative(vector<double> values) {
     vector<double> derivat(m_nofCoordinates, 0);
     double dy;
+    double hl;
+    double hu;
     for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
         if (iy == 0) { // forward
             dy = m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy);
@@ -691,11 +693,12 @@ vector<double> ShearLayerStats::derivative(vector<double> values) {
             dy = m_yCoordinates.at(iy) - m_yCoordinates.at(iy-1);
             derivat.at(iy) = (values.at(iy) - values.at(iy - 1)) / dy;
         } else { // other: central
-            dy = m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy - 1);
-            derivat.at(iy) = (values.at(iy + 1) -  values.at(iy - 1)) / dy;
+//            double h = m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy);
+            hl = m_yCoordinates.at(iy) - m_yCoordinates.at(iy - 1);
+            hu = m_yCoordinates.at(iy + 1) - m_yCoordinates.at(iy);
+            derivat.at(iy) = (values.at(iy + 1)*hl*hl + (hu*hu - hl*hl)*values.at(iy) - hu*hu*values.at(iy - 1)) / (hl*hu*(hl+hu));  // numpy documentation
         }
     }
-
     return derivat;
 }
 

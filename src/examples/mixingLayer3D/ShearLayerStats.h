@@ -64,7 +64,7 @@ private:
     double m_K_integrated;
     // Data stored across y
     vector<double> m_R11, m_R22, m_R33, m_R12, m_R13, m_R23;
-    vector<double> ux_Fa, uy_Fa, uz_Fa;
+    vector<double> ux_Fa, uy_Fa, uz_Fa, ux_Re;
     vector<double> umag_Re, rho_Re, momentumthickness_integrand;
     vector<double> m_number;
     vector<double> m_K;

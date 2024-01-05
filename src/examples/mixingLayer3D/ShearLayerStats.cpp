@@ -496,6 +496,7 @@ void ShearLayerStats::calculateRhoU() {
     }
     m_number.resize(m_nofCoordinates); std::fill(m_number.begin(), m_number.end(), 0);
     umag_Re.resize(m_nofCoordinates); std::fill(umag_Re.begin(), umag_Re.end(), 0);
+    ux_Re.resize(m_nofCoordinates); std::fill(ux_Re.begin(), ux_Re.end(), 0);
     rho_Re.resize(m_nofCoordinates); std::fill(rho_Re.begin(), rho_Re.end(), 0);
     for (size_t ij = 0; ij < 6; ij++) {
         Rij_set.at(ij)->resize(m_nofCoordinates);
@@ -539,6 +540,7 @@ void ShearLayerStats::calculateRhoU() {
                     rhou_Re_set.at(dim)->at(y_ind) += m_rho(dof_ind) * m_u.at(dim)(dof_ind);
                 }
                 rho_Re.at(y_ind) += m_rho(dof_ind);
+                ux_Re.at(y_ind) += m_u.at(0)(dof_ind);
                 umag_Re.at(y_ind) += sqrt(pow(m_u.at(0)(dof_ind), 2) + pow(m_u.at(1)(dof_ind), 2) + pow(m_u.at(2)(dof_ind), 2));
             } /* for all quadrature points */
         } /* if locally owned */
@@ -556,8 +558,10 @@ void ShearLayerStats::calculateRhoU() {
             }
             rho_Re.at(iy) = dealii::Utilities::MPI::sum(rho_Re.at(iy), MPI_COMM_WORLD);
             umag_Re.at(iy) = dealii::Utilities::MPI::sum(umag_Re.at(iy), MPI_COMM_WORLD);
+            ux_Re.at(iy) = dealii::Utilities::MPI::sum(ux_Re.at(iy), MPI_COMM_WORLD);
             rho_Re.at(iy) /= m_number.at(iy);
             umag_Re.at(iy) /= m_number.at(iy);
+            ux_Re.at(iy) /= m_number.at(iy);
         } else nonumbers.push_back(iy);
     }
     // average of neighboring points if there were no points
@@ -576,6 +580,7 @@ void ShearLayerStats::calculateRhoU() {
         }
         rho_Re.at(iy) = 1 / window_size * (rho_Re.at(iy_u) * dy_u + rho_Re.at(iy_l) * dy_l);
         umag_Re.at(iy) = 1 / window_size * (umag_Re.at(iy_u) * dy_u + umag_Re.at(iy_l) * dy_l);
+        ux_Re.at(iy) = 1 / window_size * (ux_Re.at(iy_u) * dy_u + ux_Re.at(iy_l) * dy_l);
     }
 
     // ui_favre and momentumthickness_integrand
@@ -871,6 +876,10 @@ void ShearLayerStats::write_tn() {
         *tnFile << "K: ";
         for (size_t iy = 0; iy < m_nofCoordinates-1; iy++) {
             *tnFile << m_K.at(iy) << " ";
+        } *tnFile << endl;
+        *tnFile << "ux_Re: ";
+        for (size_t iy = 0; iy < m_nofCoordinates-1; iy++) {
+            *tnFile << ux_Re.at(iy) << " ";
         } *tnFile << endl;
     }
 }

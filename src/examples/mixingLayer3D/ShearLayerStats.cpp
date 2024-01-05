@@ -86,23 +86,99 @@ void ShearLayerStats::testIntegration() {
 }
 
 void ShearLayerStats::testDerivate() {
-    // symmetry test
-    vector<double> parabola(m_nofCoordinates);
-    for (size_t i = 0; i < m_nofCoordinates; i++) {
-        parabola.at(i) = m_yCoordinates.at(i) * m_yCoordinates.at(i);
-    }
-    vector<double> deri = derivative(parabola);
-    // precision test
+    vector<double> f(m_nofCoordinates);
+    vector<double> deri(m_nofCoordinates);
     vector<double> diff(m_nofCoordinates);
-    for (size_t i = 0; i < m_nofCoordinates; i++) {
-        diff.at(i) = std::pow(deri.at(i) - m_yCoordinates.at(i), 1);
+    size_t iy;
+    double fac;
+    double ideal_result;
+    // constant
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        f.at(iy) = 1;
+    }
+    deri = derivative(f);
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        ideal_result = 0;
+        diff.at(iy) = pow((deri.at(iy) - ideal_result)/ideal_result, 2);
     }
     if (is_MPI_rank_0()) {
-        LOG(DETAILED) << "Derivative of parabola sums up to "
-                      << std::accumulate(deri.begin(), deri.end(), 0.) << ", expected 0." << endl
-                      << "Difference to f(x)=x (RMS) sums up to "
-                      << std::accumulate(diff.begin(), diff.end(), 0.) << ", expected 0." << endl;
+        LOG(DETAILED) << "Derivative of f(x) = 1" << endl
+                      << "RMS diff to  f'(x) = 0: "
+                      << accumulate(diff.begin(), diff.end(), 0.) << ", expected 0." << endl;
     }
+    // linear
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        f.at(iy) = m_yCoordinates.at(iy);
+    }
+    deri = derivative(f);
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        ideal_result = 1;
+        diff.at(iy) = pow((deri.at(iy) - ideal_result)/ideal_result, 2);
+    }
+    if (is_MPI_rank_0()) {
+        LOG(DETAILED) << "Derivative of f(x) = x" << endl
+                      << "RMS diff to  f'(x) = 1: "
+                      << accumulate(diff.begin(), diff.end(), 0.) << ", expected 0." << endl;
+    }
+    fac = 4/m_ly;
+    // parabola
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        f.at(iy) = pow(fac * m_yCoordinates.at(iy),2);
+    }
+    deri = derivative(f);
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        ideal_result = 2*fac*(fac*m_yCoordinates.at(iy));
+        diff.at(iy) = pow((deri.at(iy) - ideal_result)/ideal_result, 2);
+    }
+    if (is_MPI_rank_0()) {
+        LOG(DETAILED) << "Derivative of f(x) = (" << fac << "x)^2" << endl
+                      << "RMS diff to  f'(x) = 2*" << fac << "*" << fac << "*x: "
+                      << accumulate(diff.begin(), diff.end(), 0.) << ", expected 0." << endl;
+    }
+    // sine
+    fac = 2*3.1415/m_ly;
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        f.at(iy) = sin(fac*m_yCoordinates.at(iy));
+    }
+    deri = derivative(f);
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        ideal_result = fac*cos(fac*m_yCoordinates.at(iy));
+        diff.at(iy) = pow((deri.at(iy) - ideal_result)/ideal_result, 2);
+    }
+    if (is_MPI_rank_0()) {
+        LOG(DETAILED) << "Derivative of f(x) = sin(" << fac << "*x)" << endl
+                      << "RMS diff to  f'(x) = " << fac << "*cos(" << fac << "*x) : "
+                      << accumulate(diff.begin(), diff.end(), 0.) << ", expected 0." << endl;
+    }
+    // cosine
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        f.at(iy) = cos(fac*m_yCoordinates.at(iy));
+    }
+    deri = derivative(f);
+    for (iy = 0; iy < m_nofCoordinates; iy++) {
+        ideal_result = fac*(-sin(fac*m_yCoordinates.at(iy)));
+        diff.at(iy) = pow((deri.at(iy) - ideal_result)/ideal_result, 2);
+    }
+    if (is_MPI_rank_0()) {
+        LOG(DETAILED) << "Derivative of f(x) = cos(" << fac << "*x)" << endl
+                      << "RMS diff to  f'(x) = " << fac << "*-sin(" << fac << "*x) : "
+                      << accumulate(diff.begin(), diff.end(), 0.) << ", expected 0." << endl;
+    }
+    LOG(DETAILED) << "y:" << endl << "[";
+    for (iy = 0; iy < m_nofCoordinates-1; iy++) {
+        LOG(DETAILED) << m_yCoordinates.at(iy) << ", ";
+    }
+    LOG(DETAILED) << m_yCoordinates.at(m_nofCoordinates-1) << "]" << endl;
+    LOG(DETAILED) << "cos(y):" << endl << "[";
+    for (iy = 0; iy < m_nofCoordinates-1; iy++) {
+        LOG(DETAILED) << f.at(iy) << ", ";
+    }
+    LOG(DETAILED) << f.at(m_nofCoordinates-1) << "]" << endl;
+    LOG(DETAILED) << "(cos(y))':" << endl << "[";
+    for (iy = 0; iy < m_nofCoordinates-1; iy++) {
+        LOG(DETAILED) << deri.at(iy) << ", ";
+    }
+    LOG(DETAILED) << deri.at(m_nofCoordinates-1) << "]" << endl;
 }
 
 void ShearLayerStats::calculateDeltas(double dT0) {

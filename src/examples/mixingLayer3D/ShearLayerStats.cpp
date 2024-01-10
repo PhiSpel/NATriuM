@@ -664,7 +664,7 @@ void ShearLayerStats::calculateRhoU() {
 
     if (is_MPI_rank_0()) {
         // calculate y-derivatives
-        vector<double> dUdy_abs = derivative(umag_Re);
+//        vector<double> dUdy_abs = derivative(umag_Re);
         vector<double> ux_Fa_dy = derivative(ux_Fa);
         for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
             dUdy_abs.at(iy) = abs(dUdy_abs.at(iy));
@@ -676,7 +676,7 @@ void ShearLayerStats::calculateRhoU() {
         double growthrate_integral = integrate(growthrate_integrand);
 
         // calculate vorticity thickness
-        m_currentDeltaOmega = m_dU0 /*dU*/ / *max_element(begin(dUdy_abs), end(dUdy_abs));
+        m_currentDeltaOmega = m_dU0 /*dU*/ / *max_element(begin(ux_Fa_dy), end(ux_Fa_dy));
         m_ReOmega = rho0 * m_Re0 * m_dU0 * m_currentDeltaOmega;
 
         // calculate momentum thickness

@@ -667,8 +667,9 @@ void ShearLayerStats::calculateRhoU() {
 //        vector<double> dUdy_abs = derivative(umag_Re);
         vector<double> ux_Fa_dy = derivative(ux_Fa);
         for (size_t iy = 0; iy < m_nofCoordinates; iy++) {
-            dUdy_abs.at(iy) = abs(dUdy_abs.at(iy));
+//            dUdy_abs.at(iy) = abs(dUdy_abs.at(iy));
             growthrate_integrand.at(iy) = rho_Re.at(iy) * m_R12.at(iy) * ux_Fa_dy.at(iy);
+            ux_Fa_dy.at(iy) = abs(ux_Fa_dy.at(iy));
         }
 
         // calculate y-integrals

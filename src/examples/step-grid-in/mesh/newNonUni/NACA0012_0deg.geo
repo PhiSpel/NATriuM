@@ -1,16 +1,17 @@
+//FILE newNonUni 0deg
 
 inlet_r      = 4;
 inlet_front  = 3;
 inlet_c      = 0.3;
 outlet_c     = 6;
 outlet_h     = inlet_r;
-sponge_h     = inlet_r * 4;
+sponge_h     = inlet_r * 3;
 size_foil    = 0.1;
 size_in_out  = 1;
 size_sponge  = 1;
 point_id_top = 70;
 point_id_bot = 130;
-n_around     = 200;
+n_around     = 100;
 n_foil       = 2;  // number of points per foil section; 2 for just the section, 3 to split once, ...
 n_inlet      = 31 + (n_foil-2)*30;  // top and bottom, each; 31 default points; additional 31-1 (30 segments) points for each n_foil above 2
 channel_l    = 1.5;
@@ -21,9 +22,8 @@ n_outlet_center = n_channel + 1 - n_points_along_foil;
 progression_around = 1.05;
 progression_sponge_front = 1.05;
 progression_sponge_back = 1.05;
-//n_sponge_top = 14;
-n_sponge_front= 100;
-n_sponge_back= 100;
+n_sponge_front= 57;
+n_sponge_back= 50;
     
 Point(1) = {1.0, -1.66533e-17, 0, 1};
 //Point(2) = {0.999748, 3.65828e-05, 0, 1};
@@ -474,8 +474,8 @@ Transfinite Surface {6} = {point_id_bot, 201, 211, 212}; // channel surface bott
 /// SPONGE
 Point(230) = {outlet_c, sponge_h, 0, size_sponge};      // sponge top back
 Point(231) = {outlet_c, -sponge_h, 0, size_sponge};     // sponge bottom back
-//Point(232) = {outlet_c/2, sponge_h, 0, size_sponge};    // sponge top front
-//Point(233) = {outlet_c/2, -sponge_h, 0, size_sponge};   // sponge bottom front
+//Point(232) = {outlet_c/2, inlet_h + (inlet_h-sponge_h)/2, 0, size_sponge};    // sponge top front
+//Point(233) = {outlet_c/2, -(inlet_h + (inlet_h-sponge_h)/2), 0, size_sponge};   // sponge bottom front
 Line(230)  = {210, 230};                                // sponge outlet top line
 Line(231)  = {211, 231};                                // sponge outlet bottom line
 Line(232)  = {200, 230};                                // sponge top line
@@ -490,19 +490,25 @@ Transfinite Curve {230, 231} = n_sponge_back Using Progression progression_spong
 Plane Surface(7) = {230};                               // sponge top
 Plane Surface(8) = {231};                               // sponge bottom
 
-//Recombine Surface{100};
+//Transfinite Surface{7};
+//Recombine Surface{1,2,5,6,7};
 
 /// MESH SIZES
-Mesh.Algorithm = 6;
-Mesh.SubdivisionAlgorithm = 1;  // 1 to subdivide as quadrangles
+//Mesh.ElementOrder = 1;
+//Mesh.Algorithm = 6;
+//Mesh.SubdivisionAlgorithm = 1;  // 1 to subdivide as quadrangles
 Mesh.RecombineAll = 1;
+Mesh.SubdivisionAlgorithm = -1;
 Mesh.RecombinationAlgorithm = 1; // or 3; to leave no triangles
 
 /// BOUNDARIES
-Physical Curve("Inlet", 300) = {233, 204, 203, 232};
+Physical Curve(300) = {233, 204, 203, 232};  // "Inlet", 
+// TODO: only inlet in channel, not sponge Physical Curve(300) = {204, 203};  // "Inlet", 
 //Physical Curve("Sponge", 301) = {234, 235};
-Physical Curve("Outlet", 302) = {231, 212, 211, 230};
-Physical Curve("BB_BC", 303) = {1, 3:197};
+Physical Curve(302) = {231, 212, 211, 230};  // "Outlet", 
+Physical Curve(303) = {1, 3:197};  // "BB_BC", 
 Physical Surface(236) = {1, 2, 6, 5, 7, 8};
+
 Mesh 2;
+
 Save "NACA0012_0deg.msh";

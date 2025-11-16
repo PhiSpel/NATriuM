@@ -138,17 +138,29 @@ public:
 		}
 		// check uniqueness in one direction
 		std::vector<dealii::types::boundary_id>::iterator it;
+                LOG(DETAILED) << "Boundary IDs in mesh: ";
+                for (size_t i = 0; i < tria_boundary_ids.size(); i++) LOG(DETAILED) << tria_boundary_ids.at(i) << ", ";
+                LOG(DETAILED) << std::endl;
+                
+                LOG(DETAILED) << "Boundary IDs in boundaries: ";
+                for (size_t i = 0; i < collection_boundary_ids.size(); i++) LOG(DETAILED) << collection_boundary_ids.at(i) << ", ";
+                LOG(DETAILED) << std::endl;
+
 		for (size_t i = 0; i < tria_boundary_ids.size(); i++) {
 			it = std::find(collection_boundary_ids.begin(),
 					collection_boundary_ids.end(), tria_boundary_ids.at(i));
+                        //LOG(DETAILED) << "Found boundary ID " << tria_boundary_ids.at(i) << "in mesh";
 			if (it == collection_boundary_ids.end()) {
 				LOG(ERROR) << "Found boundary ID "
 						<< size_t(tria_boundary_ids.at(i))
-						<< " in mesh, but not in boundaries." << endl;
-				result = false;
+						<< " in mesh, but not in boundaries. Removed it from mesh IDs." << endl;
+				//tria_boundary_ids.erase(it);
+                                result = false;
 			} else {
+                                //LOG(DETAILED) << ", matching it to " << collection_boundary_ids.at(i) << std::endl;
 				collection_boundary_ids.erase(it);
 			}
+                        //m_triangulation->set_boundary_ids(tria_boundary_ids);
 		}
 		// check uniqueness in other directions
 		for (size_t i = 0; i < collection_boundary_ids.size(); i++) {

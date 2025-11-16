@@ -7,7 +7,8 @@ ADD_EXECUTABLE( ${TARGET}
                 DiamondObstacle2D.cpp
                 )
 # link natrium library to executable
-include_directories( /usr/include/boost ../../../library)
+include_directories( /usr/include/boost ../../library)
+target_include_directories( ${TARGET} PRIVATE ../../library)
 target_link_libraries(  ${TARGET}
         natrium
         ${Boost_FILESYSTEM_LIBRARY}

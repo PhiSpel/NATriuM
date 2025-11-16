@@ -2,7 +2,7 @@
 add_subdirectory(step-grid-in)
 #add_subdirectory(LidDrivenCavity2D)
 #add_subdirectory(MixingLayer3D)
-#add_subdirectory(Sphere)
+add_subdirectory(Sphere)
 #add_subdirectory(TaylorGreenVortex3D)
 #add_subdirectory(TurbulentChannel)
 

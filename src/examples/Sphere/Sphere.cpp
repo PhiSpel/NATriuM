@@ -90,15 +90,11 @@ namespace natrium {
         const dealii::SphericalManifold<3> manifold1(dealii::Point<3>(0, 0, 0));
         make_inner_manifold(mesh, manifold1, 0.5,1);
 
-
         mesh.set_manifold(1, manifold1);
 
         dealii::TransfiniteInterpolationManifold<3> transfinite_manifold;
         transfinite_manifold.initialize(mesh);
         mesh.set_manifold(0, transfinite_manifold);
-
-
-
 
         const int inlet_x = -2;
         const int outlet_x = 8;
@@ -107,9 +103,7 @@ namespace natrium {
 
         std::vector<unsigned int> repetitions;
 
-
         dealii::Triangulation<3> merge;
-
 
 // make adjacent regions
 
@@ -128,19 +122,9 @@ namespace natrium {
                     new_mesh.set_all_manifold_ids(2);
 
                     dealii::GridGenerator::merge_triangulations(new_mesh,mesh, mesh, 1.0e-12);
-
-
-
                 }
             }
         }
-
-
-
-
-
-
-
 
 // set boundary ids
         DealIIExtensions::set_boundary_ids_at_hyperplane<3>(mesh, 0, inlet_x, 2); // left
@@ -149,10 +133,6 @@ namespace natrium {
         DealIIExtensions::set_boundary_ids_at_hyperplane<3>(mesh, 1, width, 5);
         DealIIExtensions::set_boundary_ids_at_hyperplane<3>(mesh, 2, -width, 6);
         DealIIExtensions::set_boundary_ids_at_hyperplane<3>(mesh, 2, width, 7);
-
-
-
-
 
         boost::shared_ptr<Mesh<3> > distributed_mesh = boost::make_shared<Mesh<3> >(
                 MPI_COMM_WORLD);
@@ -163,7 +143,7 @@ namespace natrium {
 
         std::stringstream s;
         s << "./grid_sphere.vtk";
-        cout << s.str() << endl;
+        if (is_MPI_rank_0()) LOG(WELCOME) << s.str() << endl;
         std::ofstream out(s.str());
         dealii::GridOut grid_out;
         grid_out.write_vtk(mesh, out);

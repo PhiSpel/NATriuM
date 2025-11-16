@@ -4,7 +4,7 @@
 
 # It is good practise to specify a version requirement:
 #
-cmake_minimum_required( VERSION 2.8.8 )
+cmake_minimum_required( VERSION 3.5 )
 set(CMAKE_CXX_STANDARD 17)
 
 # Find deal library

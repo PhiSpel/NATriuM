@@ -31,15 +31,17 @@ using namespace natrium;
 
 //! [Main function]
 int main(int argc, char** argv) {
-
     MPIGuard::getInstance();
     CommandLineParser parser(argc, argv);
     parser.setArgument<double>("Ma", "Mach number", 1.5);
     parser.setArgument<int>("Re", "Reynolds number", 10000);
-    parser.setArgument<int>("ref-level", "Refinement level", 1);
+    parser.setArgument<int>("ref-level", "Refinement level", 0);
     parser.setArgument<int>("aoa", "Angle of attack", 0);
     parser.setArgument<int>("server-end", "Maximum server time [s]", 70000);
     parser.setArgument<string>("foilname", "Folder of domain mesh", "nonUni_closed");
+    parser.setArgument<int>("n-no-out", "Iterations without output", 0);
+    parser.setArgument<double>("Pr", "Prandtl number", 1.0);
+    parser.setArgument<int>("iTmax", "max simulation steps", 50000);
 
     try {
         parser.importOptions();
@@ -51,7 +53,7 @@ int main(int argc, char** argv) {
     const int refLevel = parser.getArgument<int>("ref-level");
 
     // set Reynolds and Mach number
-    const double Ma = parser.getArgument<double>("Ma")*sqrt(1.4);
+    const double Ma = parser.getArgument<double>("Ma");//*sqrt(1.4)
     const double gamma = 1.4;
     // increase velocity to gain correct speed
 
@@ -59,37 +61,38 @@ int main(int argc, char** argv) {
 
     // set Problem so that the right Re and Ma are achieved
     double U = 1;
-    double reference_temperature = 1;
+    double reference_temperature = 1.;  // 0.9;
     double scaling = sqrt(3) * U / (Ma * sqrt(gamma*reference_temperature));
     const double viscosity = U / Re; // (because L = 1)
     int aoa = parser.getArgument<int>("aoa");
 
     // make problem and solver objects
-	boost::shared_ptr<ProblemDescription<2>> obstacle_flow
+    boost::shared_ptr<ProblemDescription<2>> obstacle_flow
         = boost::make_shared<DiamondObstacle2D>(U, viscosity, refLevel, aoa, parser.getArgument<string>("foilname"));
-	//! [Problem]
+    //! [Problem]
 
-	//! [Configuration]
-	std::stringstream dirname;
+    //! [Configuration]
+    std::stringstream dirname;
     dirname << getenv("NATRIUM_HOME") << "/step-grid-in/Re" << Re << "-Ma" << Ma << "-reflevel" << refLevel
             << "-aoa" << aoa << "-time" << std::time(nullptr);
-	boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
-	configuration->setOutputDirectory(dirname.str());
+    boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
+    configuration->setOutputDirectory(dirname.str());
     configuration->setUserInteraction(false);
     configuration->setOutputCheckpointInterval(100000);
-	configuration->setOutputSolutionInterval(10000);
+    configuration->setNoOutputInterval(parser.getArgument<int>("n-no-out"));
+    configuration->setOutputSolutionInterval(10000);
     configuration->setStencilScaling(scaling);
-	configuration->setNumberOfTimeSteps(200000);
+    configuration->setNumberOfTimeSteps(parser.getArgument<int>("iTmax"));
+    configuration->setSimulationEndTime(parser.getArgument<double>("tmax"));
     configuration->setHeatCapacityRatioGamma(gamma);
-	//configuration->setTimeIntegrator(EXPONENTIAL);
-	configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
+    configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
     configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
-//	 configuration->setForcingScheme(NO_FORCING);
-	configuration->setStencil(Stencil_D2Q19V);
-	configuration->setMachNumber(Ma);
+    configuration->setStencil(Stencil_D2Q19H);
+    configuration->setReferenceTemperature(reference_temperature);
+    configuration->setPrandtlNumber(parser.getArgument<double>("Pr"));
+    //configuration->setMachNumber(Ma);
     configuration->setSupportPoints(GAUSS_LOBATTO_CHEBYSHEV_POINTS);
     configuration->setCollisionScheme(BGK_STANDARD);
-    // configuration->setSimulationEndTime(30);
     configuration->setServerEndTime(parser.getArgument<int>("server-end"));
 
     parser.applyToSolverConfiguration(*configuration);
@@ -99,7 +102,7 @@ int main(int argc, char** argv) {
 
     if (is_MPI_rank_0()) LOG(WELCOME) << "NATriuM step-grid-in terminated." << endl;
 
-	return 0;
+    return 0;
 }
 
 //! [Solver]

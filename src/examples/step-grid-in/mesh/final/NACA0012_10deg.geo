@@ -37,9 +37,9 @@ Transfinite Curve {1:nx} = n_foil Using Progression 1;  // `Using Progression 1`
 
 
 /// INLET
-Point(200) = {0, inlet_r, 0, size_in_out};       // inlet top
-Point(201) = {0, -inlet_r, 0, size_in_out};      // inlet bottom
-Point(202) = {inlet_c-inlet_front, 0, 0, size_in_out};     // inlet front
+Point(200) = {0, inlet_r, 0, 1};       // inlet top
+Point(201) = {0, -inlet_r, 0, 1};      // inlet bottom
+Point(202) = {inlet_c-inlet_front, 0, 0, 1};     // inlet front
 Point(203) = {inlet_c, 0, 0};                          // inlet center
 Line(200)  = {point_id_front, 202};                               // inlet front line
 Line(201)  = {200, point_id_top};                      // inlet top line
@@ -56,8 +56,8 @@ Transfinite Surface {1} = {202, point_id_front, point_id_top, 200};          // 
 Transfinite Surface {2} = {202, 201, point_id_bot, point_id_front};          // inlet surface bottom
 
 /// OUTLET
-Point(210) = {outlet_c, outlet_h, 0, size_in_out};     // outlet top
-Point(211) = {outlet_c, -outlet_h, 0, size_in_out};    // outlet bottom
+Point(210) = {outlet_c, outlet_h, 0, 1};     // outlet top
+Point(211) = {outlet_c, -outlet_h, 0, 1};    // outlet bottom
 Point(212) = {outlet_c, 0, 0, size_foil};              // outlet center
 Line(210)  = {1, 212};                                 // outlet center line
 Line(211)  = {210, 212};                               // outlet end top line

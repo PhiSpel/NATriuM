@@ -6,7 +6,7 @@ add_subdirectory(Sphere)
 #add_subdirectory(TaylorGreenVortex3D)
 #add_subdirectory(TurbulentChannel)
 
-#add_subdirectory(archive/static-droplet)
+add_subdirectory(SodShockTube)
 #add_subdirectory(archive/step-couette3D)
 #add_subdirectory(archive/step-decayingTurbulence2D)
 #add_subdirectory(archive/step-poiseuille2D)

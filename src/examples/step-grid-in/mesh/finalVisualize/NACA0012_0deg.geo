@@ -1,4 +1,5 @@
 //FILE newNonUni 0deg res100
+nc = 3;
 
 inlet_r      = 4;
 inlet_front  = 3;
@@ -6,21 +7,22 @@ inlet_c      = 0.3;
 outlet_c     = 6;
 outlet_h     = inlet_r;
 sponge_h     = inlet_r * 3;
-point_id_top = 64;
-point_id_front = 100;
-point_id_bot = 136;
-n_around     = 150;
+pid_top      = 67;
+pid_front    = 100;
+pid_back     = 1;
+pid_bot      = 133;
+n_around     = 150/nc;
 n_foil       = 2;  // number of points per foil section; 2 for just the section, 3 to split once, ...
-n_inlet      = point_id_front - point_id_top + 1;  // top and bottom, each; 31 default points; additional 31-1 (30 segments) points for each n_foil above 2
+n_inlet      = (pid_front - pid_top)/nc+1;  // top and bottom, each; 31 default points; additional 31-1 (30 segments) points for each n_foil above 2
 channel_l    = 1.5;
 channel_h    = inlet_r;
-n_channel    = 600;  // number of points on top and bottom
-n_outlet_center = n_channel - point_id_top + 1;
+n_channel    = 600/nc;  // number of points on top and bottom
+n_outlet_center = n_channel - pid_top/nc + pid_back;
 progression_around = 1.01;
 progression_sponge_front = 1.05;
 progression_sponge_back = 1.05;
-n_sponge_front= 79;
-n_sponge_back= 70;
+n_sponge_front= 79/nc;
+n_sponge_back= 70/nc;
 
 //last point on bottom changed to force asymmetry - no effect on vortex shedding
 x={1.0, 0.99, 0.98, 0.97, 0.96, 0.95, 0.94, 0.93, 0.92, 0.91, 0.9, 0.89, 0.88, 0.87, 0.86, 0.85, 0.84, 0.83, 0.82, 0.81, 0.8, 0.79, 0.78, 0.77, 0.76, 0.75, 0.74, 0.73, 0.72, 0.71, 0.7, 0.69, 0.68, 0.67, 0.66, 0.65, 0.64, 0.63, 0.62, 0.61, 0.6, 0.59, 0.58, 0.57, 0.56, 0.55, 0.54, 0.53, 0.515705, 0.5, 0.484295, 0.468605, 0.452946, 0.437333, 0.421783, 0.406309, 0.390928, 0.375655, 0.360504, 0.345492, 0.330631, 0.315938, 0.301426, 0.28711, 0.273005, 0.259123, 0.245479, 0.232087, 0.218958, 0.206107, 0.193546, 0.181288, 0.169344, 0.157726, 0.146447, 0.135516, 0.124944, 0.114743, 0.104922, 0.095492, 0.08646, 0.077836, 0.069629, 0.061847, 0.054497, 0.047586, 0.041123, 0.035112, 0.02956, 0.024472, 0.019853, 0.015708, 0.012042, 0.008856, 0.006156, 0.003943, 0.002219, 0.000987, 0.000247, 0.0, 0.000247, 0.000987, 0.002219, 0.003943, 0.006156, 0.008856, 0.012042, 0.015708, 0.019853, 0.024472, 0.02956, 0.035112, 0.041123, 0.047586, 0.054497, 0.061847, 0.069629, 0.077836, 0.08646, 0.095492, 0.104922, 0.114743, 0.124944, 0.135516, 0.146447, 0.157726, 0.169344, 0.181288, 0.193546, 0.206107, 0.218958, 0.232087, 0.245479, 0.259123, 0.273005, 0.28711, 0.301426, 0.315938, 0.330631, 0.345492, 0.360504, 0.375655, 0.390928, 0.406309, 0.421783, 0.437333, 0.452946, 0.468605, 0.484295, 0.5, 0.515705, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.6, 0.61, 0.62, 0.63, 0.64, 0.65, 0.66, 0.67, 0.68, 0.69, 0.7, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 
@@ -32,14 +34,14 @@ y={-0.0, 0.001444, 0.00287, 0.004277, 0.005667, 0.007039, 0.008395, 0.009733, 0.
 };
 nx = #x[];
 
-For i In {0:nx-1}
-  Point(i+1) = {x[i], y[i], 0, 1};
+For i In {pid_back:nx:nc}
+  Point(i) = {x[i-1], y[i-1], 0, 1};
 EndFor
-For i In {1:nx-1}
-  Line(i) = {i, i+1};
+For i In {pid_back:nx-nc:nc}
+  Line(i) = {i, i+nc};
 EndFor
-Line(nx) = {nx, 1};
-Transfinite Curve {1:nx} = n_foil Using Progression 1;  // `Using Progression 1` not necessary!
+Line(nx-nc+pid_back) = {196, pid_back};
+Transfinite Curve {pid_back:nx:nc} = n_foil Using Progression 1;  // `Using Progression 1` not necessary!
 
 
 /// INLET
@@ -47,25 +49,25 @@ Point(200) = {0, inlet_r, 0, 1};       // inlet top
 Point(201) = {0, -inlet_r, 0, 1};      // inlet bottom
 Point(202) = {inlet_c-inlet_front, 0, 0, 1};     // inlet front
 Point(203) = {inlet_c, 0, 0};                          // inlet center
-Line(200)  = {point_id_front, 202};                               // inlet front line
-Line(201)  = {200, point_id_top};                      // inlet top line
-Line(202)  = {201, point_id_bot};                      // inlet bottom line
+Line(200)  = {pid_front, 202};                               // inlet front line
+Line(201)  = {200, pid_top};                      // inlet top line
+Line(202)  = {201, pid_bot};                      // inlet bottom line
 Ellipse(203) = {200, 203, 203, 202};                   // inlet circle line top
 Ellipse(204) = {202, 203, 203, 201};                   // inlet circle line bottom
 Transfinite Curve {200, -201, -202} = n_around Using Progression progression_around;  // inlet lines points
 Transfinite Curve {203, 204} = n_inlet Using Progression 1;        // inlet circle points
-Curve Loop (200) = {-203, 201, point_id_top:point_id_front-1, 200}; // inlet loop top
-Curve Loop (201) = {-200, point_id_front:point_id_bot-1, -202, -204}; // inlet loop bottom
+Curve Loop (200) = {-203, 201, pid_top:pid_front-1:nc, 200}; // inlet loop top
+Curve Loop (201) = {-200, pid_front:pid_bot-1:nc, -202, -204}; // inlet loop bottom
 Plane Surface(1) = {200};                                // inlet surface top
 Plane Surface(2) = {201};                                // inlet surface bottom
-Transfinite Surface {1} = {202, point_id_front, point_id_top, 200};          // inlet surface top
-Transfinite Surface {2} = {202, 201, point_id_bot, point_id_front};          // inlet surface bottom
+Transfinite Surface {1} = {202, pid_front, pid_top, 200};          // inlet surface top
+Transfinite Surface {2} = {202, 201, pid_bot, pid_front};          // inlet surface bottom
 
 /// OUTLET
 Point(210) = {outlet_c, outlet_h, 0, 1};     // outlet top
 Point(211) = {outlet_c, -outlet_h, 0, 1};    // outlet bottom
-Point(212) = {outlet_c, 0, 0, size_foil};              // outlet center
-Line(210)  = {1, 212};                                 // outlet center line
+Point(212) = {outlet_c, 0, 0, 1};              // outlet center
+Line(210)  = {pid_back, 212};                                 // outlet center line
 Line(211)  = {210, 212};                               // outlet end top line
 Line(212)  = {211, 212};                               // outlet end bottom line
 Transfinite Curve {210, 213, 214} = n_outlet_center Using Progression 1;  // outlet center lines points
@@ -78,16 +80,16 @@ Transfinite Curve {220} = n_channel Using Progression 1;      // channel top poi
 Transfinite Curve {221} = n_channel Using Progression 1;      // channel bottom points
 
 /// OUTLET / CHANNEL SURFACES
-Curve Loop(222) = {-201, 220, 211, -210, 1:point_id_top-1}; // channel top
-Curve Loop(223) = {202, point_id_bot:nx, 210, -212, -221}; // channel bottom
+Curve Loop(222) = {-201, 220, 211, -210, pid_back:pid_top-1:nc}; // channel top
+Curve Loop(223) = {202, pid_bot:nx-1:nc, 210, -212, -221}; // channel bottom
 Plane Surface(5) = {222};                               // channel top
 Plane Surface(6) = {223};                               // channel bottom
-Transfinite Surface {5} = {point_id_top, 212, 210, 200}; // channel surface top
-Transfinite Surface {6} = {point_id_bot, 201, 211, 212}; // channel surface bottom
+Transfinite Surface {5} = {pid_top, 212, 210, 200}; // channel surface top
+Transfinite Surface {6} = {pid_bot, 201, 211, 212}; // channel surface bottom
 
 /// SPONGE
-Point(230) = {outlet_c, sponge_h, 0, size_sponge};      // sponge top back
-Point(231) = {outlet_c, -sponge_h, 0, size_sponge};     // sponge bottom back
+Point(230) = {outlet_c, sponge_h, 0, 1};      // sponge top back
+Point(231) = {outlet_c, -sponge_h, 0, 1};     // sponge bottom back
 Line(230)  = {210, 230};                                // sponge outlet top line
 Line(231)  = {211, 231};                                // sponge outlet bottom line
 Line(232)  = {200, 230};                                // sponge top line
@@ -113,7 +115,7 @@ Mesh.RecombinationAlgorithm = 1; // or 3; to leave no triangles
 /// BOUNDARIES
 Physical Curve(300) = {233, 204, 203, 232};  // "Inlet", 
 Physical Curve(302) = {231, 212, 211, 230};  // "Outlet", 
-Physical Curve(303) = {1:nx};  // "BB_BC", 
+Physical Curve(303) = {pid_back:nx-pid_back:nc};  // "BB_BC", 
 Physical Surface(236) = {1, 2, 6, 5, 7, 8};
 
 Mesh 2;

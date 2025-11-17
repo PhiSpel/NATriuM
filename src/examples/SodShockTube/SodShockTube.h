@@ -53,7 +53,7 @@ public:
    * @param trafo_x < 1: 0=regular grid spacing
    * @param trafo_y < 1: 0=regular grid spacing
    **/
-  SodShockTube(int length, double viscosity, size_t refinement_level, double u0, double kappa, double perturbation=0.05, double trafo_x=0, double trafo_y=0);
+  SodShockTube(int length, double viscosity, size_t refinement_level, double u0, double kappa, size_t nx, double perturbation=0.05, double trafo_x=0, double trafo_y=0);
 
   /// destructor
   virtual ~SodShockTube();
@@ -85,7 +85,7 @@ private:
     double m_tY;
 
     UnstructuredGridFunc(double trafo_x, double trafo_y):
-           m_tX (trafo_x), m_tY (trafo_y)  {
+      m_tX (trafo_x), m_tY (trafo_y)  {
     }
 
     double trans(const double y, double trafo) const {
@@ -104,6 +104,7 @@ private:
   double m_perturbation;
   double m_trafoX;
   double m_trafoY;
+	size_t m_nx;
 
   boost::shared_ptr<Mesh<2> > makeGrid(int length);
 

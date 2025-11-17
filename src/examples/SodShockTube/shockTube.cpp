@@ -43,6 +43,8 @@ int main(int argc, char** argv) {
   parser.setPositionalArgument<int>("ref-level",
     "refinement of the computational grid");
   parser.setArgument<int>("length", "length in x direction", 1);  // 25?!
+  parser.setArgument<int>("nx",
+    "number of cells in x-direction", 25);  // p=4 -> 100 grid points
   parser.setArgument<double>("tx",
     "transformation of the grid in x-direction (<1)", 0);
   parser.setArgument<double>("ty",
@@ -75,7 +77,9 @@ int main(int argc, char** argv) {
     parser.getArgument<int>("length"),
     scaled_viscosity,
     parser.getArgument<int>("ref-level"),
-    u0, kappa, perturbation,
+    u0, kappa,
+    parser.getArgument<double>("nx"),
+		perturbation,
     parser.getArgument<double>("tx"),
     parser.getArgument<double>("ty")
   );

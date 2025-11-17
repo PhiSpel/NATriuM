@@ -20,9 +20,10 @@ namespace natrium {
 
 SodShockTube::SodShockTube(
 	int length, double viscosity, size_t refinement_level, double u0,
-  double kappa, double perturbation, double trafo_x, double trafo_y) :
+  double kappa, size_t nx, double perturbation, double trafo_x, double trafo_y) :
     ProblemDescription<2>(makeGrid(length), viscosity, 1.0),
 		m_length(length), m_u0(u0), m_kappa(kappa), m_refinementLevel(refinement_level),
+		m_nx(nx),
 		m_perturbation(perturbation), m_trafoX(trafo_x), m_trafoY(trafo_y)  {
   assert(trafo_x >=0);
   assert(trafo_x < 1);
@@ -66,14 +67,14 @@ double SodShockTube::InitialTemperature::value(const dealii::Point<2>& x, const 
 boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(int length) {
   //Creation of the principal domain
 #ifdef WITH_TRILINOS_MPI
-  boost::shared_ptr<Mesh<2> > rect = boost::make_shared<Mesh<2>>(MPI_COMM_WORLD);
+  boost::shared_ptr<Mesh<2>> rect = boost::make_shared<Mesh<2>>(MPI_COMM_WORLD);
 #else
-  boost::shared_ptr<Mesh<2> > rect = boost::make_shared<Mesh<2>>();
+  boost::shared_ptr<Mesh<2>> rect = boost::make_shared<Mesh<2>>();
 #endif
   const dealii::Point<2> left = {0.0,0.0};
-  const dealii::Point<2> right = {static_cast<double>(length), 1.0};
-  const std::vector <unsigned int>& reps = {static_cast<unsigned int>(length), 1};
-
+  const dealii::Point<2> right = {static_cast<double>(length), 1./static_cast<double>(m_nx)};
+  // const std::vector <unsigned int>& reps = {static_cast<unsigned int>(length), 1};
+  const std::vector<unsigned int>& reps = {m_nx, 1};
   dealii::GridGenerator::subdivided_hyper_rectangle(*rect, reps, left, right, true);
   //dealii::GridGenerator::hyper_cube(*rect, 0, 1);
   // Assign boundary indicators to the faces of the "parent cell"
@@ -82,7 +83,6 @@ boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(int length) {
   //cell->face(1)->set_boundary_id(1);  // right
   //cell->face(2)->set_boundary_id(2);  // top
   //cell->face(3)->set_boundary_id(3);  // bottom
-
   return rect;
 }
 
@@ -92,21 +92,14 @@ boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(int length) {
  * @note All boundary types are inherited of BoundaryDescription; e.g. PeriodicBoundary
  */
 boost::shared_ptr<BoundaryCollection<2> > SodShockTube::makeBoundaries() {
-
   // make boundary description
   boost::shared_ptr<BoundaryCollection<2>> boundaries = boost::make_shared<BoundaryCollection<2>>();
   numeric_vector zeroVelocity(2);
-
-  boundaries->addBoundary(
-    boost::make_shared<VelocityNeqBounceBack<2> >(0, zeroVelocity));
-  boundaries->addBoundary(
-    boost::make_shared<VelocityNeqBounceBack<2> >(1, zeroVelocity));
-  boundaries->addBoundary(
-    boost::make_shared<PeriodicBoundary<2> >(2, 3, 1, getMesh()));
-
+  boundaries->addBoundary(boost::make_shared<VelocityNeqBounceBack<2>>(0, zeroVelocity));
+  boundaries->addBoundary(boost::make_shared<VelocityNeqBounceBack<2>>(1, zeroVelocity));
+  boundaries->addBoundary(boost::make_shared<PeriodicBoundary<2>>(2, 3, 1, getMesh()));
   // Get the triangulation object (which belongs to the parent class).
   boost::shared_ptr<Mesh<2> > tria_pointer = getMesh();
-
   return boundaries;
 }
 } /* namespace natrium */

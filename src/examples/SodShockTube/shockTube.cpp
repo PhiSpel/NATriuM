@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
 	configuration->setExponentialFilterNc(3);
 	configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
 
-	parser.applyToSolverConfiguration(*configuration);
+	//parser.applyToSolverConfiguration(*configuration);
 	//configuration->setFiltering(true);
     //configuration->setFilteringScheme(EXmathPONENTIAL_FILTER);
     configuration->setVmultLimiter(bool(parser.getArgument<int>("vmult")));
@@ -145,7 +145,8 @@ int main(int argc, char** argv) {
 	}
 	configuration->setOutputDirectory(dirname.str());
 
-	pout << "Simulation end time will be t_max = " << t_max << endl;
+    parser.applyToSolverConfiguration(*configuration);
+    pout << "Simulation end time will be t_max = " << t_max << endl;
 	// ========================================================================
 	// RUN SOLVER
 	// ========================================================================

@@ -61,11 +61,12 @@ int main(int argc, char** argv) {
 
   double perturbation = 0.05;
   double kappa = 80;
-  double Ma = 0.04 / (1.0 / sqrt(3));
-  double Re;
-  double u0;
 
-  double scaling = 1.0; //sqrt(3) * u0 / Ma;
+  // double Ma = 0.04 / (1.0 / sqrt(3));
+  // double Re;
+  // double u0;
+  // double scaling = sqrt(3) * u0 / Ma
+  double scaling = 1.0;
   double scaled_viscosity = parser.getArgument<int>("length") * parser.getArgument<double>("visc");
 
   boost::shared_ptr<ProblemDescription<2> > shockTube = boost::make_shared<SodShockTube>(
@@ -74,24 +75,17 @@ int main(int argc, char** argv) {
     parser.getArgument<int>("ref-level"),
     u0, kappa,
     parser.getArgument<int>("nx"),
-		perturbation,
+    perturbation,
     parser.getArgument<double>("tx"),
     parser.getArgument<double>("ty")
   );
 
   double t_max = parser.getArgument<int>("length")*sqrt(3.0)*0.15; //for t_phys = 0.15
-  // **** Grid properties ****
-  /*pout << "**** Grid properties ****" << endl;
-   int noCellsInOneDir = p * pow(2, refinement_level + 1);
-   pout << "Mesh resolution: " << noCellsInOneDir << "x" << noCellsInOneDir
-   << endl;
-   pout << "Number of grid points: " << pow(noCellsInOneDir, 2) << endl;
-   pout << "-------------------------------------" << endl;
-   */
 
   // ========================================================================
   // CONFIGURE SOLVER
   // ========================================================================
+
   boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
   configuration->setSwitchOutputOff(false);
   configuration->setUserInteraction(false);
@@ -153,17 +147,18 @@ int main(int argc, char** argv) {
 
   parser.applyToSolverConfiguration(*configuration);
   pout << "Simulation end time will be t_max = " << t_max << endl;
+
   // ========================================================================
   // RUN SOLVER
   // ========================================================================
 
   natrium::CompressibleCFDSolver<2> solver(configuration, shockTube);
-
   solver.run();
 
   // ========================================================================
   // FINAL OUTPUT
   // ========================================================================
+  
   pout << "Simulation successful." << endl;
   return 0;
 }

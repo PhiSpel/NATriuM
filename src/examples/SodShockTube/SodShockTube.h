@@ -101,10 +101,10 @@ private:
   double m_u0;
   double m_kappa;
   size_t m_refinementLevel;
+  size_t m_nx;
   double m_perturbation;
   double m_trafoX;
   double m_trafoY;
-	size_t m_nx;
 
   boost::shared_ptr<Mesh<2> > makeGrid(int length);
 

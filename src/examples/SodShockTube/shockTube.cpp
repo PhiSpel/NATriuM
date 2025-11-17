@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 
   // double Ma = 0.04 / (1.0 / sqrt(3));
   // double Re;
-  // double u0;
+  double u0;
   // double scaling = sqrt(3) * u0 / Ma
   double scaling = 1.0;
   double scaled_viscosity = parser.getArgument<double>("length") * parser.getArgument<double>("visc");

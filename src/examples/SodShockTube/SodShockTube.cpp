@@ -21,7 +21,7 @@ namespace natrium {
 SodShockTube::SodShockTube(
   double length, double viscosity, size_t refinement_level, double u0,
   double kappa, int nx, double perturbation, double trafo_x, double trafo_y) :
-    ProblemDescription<2>(makeGrid(length), viscosity, 1.0),
+    ProblemDescription<2>(makeGrid(length, nx), viscosity, 1.0),
     m_length(length), m_u0(u0), m_kappa(kappa), m_refinementLevel(refinement_level),
     m_nx(nx),
     m_perturbation(perturbation), m_trafoX(trafo_x), m_trafoY(trafo_y)  {
@@ -64,7 +64,7 @@ double SodShockTube::InitialTemperature::value(const dealii::Point<2>& x, const 
   return return_value;
 }
 
-boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(int length) {
+boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(double length, int nx) {
   //Creation of the principal domain
 
 #ifdef WITH_TRILINOS_MPI

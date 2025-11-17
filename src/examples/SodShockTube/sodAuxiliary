@@ -1,0 +1,7 @@
+for ref in 0 1 2 3 4 5 6; do for cfl in 1 0.5 0.25; do for nu in 3e-3 1e-3 3e-4 1e-4 3e-5; do sbatch sodShock.sh $ref $nu $cfl; done; done; done
+
+DIR=/mnt/c/Users/phili/Desktop/sod;
+if ! [ -d "$DIR" ];
+then mkdir ${DIR};
+fi;
+rsync -tvrP omni:/work/ws-tmp/ps500501-natrium/* ${DIR};

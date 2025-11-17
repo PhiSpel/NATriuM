@@ -99,6 +99,7 @@ int main(int argc, char** argv) {
   configuration->setSimulationEndTime(t_max);
   configuration->setCFL(1);
   configuration->setPrandtlNumber(1.0);
+	configuration->setHeatCapacityRatioGamma(1.4);
 
   configuration->setStencilScaling(scaling);
   configuration->setStencil(Stencil_D2Q25H);

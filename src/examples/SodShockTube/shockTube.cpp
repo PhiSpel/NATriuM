@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
   CommandLineParser parser(argc, argv);
   parser.addDocumentationString("shockTube", "Shocktube as described by Sod (1978)");
   parser.setArgument<int>("ref-level", "refinement of the computational grid", 0);
-  parser.setArgument<int>("length", "length in x direction", 1);
+  parser.setArgument<double>("length", "length in x direction", 1);
   parser.setArgument<int>("nx", "number of cells in x-direction", 25);  // p=4 -> 100 grid points
   parser.setArgument<double>("tx", "transformation of the grid in x-direction (<1)", 0);
   parser.setArgument<double>("ty", "transformation or the grid in y-direction (<1)", 0);
@@ -67,10 +67,10 @@ int main(int argc, char** argv) {
   // double u0;
   // double scaling = sqrt(3) * u0 / Ma
   double scaling = 1.0;
-  double scaled_viscosity = parser.getArgument<int>("length") * parser.getArgument<double>("visc");
+  double scaled_viscosity = parser.getArgument<double>("length") * parser.getArgument<double>("visc");
 
   boost::shared_ptr<ProblemDescription<2> > shockTube = boost::make_shared<SodShockTube>(
-    parser.getArgument<int>("length"),
+    parser.getArgument<double>("length"),
     scaled_viscosity,
     parser.getArgument<int>("ref-level"),
     u0, kappa,
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
     parser.getArgument<double>("ty")
   );
 
-  double t_max = parser.getArgument<int>("length")*sqrt(3.0)*0.15; //for t_phys = 0.15
+  double t_max = parser.getArgument<double>("length")*sqrt(3.0)*0.15; //for t_phys = 0.15
 
   // ========================================================================
   // CONFIGURE SOLVER
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
   if (parser.hasArgument("minion-brown")) {
     dirname << "-MinionBrown";
   }
-  dirname << "/N" << parser.getArgument<int>("ref-level")*2.0*parser.getArgument<int>("length") << "-p"
+  dirname << "/N" << parser.getArgument<int>("ref-level")*2.0*parser.getArgument<double>("nx") << "-p"
     << configuration->getSedgOrderOfFiniteElement() << "-sl"
     << static_cast<int>(configuration->getAdvectionScheme()) << "-coll"
     << static_cast<int>(configuration->getCollisionScheme()) << "-int"

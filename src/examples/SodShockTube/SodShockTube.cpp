@@ -74,7 +74,7 @@ boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(int length) {
   const dealii::Point<2> left = {0.0,0.0};
   const dealii::Point<2> right = {static_cast<double>(length), 1./static_cast<double>(m_nx)};
   // const std::vector <unsigned int>& reps = {static_cast<unsigned int>(length), 1};
-  const std::vector<unsigned int>& reps = {m_nx, 1};
+  const std::vector<unsigned int>& reps = {static_cast<unsigned int>(m_nx), 1};
   dealii::GridGenerator::subdivided_hyper_rectangle(*rect, reps, left, right, true);
   //dealii::GridGenerator::hyper_cube(*rect, 0, 1);
   // Assign boundary indicators to the faces of the "parent cell"

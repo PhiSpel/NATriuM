@@ -19,8 +19,8 @@
 namespace natrium {
 
 SodShockTube::SodShockTube(
-  int length, double viscosity, size_t refinement_level, double u0,
-  double kappa, size_t nx, double perturbation, double trafo_x, double trafo_y) :
+  double length, double viscosity, size_t refinement_level, double u0,
+  double kappa, int nx, double perturbation, double trafo_x, double trafo_y) :
     ProblemDescription<2>(makeGrid(length), viscosity, 1.0),
     m_length(length), m_u0(u0), m_kappa(kappa), m_refinementLevel(refinement_level),
     m_nx(nx),
@@ -73,7 +73,7 @@ boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(int length) {
   boost::shared_ptr<Mesh<2>> rect = boost::make_shared<Mesh<2>>();
 #endif
   const dealii::Point<2> left = {0.0,0.0};
-  const dealii::Point<2> right = {static_cast<double>(length), 1./static_cast<double>(m_nx)};
+  const dealii::Point<2> right = {length, 1./static_cast<double>(m_nx)};
   // const std::vector <unsigned int>& reps = {static_cast<unsigned int>(length), 1};
   const std::vector<unsigned int>& reps = {static_cast<unsigned int>(m_nx), 1};
   dealii::GridGenerator::subdivided_hyper_rectangle(*rect, reps, left, right, true);

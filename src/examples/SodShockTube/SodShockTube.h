@@ -53,7 +53,7 @@ public:
    * @param trafo_x < 1: 0=regular grid spacing
    * @param trafo_y < 1: 0=regular grid spacing
    **/
-  SodShockTube(int length, double viscosity, size_t refinement_level, double u0, double kappa, size_t nx, double perturbation=0.05, double trafo_x=0, double trafo_y=0);
+  SodShockTube(double length, double viscosity, size_t refinement_level, double u0, double kappa, int nx, double perturbation=0.05, double trafo_x=0, double trafo_y=0);
 
   /// destructor
   virtual ~SodShockTube();
@@ -101,7 +101,7 @@ private:
   double m_u0;
   double m_kappa;
   size_t m_refinementLevel;
-  size_t m_nx;
+  int m_nx;
   double m_perturbation;
   double m_trafoX;
   double m_trafoY;

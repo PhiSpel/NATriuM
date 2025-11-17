@@ -31,133 +31,141 @@ using namespace natrium;
 // Main function
 int main(int argc, char** argv) {
 
-	MPIGuard::getInstance(argc, argv);
+  MPIGuard::getInstance(argc, argv);
 
-	// ========================================================================
-	// READ COMMAND LINE PARAMETERS
-	// ========================================================================
+  // ========================================================================
+  // READ COMMAND LINE PARAMETERS
+  // ========================================================================
 
-	CommandLineParser parser(argc, argv);
-	parser.addDocumentationString("shockTube",
-            "Shocktube as described by Sod (1978)");
-	parser.setPositionalArgument<int>("ref-level",
-			"refinement of the computational grid");
-	parser.setArgument<int>("length", "length in x direction", 25);
-	parser.setArgument<double>("tx",
-			"transformation of the grid in x-direction (<1)", 0);
-	parser.setArgument<double>("ty",
-			"transformation or the grid in y-direction (<1)", 0);
-	parser.setArgument<int>("filter", "apply filtering", 0);
-	parser.setArgument<int>("filter-s", "parameter as filter", 32);
-    parser.setArgument<int>("vmult", "apply vMultLimiter", 0);
-    parser.setArgument<double>("visc","viscosity of the fluid",0.001);
+  CommandLineParser parser(argc, argv);
+  parser.addDocumentationString("shockTube",
+    "Shocktube as described by Sod (1978)");
+  parser.setPositionalArgument<int>("ref-level",
+    "refinement of the computational grid");
+  parser.setArgument<int>("length", "length in x direction", 1);  // 25?!
+  parser.setArgument<double>("tx",
+    "transformation of the grid in x-direction (<1)", 0);
+  parser.setArgument<double>("ty",
+    "transformation or the grid in y-direction (<1)", 0);
+  parser.setArgument<int>("filter", "apply filtering", 0);
+  parser.setArgument<int>("filter-s", "parameter as filter", 32);
+  parser.setArgument<int>("vmult", "apply vMultLimiter", 0);
+  parser.setArgument<double>("visc","viscosity of the fluid",0.001);
 
-	try {
-		parser.importOptions();
-	} catch (HelpMessageStop&) {
-		return 0;
-	}
+  try {
+    parser.importOptions();
+  } catch (HelpMessageStop&) {
+    return 0;
+  }
 
-	// ========================================================================
-	// MAKE FLOW PROBLEM
-	// ========================================================================
+  // ========================================================================
+  // MAKE FLOW PROBLEM
+  // ========================================================================
 
-	double perturbation = 0.05;
-	double kappa = 80;
-	double Ma = 0.04 / (1.0 / sqrt(3));
-	double Re;
-	double u0;
+  double perturbation = 0.05;
+  double kappa = 80;
+  double Ma = 0.04 / (1.0 / sqrt(3));
+  double Re;
+  double u0;
+
+  double scaling = 1.0; //sqrt(3) * u0 / Ma;
+  double scaled_viscosity = parser.getArgument<int>("length") * parser.getArgument<double>("visc");
+
+  boost::shared_ptr<ProblemDescription<2> > shockTube = boost::make_shared<SodShockTube>(
+    parser.getArgument<int>("length"),
+    scaled_viscosity,
+    parser.getArgument<int>("ref-level"),
+    u0, kappa, perturbation,
+    parser.getArgument<double>("tx"),
+    parser.getArgument<double>("ty")
+  );
 
 
-    double scaling = 1.0; //sqrt(3) * u0 / Ma;
-    double scaled_viscosity = parser.getArgument<int>("length") * parser.getArgument<double>("visc");
+  double t_max = parser.getArgument<int>("length")*sqrt(3.0)*0.15; //for t_phys = 0.15
+  // **** Grid properties ****
+  /*pout << "**** Grid properties ****" << endl;
+   int noCellsInOneDir = p * pow(2, refinement_level + 1);
+   pout << "Mesh resolution: " << noCellsInOneDir << "x" << noCellsInOneDir
+   << endl;
+   pout << "Number of grid points: " << pow(noCellsInOneDir, 2) << endl;
+   pout << "-------------------------------------" << endl;
+   */
 
-	boost::shared_ptr<ProblemDescription<2> > shockTube = boost::make_shared<
-            SodShockTube>(parser.getArgument<int>("length"),scaled_viscosity, parser.getArgument<int>("ref-level"), u0,
-			kappa, perturbation, parser.getArgument<double>("tx"),
-			parser.getArgument<double>("ty"));
+  // ========================================================================
+  // CONFIGURE SOLVER
+  // ========================================================================
+  boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<SolverConfiguration>();
+  configuration->setSwitchOutputOff(false);
+  configuration->setUserInteraction(false);
+  configuration->setCommandLineVerbosity(ALL);
+  configuration->setOutputTableInterval(10);
+  configuration->setOutputSolutionInterval(10);
+  configuration->setOutputCheckpointInterval(1e9);
+  configuration->setOutputGlobalTurbulenceStatistics(true);
 
+  configuration->setConvergenceThreshold(1e-10);
+  configuration->setSimulationEndTime(t_max);
+  configuration->setCFL(1);
+  configuration->setPrandtlNumber(1.0);
 
-    double t_max = parser.getArgument<int>("length")*sqrt(3.0)*0.15; //for t_phys = 0.15
-	// **** Grid properties ****
-	/*pout << "**** Grid properties ****" << endl;
-	 int noCellsInOneDir = p * pow(2, refinement_level + 1);
-	 pout << "Mesh resolution: " << noCellsInOneDir << "x" << noCellsInOneDir
-	 << endl;
-	 pout << "Number of grid points: " << pow(noCellsInOneDir, 2) << endl;
-	 pout << "-------------------------------------" << endl;
-	 */
+  configuration->setStencilScaling(scaling);
+  configuration->setStencil(Stencil_D2Q25H);
+  configuration->setSedgOrderOfFiniteElement(4);
+  configuration->setCollisionScheme(BGK_STANDARD);
+  configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
+  configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
 
-	// ========================================================================
-	// CONFIGURE SOLVER
-	// ========================================================================
-	boost::shared_ptr<SolverConfiguration> configuration = boost::make_shared<
-			SolverConfiguration>();
-	configuration->setSwitchOutputOff(false);
-	configuration->setUserInteraction(false);
-	configuration->setCommandLineVerbosity(ALL);
-	configuration->setOutputTableInterval(10);	//10
-	configuration->setOutputSolutionInterval(10); //10
-	configuration->setOutputCheckpointInterval(1e9);
-	configuration->setConvergenceThreshold(1e-10);
-	configuration->setStencilScaling(scaling);
-	configuration->setCFL(1);
-	configuration->setSedgOrderOfFiniteElement(2);
-	configuration->setSimulationEndTime(t_max);
-	configuration->setOutputGlobalTurbulenceStatistics(true);
-	configuration->setAdvectionScheme(SEMI_LAGRANGIAN);
-	configuration->setExponentialFilterAlpha(36); //36
-	configuration->setExponentialFilterNc(3);
-	configuration->setEquilibriumScheme(QUARTIC_EQUILIBRIUM);
+  configuration->setExponentialFilterAlpha(36);
+  configuration->setExponentialFilterNc(3);
 
-	//parser.applyToSolverConfiguration(*configuration);
-	//configuration->setFiltering(true);
-    //configuration->setFilteringScheme(EXmathPONENTIAL_FILTER);
-    configuration->setVmultLimiter(bool(parser.getArgument<int>("vmult")));
-    pout << "VMultLimiter is " << configuration->isVmultLimiter() << endl;
-	std::stringstream dirname;
-	dirname << getenv("NATRIUM_HOME") << "/shockTube";
-	if (parser.hasArgument("minion-brown")) {
-		dirname << "-MinionBrown";
-	}
-	dirname << "/N" << parser.getArgument<int>("ref-level")*2.0*parser.getArgument<int>("length") << "-p"
-			<< configuration->getSedgOrderOfFiniteElement() << "-sl"
-			<< static_cast<int>(configuration->getAdvectionScheme()) << "-coll"
-			<< static_cast<int>(configuration->getCollisionScheme()) << "-int"
-			<< static_cast<int>(configuration->getTimeIntegrator()) << "_"
-			<< static_cast<int>(configuration->getDealIntegrator()) << "-CFL"
-			<< configuration->getCFL() << "-reg" << static_cast<int>(configuration->getRegularizationScheme())<< "-scaling"
-            << configuration->getStencilScaling() << "-suppP"
-            << configuration->getSupportPoints() << "-vMult"
-            << configuration->isVmultLimiter() << "-visc"
-            << parser.getArgument<double>("visc");
-	if (parser.getArgument<int>("filter") != 0) {
-		dirname << "-filter" << parser.getArgument<int>("filter") << "-filt_s"
-				<< parser.getArgument<int>("filter-s");
-	}
-	if ((parser.getArgument<double>("tx") != 0)
-			or (parser.getArgument<double>("ty") != 0)) {
-		dirname << "-tx" << parser.getArgument<double>("tx") << "-ty"
-				<< parser.getArgument<double>("ty");
-	}
-	if (configuration->getRegularizationScheme() != NO_REGULARIZATION){
-		dirname << "-reg" << static_cast<int>(configuration->getRegularizationScheme());
-	}
-	configuration->setOutputDirectory(dirname.str());
+  //parser.applyToSolverConfiguration(*configuration);
+  //configuration->setFiltering(true);
+  //configuration->setFilteringScheme(EXmathPONENTIAL_FILTER);
+  configuration->setVmultLimiter(bool(parser.getArgument<int>("vmult")));
+  pout << "VMultLimiter is " << configuration->isVmultLimiter() << endl;
+  std::stringstream dirname;
+  dirname << getenv("NATRIUM_HOME") << "/shockTube";
+  if (parser.hasArgument("minion-brown")) {
+    dirname << "-MinionBrown";
+  }
+  dirname << "/N" << parser.getArgument<int>("ref-level")*2.0*parser.getArgument<int>("length") << "-p"
+    << configuration->getSedgOrderOfFiniteElement() << "-sl"
+    << static_cast<int>(configuration->getAdvectionScheme()) << "-coll"
+    << static_cast<int>(configuration->getCollisionScheme()) << "-int"
+    << static_cast<int>(configuration->getTimeIntegrator()) << "_"
+    << static_cast<int>(configuration->getDealIntegrator()) << "-CFL"
+    << configuration->getCFL() << "-reg" << static_cast<int>(configuration->getRegularizationScheme())<< "-scaling"
+    << configuration->getStencilScaling() << "-suppP"
+    << configuration->getSupportPoints() << "-vMult"
+    << configuration->isVmultLimiter() << "-visc"
+    << parser.getArgument<double>("visc");
+  if (parser.getArgument<int>("filter") != 0) {
+    dirname << "-filter" << parser.getArgument<int>("filter") << "-filt_s"
+      << parser.getArgument<int>("filter-s");
+  }
+  if ((parser.getArgument<double>("tx") != 0)
+      or (parser.getArgument<double>("ty") != 0)) {
+    dirname << "-tx" << parser.getArgument<double>("tx") << "-ty"
+      << parser.getArgument<double>("ty");
+  }
+  if (configuration->getRegularizationScheme() != NO_REGULARIZATION){
+    dirname << "-reg" << static_cast<int>(configuration->getRegularizationScheme());
+  }
+  configuration->setOutputDirectory(dirname.str());
 
-    parser.applyToSolverConfiguration(*configuration);
-    pout << "Simulation end time will be t_max = " << t_max << endl;
-	// ========================================================================
-	// RUN SOLVER
-	// ========================================================================
+  parser.applyToSolverConfiguration(*configuration);
+  pout << "Simulation end time will be t_max = " << t_max << endl;
+  // ========================================================================
+  // RUN SOLVER
+  // ========================================================================
 
-	natrium::CompressibleCFDSolver<2> solver(configuration, shockTube);
+  natrium::CompressibleCFDSolver<2> solver(configuration, shockTube);
 
-	solver.run();
+  solver.run();
 
-	// ========================================================================
-	// FINAL OUTPUT
-	// ========================================================================
-	pout << "Simulation successful." << endl;
-	return 0;
+  // ========================================================================
+  // FINAL OUTPUT
+  // ========================================================================
+  pout << "Simulation successful." << endl;
+  return 0;
 }

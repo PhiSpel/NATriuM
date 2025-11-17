@@ -20,10 +20,9 @@ namespace natrium {
 
 SodShockTube::SodShockTube(
   double length, double viscosity, size_t refinement_level, double u0,
-  double kappa, int nx, double perturbation, double trafo_x, double trafo_y) :
+  double kappa, size_t nx, double perturbation, double trafo_x, double trafo_y) :
     ProblemDescription<2>(makeGrid(length, nx), viscosity, 1.0),
     m_length(length), m_u0(u0), m_kappa(kappa), m_refinementLevel(refinement_level),
-    m_nx(nx),
     m_perturbation(perturbation), m_trafoX(trafo_x), m_trafoY(trafo_y)  {
   assert(trafo_x >=0);
   assert(trafo_x < 1);
@@ -64,7 +63,7 @@ double SodShockTube::InitialTemperature::value(const dealii::Point<2>& x, const 
   return return_value;
 }
 
-boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(double length, int nx) {
+boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(double length, size_t nx) {
   //Creation of the principal domain
 
 #ifdef WITH_TRILINOS_MPI
@@ -73,9 +72,9 @@ boost::shared_ptr<Mesh<2> > SodShockTube::makeGrid(double length, int nx) {
   boost::shared_ptr<Mesh<2>> rect = boost::make_shared<Mesh<2>>();
 #endif
   const dealii::Point<2> left = {0.0,0.0};
-  const dealii::Point<2> right = {length, 1./static_cast<double>(m_nx)};
+  const dealii::Point<2> right = {length, 1./static_cast<double>(nx)};
   // const std::vector <unsigned int>& reps = {static_cast<unsigned int>(length), 1};
-  const std::vector<unsigned int>& reps = {static_cast<unsigned int>(m_nx), 1};
+  const std::vector<unsigned int>& reps = {static_cast<unsigned int>(nx), 1};
   dealii::GridGenerator::subdivided_hyper_rectangle(*rect, reps, left, right, true);
   // dealii::GridGenerator::hyper_cube(*rect, 0, 1);
   return rect;

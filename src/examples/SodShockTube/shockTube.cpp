@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
   if (parser.hasArgument("minion-brown")) {
     dirname << "-MinionBrown";
   }
-  dirname << "/N" << parser.getArgument<int>("ref-level")*2.0*parser.getArgument<double>("nx") << "-p"
+  dirname << "/N" << parser.getArgument<int>("ref-level")*2.0*parser.getArgument<int>("nx") << "-p"
     << configuration->getSedgOrderOfFiniteElement() << "-sl"
     << static_cast<int>(configuration->getAdvectionScheme()) << "-coll"
     << static_cast<int>(configuration->getCollisionScheme()) << "-int"

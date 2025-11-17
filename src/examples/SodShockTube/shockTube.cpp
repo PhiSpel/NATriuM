@@ -38,18 +38,12 @@ int main(int argc, char** argv) {
   // ========================================================================
 
   CommandLineParser parser(argc, argv);
-  parser.addDocumentationString("shockTube",
-    "Shocktube as described by Sod (1978)");
-  parser.setPositionalArgument<int>("ref-level",
-    "refinement of the computational grid");
-  parser.setArgument<int>("length", "length in x direction", 1);  // 25?!
-  parser.setArgument<double>("cfl", "CFL number", 1);  // 25?!
-  parser.setArgument<int>("nx",
-    "number of cells in x-direction", 25);  // p=4 -> 100 grid points
-  parser.setArgument<double>("tx",
-    "transformation of the grid in x-direction (<1)", 0);
-  parser.setArgument<double>("ty",
-    "transformation or the grid in y-direction (<1)", 0);
+  parser.addDocumentationString("shockTube", "Shocktube as described by Sod (1978)");
+  parser.setPositionalArgument<int>("ref-level", "refinement of the computational grid");
+  parser.setArgument<int>("length", "length in x direction", 1);
+  parser.setArgument<int>("nx", "number of cells in x-direction", 25);  // p=4 -> 100 grid points
+  parser.setArgument<double>("tx", "transformation of the grid in x-direction (<1)", 0);
+  parser.setArgument<double>("ty", "transformation or the grid in y-direction (<1)", 0);
   parser.setArgument<int>("filter", "apply filtering", 0);
   parser.setArgument<int>("filter-s", "parameter as filter", 32);
   parser.setArgument<int>("vmult", "apply vMultLimiter", 0);
@@ -109,7 +103,7 @@ int main(int argc, char** argv) {
 
   configuration->setConvergenceThreshold(1e-10);
   configuration->setSimulationEndTime(t_max);
-  configuration->setCFL(parser.getArgument<double>("cfl"));
+  configuration->setCFL(1);
   configuration->setPrandtlNumber(1.0);
 
   configuration->setStencilScaling(scaling);

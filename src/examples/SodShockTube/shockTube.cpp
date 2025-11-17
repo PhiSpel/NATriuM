@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
   parser.setPositionalArgument<int>("ref-level",
     "refinement of the computational grid");
   parser.setArgument<int>("length", "length in x direction", 1);  // 25?!
+  parser.setArgument<double>("cfl", "CFL number", 1);  // 25?!
   parser.setArgument<int>("nx",
     "number of cells in x-direction", 25);  // p=4 -> 100 grid points
   parser.setArgument<double>("tx",
@@ -84,7 +85,6 @@ int main(int argc, char** argv) {
     parser.getArgument<double>("ty")
   );
 
-
   double t_max = parser.getArgument<int>("length")*sqrt(3.0)*0.15; //for t_phys = 0.15
   // **** Grid properties ****
   /*pout << "**** Grid properties ****" << endl;
@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
 
   configuration->setConvergenceThreshold(1e-10);
   configuration->setSimulationEndTime(t_max);
-  configuration->setCFL(1);
+  configuration->setCFL(parser.getArgument<double>("cfl"));
   configuration->setPrandtlNumber(1.0);
 
   configuration->setStencilScaling(scaling);

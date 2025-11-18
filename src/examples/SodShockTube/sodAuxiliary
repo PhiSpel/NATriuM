@@ -5,3 +5,17 @@ if ! [ -d "$DIR" ];
 then mkdir ${DIR};
 fi;
 rsync -tvrP omni:/work/ws-tmp/ps500501-natrium/* ${DIR};
+
+
+for nu in 3e-3 1e-3 3e-4; do sbatch sodShock0.sh $nu 1; done
+for nu in 3e-3 1e-3 3e-4; do sbatch sodShock1.sh $nu 1; done
+for nu in 3e-3 1e-3 3e-4; do sbatch sodShock2.sh $nu 1; done
+for nu in 3e-3 1e-3 3e-4; do sbatch sodShock3.sh $nu 1; done
+for nu in 3e-3 1e-3 3e-4; do sbatch sodShock4.sh $nu 1; done
+for nu in 3e-3 1e-3 3e-4; do sbatch sodShock5.sh $nu 1; done
+
+for p in 1 2 3 4 5 6; do sbatch sodShockP.sh 3e-4 1 $p; done
+
+for cfl in 1 .5 .25 .125 .0625; do sbatch sodShockCfl.sh 3e-4 $cfl; done
+
+for nu in 1e-4 3e-5; do sbatch sodShock4.sh $nu 1; done

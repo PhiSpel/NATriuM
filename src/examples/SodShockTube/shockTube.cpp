@@ -1,8 +1,8 @@
 /**
- * @file static_droplet.cpp
- * @short Static droplet simulation
- * @date 16.11.2015
- * @author Andreas Kraemer, Bonn-Rhein-Sieg University of Applied Sciences, Sankt Augustin
+ * @file shockTube.cpp
+ * @short Sod shock tube simulation
+ * @date 18.11.2025
+ * @author Dominik Wilde, Philipp Spelten, Bonn-Rhein-Sieg University of Applied Sciences, Sankt Augustin
  */
 
 #include <stdlib.h>
@@ -10,21 +10,17 @@
 
 #include "deal.II/numerics/data_out.h"
 #include "deal.II/base/utilities.h"
-
 #include "natrium/solver/CFDSolver.h"
 #include "natrium/solver/CompressibleCFDSolver.h"
 #include "natrium/solver/SolverConfiguration.h"
-
 #include "natrium/problemdescription/ProblemDescription.h"
-
 #include "natrium/utilities/CFDSolverUtilities.h"
 #include "natrium/utilities/BasicNames.h"
-
 #include "natrium/benchmarks/ShearLayer2D.h"
-#include "SodShockTube.h"
-
 #include "natrium/utilities/Info.h"
 #include "natrium/utilities/CommandLineParser.h"
+
+#include "SodShockTube.h"
 
 using namespace natrium;
 

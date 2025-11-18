@@ -14,10 +14,10 @@ for nu in 3e-3 1e-3 3e-4; do sbatch sodShock3.sh $nu 1; done
 for nu in 3e-3 1e-3 3e-4; do sbatch sodShock4.sh $nu 1; done
 for nu in 3e-3 1e-3 3e-4; do sbatch sodShock5.sh $nu 1; done
 
-for p in 1 2 3 4 5 6; do sbatch sodShockP.sh 3e-4 1 $p; done
+for p in 1 2 3 4 5 6; do sbatch sodShockP.sh 1e-5 $p; done
 
 for cfl in 1 .5 .25 .125 .0625; do sbatch sodShockCfl.sh 3e-4 $cfl; done
 
 for nu in 1e-4 3e-5; do sbatch sodShock4.sh $nu 1; done
 
-for ref in 1 2 3 4 5 6; do sbatch sodShock${ref}.sh 1e-5 1; done
+for cfl in 1 .5 .25 .125 .0625; do for ref in 3 4 5; do sbatch sodShock${ref}.sh 1e-5 ${cfl}; done; done

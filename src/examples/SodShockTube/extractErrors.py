@@ -20,12 +20,13 @@ imgtype = ".png"
 transparent = False
 
 imgpath = "/mnt/c/Users/phili/Desktop/sodImages/"
-yi = 1/25/2
+yi = 0
 zi = 0
 
 tmax = 0.15
 gamma = 2#1.4
 PfromR = False
+recalcRhoRef = False
 R = 1
 
 rho1 = 8
@@ -75,10 +76,11 @@ for jobfolder in glob("/mnt/c/Users/phili/Desktop/sod/*/"):
   print("Jobfolder: ", jobfolder)
   jobName = jobfolder.split("/")[-2]
   parameters = jobName.split("_")
-  if len(glob(jobfolder + "slurm_NATriuM_SodShock.out")) == 0:
+  logfilename = glob(jobfolder + "*.out")
+  if len(logfilename) == 0:
     print("::::Error: No logfile found, skipping this job")
     continue
-  logfile = open(jobfolder + "slurm_NATriuM_SodShock.out", "r")
+  logfile = open(logfilename[0], "r")
   lines = logfile.read().splitlines()
   if len(lines) < 50:
     print("::::Error: Logfile seems too short, skipping this job")
@@ -166,8 +168,10 @@ for jobfolder in glob("/mnt/c/Users/phili/Desktop/sod/*/"):
 
   plt.close("all")
 
-  rhoRef = np.interp(xiList, refOld[:,0], refOld[:,1])
-  rhoRef = ref#np.interp(xiList, refOld[:,0], refOld[:,1])
+  if recalcRhoRef:
+    rhoRef = ref
+  else:
+    rhoRef = np.interp(xiList, refOld[:,0], refOld[:,1])
   L1rho = np.mean(np.abs(np.array(rhoList) - rhoRef))
   L2rho = np.sqrt(np.mean(np.pow(np.array(rhoList) - rhoRef, 2)))
   uxRef = np.interp(xiList, refOld[:,0], refOld[:,2])
@@ -184,6 +188,11 @@ LListRefLevel = np.array(LList)
 LListRefLevel = LListRefLevel[LListRefLevel[:,1] == 1e-3]  # viscosity
 LListRefLevel = LListRefLevel[LListRefLevel[:,2] == 1]  # cfl
 LListRefLevel = LListRefLevel[LListRefLevel[:,9] == 4]  # p
+
+LListRefLevel2 = np.array(LList)
+LListRefLevel2 = LListRefLevel2[LListRefLevel2[:,1] == 1e-5]  # viscosity
+LListRefLevel2 = LListRefLevel2[LListRefLevel2[:,2] == 1]  # cfl
+LListRefLevel2 = LListRefLevel2[LListRefLevel2[:,9] == 4]  # p
 
 LListP = np.array(LList)
 Pviscosity = 3e-4
@@ -203,6 +212,7 @@ LListNu = LListNu[LListNu[:,9] == 4]  # p
 
 # for i, dataName, dataLabel in zip([[3,4],[5,6],[7,8]], ["rho", "ux", "T"], ["Density", "Velocity", "Temperature"]):
 for i, dataName, dataLabel in zip([[3,4]], ["rho"], ["Density"]):
+# === REF LEVEL ===
   fig, ax = plt.subplots(figsize=[7, 3.5])
   ax.set_xlabel("Refinement Level")
   ax.set_xticks(LListRefLevel[:,0])
@@ -223,6 +233,24 @@ for i, dataName, dataLabel in zip([[3,4]], ["rho"], ["Density"]):
   ax.legend()
   fig.savefig(imgpath + dataName + "_L2_nu1e-3_cfl1" + imgtype, transparent=transparent, dpi=300)
 
+# === REF LEVEL 2 ===
+  fig, ax = plt.subplots(figsize=[7, 3.5])
+  ax.set_xlabel("Refinement Level")
+  ax.set_xticks(LListRefLevel2[:,0])
+  ax.set_title(dataLabel + " L1 Errors over Refinement Level (nu=1e-5, cfl=1)")
+  ax.scatter(LListRefLevel2[:,0], LListRefLevel2[:,i[0]], label="$L^1$ Error " + dataLabel)
+  ax.legend()
+  fig.savefig(imgpath + dataName + "_L1_nu1e-5_cfl1" + imgtype, transparent=transparent, dpi=300)
+
+  fig, ax = plt.subplots(figsize=[7, 3.5])
+  ax.set_xlabel("Refinement Level")
+  ax.set_xticks(LListRefLevel2[:,0])
+  ax.set_title(dataLabel + " L2 Errors over Refinement Level (nu=1e-5, cfl=1)")
+  ax.scatter(LListRefLevel2[:,0], LListRefLevel2[:,i[1]], label="$L^2$ Error " + dataLabel)
+  ax.legend()
+  fig.savefig(imgpath + dataName + "_L2_nu1e-5_cfl1" + imgtype, transparent=transparent, dpi=300)
+
+# === FE ORDER ===
   fig, ax = plt.subplots(figsize=[7, 3.5])
   ax.set_xlabel("FE Order")
   ax.set_xticks(LListP[:,9])
@@ -239,6 +267,7 @@ for i, dataName, dataLabel in zip([[3,4]], ["rho"], ["Density"]):
   ax.legend()
   fig.savefig(imgpath + dataName + f"_L2Perrors_nu{Pviscosity:.2e}_cfl1" + imgtype, transparent=transparent, dpi=300)
 
+# === CFL ===
   fig, ax = plt.subplots(figsize=[7, 3.5])
   ax.set_xlabel("1/CFL")
   ax.set_xticks(1/LListCfl[:,2])
@@ -255,3 +284,19 @@ for i, dataName, dataLabel in zip([[3,4]], ["rho"], ["Density"]):
   ax.legend()
   fig.savefig(imgpath + dataName + f"_L2Cflerrors_nu{Cflviscosity:.2e}_cfl1" + imgtype, transparent=transparent, dpi=300)
 
+# === NU ===
+  fig, ax = plt.subplots(figsize=[7, 3.5])
+  ax.set_xlabel("Nu")
+  ax.set_xticks(LListNu[:,1])
+  ax.set_title(dataLabel + f"L1 Errors over nu (p=4, cfl=1)")
+  ax.scatter(LListNu[:,1], LListNu[:,i[0]], label="$L^1$ Error " + dataLabel)
+  ax.legend()
+  fig.savefig(imgpath + dataName + f"_L1Nuerrors_cfl1" + imgtype, transparent=transparent, dpi=300)
+
+  fig, ax = plt.subplots(figsize=[7, 3.5])
+  ax.set_xlabel("Nu")
+  ax.set_xticks(LListNu[:,1])
+  ax.set_title(dataLabel + f"L2 Errors over nu (p=4, cfl=1)")
+  ax.scatter(LListNu[:,1], LListNu[:,i[1]], label="$L^2$ Error " + dataLabel)
+  ax.legend()
+  fig.savefig(imgpath + dataName + f"_L2Nuerrors_cfl1" + imgtype, transparent=transparent, dpi=300)

@@ -4,8 +4,6 @@ import vtk
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
-import sympy as sp
-from sympy.abc import y
 
 rc('font', **{'size': 11, 'family': 'sans-serif', 'sans-serif': ['Myriad Pro', 'Arial', 'Tahoma']})
 plt.rcParams['text.usetex'] = True

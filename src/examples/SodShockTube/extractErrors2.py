@@ -5,6 +5,8 @@ from matplotlib import rc
 import sympy as sp
 from sympy.abc import y
 from getData import getData
+from recalcRef import recalcRef
+from recalcRef2 import SodShockAnalytic
 
 rc('font', **{'size': 11, 'family': 'sans-serif', 'sans-serif': ['Myriad Pro', 'Arial', 'Tahoma']})
 plt.rcParams['text.usetex'] = True
@@ -18,8 +20,8 @@ sllbm_size = 1.5*plt.rcParams['lines.markersize']
 imgtype = ".png"
 transparent = False
 onlyRho = False
-# refSource = "txt"
-refSource = "highRes"
+# refSource =
+refSource = "recalc"  # "highRes"  # "txt"
 
 imgpath = "/mnt/c/Users/phili/Desktop/sodImages/"
 if refSource == "txt":
@@ -29,6 +31,25 @@ elif refSource == "highRes":
   imgpath += "RefHighRes/"
   dataLists, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = getData("/mnt/c/Users/phili/Desktop/sod/10908253_nx6400_cfl1_p4/")
   ref = np.array(dataLists).T
+elif refSource == "recalc":
+  imgpath += "Recalc/"
+  dataLists, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = getData("/mnt/c/Users/phili/Desktop/sod/10908253_nx6400_cfl1_p4/")
+  tmax = float(dt)*int(lastIteration)/np.sqrt(3)
+  print("Getting ref from iteration", int(lastIteration), "dt=", float(dt), "tmax=", tmax)
+  # Physics
+  gg=1.4  # gamma = C_v / C_p = 7/5 for ideal gas
+  rL, uL, pL =  8.0,  0.0, 10
+  rR, uR, pR = 1, 0.0, 1
+  # Set Disretization
+  Nx = 6400
+  X = 1.
+  dx = X/(Nx-1)
+  xs = np.linspace(0,X,Nx)
+  iMid = Nx//2
+  t = 0.2
+  analytic = SodShockAnalytic(rL, uL, pL, rR, uR, pR, xs, iMid, tmax, gg)
+  # ref = recalcRef()  # should be 0.15
+  ref = analytic.T
 else:
   raise NotImplementedError("No valid reference source")
 yi = 0

@@ -18,6 +18,7 @@ sllbm_color = 'red'
 sllbm_size = 1.5*plt.rcParams['lines.markersize']
 imgtype = ".png"
 transparent = False
+onlyRho = False
 
 imgpath = "/mnt/c/Users/phili/Desktop/sodImages/"
 yi = 0
@@ -73,6 +74,9 @@ for jobfolder in glob("/mnt/c/Users/phili/Desktop/sod/*nx*/"):
   point_rho = data.GetPointData().GetArray("rho")
   point_ux = data.GetPointData().GetArray("ux")
   point_T = data.GetPointData().GetArray("T")
+  if point_rho is None or point_ux is None or point_T is None:
+    print(f"::::ERROR: Could get point data from {pvtuFilePath}")
+    continue
 
   rhoList = []
   uxList = []
@@ -89,10 +93,17 @@ for jobfolder in glob("/mnt/c/Users/phili/Desktop/sod/*nx*/"):
     uxList.append(point_ux.GetValue(point_id))
     TList.append(point_T.GetValue(point_id))
   
-  # for dataList, dataName in zip([rhoList, uxList, TList], ["rho", "ux", "T"]):
-  for dataList, dataName in zip([rhoList], ["rho"]):
+  if onlyRho:
+    dataIs = [1]
+    dataLists = [rhoList]
+    dataNames = ["rho"]
+  else:
+    dataIs = [1,2,3]
+    dataLists = [rhoList, uxList, TList]
+    dataNames = ["rho", "ux", "T"]
+  for dataI, dataList, dataName in zip(dataIs, dataLists, dataNames):
     fig, ax = plt.subplots(figsize=[7, 3.5])
-    plt.plot(refOld[:,0],refOld[:,1],'b--',label='Reference')
+    plt.plot(refOld[:,0],refOld[:,dataI],'b--',label='Reference')
     ax.scatter(xiList, dataList, marker=sllbm_marker, color=sllbm_color, s=sllbm_size, label="SLLBM")
     ax.set_title(f"Sod Shock Tube: {dataName} (nx={nx}, p={p}, cfl={cfl})")
     ax.legend()
@@ -116,64 +127,50 @@ for jobfolder in glob("/mnt/c/Users/phili/Desktop/sod/*nx*/"):
 
 fs = "failedJobs: "
 for failedJob in failedJobs:
-  ps += " " + failedJob
+  fs += " " + failedJob
 
-LListRefLevel = np.array(LList)
-LListRefLevel = LListRefLevel[LListRefLevel[:,1] == 1]  # cfl
-LListRefLevel = LListRefLevel[LListRefLevel[:,8] == 4]  # p
+LListRef = np.array(LList)
+LListRef = LListRef[LListRef[:,1] == 1]  # cfl
+LListRef = LListRef[LListRef[:,8] == 4]  # p
 
 LListCfl = np.array(LList)
 LListCfl = LListCfl[LListCfl[:,8] == 4]  # p
 
+LListCflRef0 = LListCfl[LListCfl[:,0] == 25]  # nx
+LListCflRef1 = LListCfl[LListCfl[:,0] == 50]  # nx
+LListCflRef2 = LListCfl[LListCfl[:,0] == 100]  # nx
 LListCflRef3 = LListCfl[LListCfl[:,0] == 200]  # nx
 LListCflRef4 = LListCfl[LListCfl[:,0] == 400]  # nx
 LListCflRef5 = LListCfl[LListCfl[:,0] == 800]  # nx
-LListCflRef5 = LListCfl[LListCfl[:,0] == 1600]  # nx
+LListCflRef6 = LListCfl[LListCfl[:,0] == 1600]  # nx
+LListCflRef7 = LListCfl[LListCfl[:,0] == 3200]  # nx
+LListCflRef8 = LListCfl[LListCfl[:,0] == 6400]  # nx
+LListCflRefs = [LListCflRef0, LListCflRef1, LListCflRef2, LListCflRef3, LListCflRef4, LListCflRef5, LListCflRef6, LListCflRef7, LListCflRef8]
 
-# for i, dataName, dataLabel in zip([[3,4],[5,6],[7,8]], ["rho", "ux", "T"], ["Density", "Velocity", "Temperature"]):
-for i, dataName, dataLabel in zip([[3,4]], ["rho"], ["Density"]):
+if onlyRho:
+  dataIs = [[2,3]]
+  dataNames = ["rho"]
+  dataLabels = ["Density"]
+else:
+  dataIs = [[2,3],[4,5],[6,7]]
+  dataNames = ["rho", "ux", "T"]
+  dataLabels = ["Density", "Velocity", "Temperature"]
+
+for i, dataName, dataLabel in zip(dataIs, dataNames, dataLabels):
 # === REF LEVEL ===
-  fig, ax = plt.subplots(figsize=[7, 3.5])
-  ax.set_xlabel("dx")
-  ax.set_title(dataLabel + " L1 Errors over dx")
-  # ax.set_xticks(LListRefLevel[:,11])
-  ax.scatter(LListRefLevel[:,11], LListRefLevel[:,i[0]], label="$L^1$ Error " + dataLabel)
-  ax.set_xscale('log')
-  ax.set_yscale('log')
-  ax.legend()
-  fig.savefig(imgpath + dataName + "_L1_dx" + imgtype, transparent=transparent, dpi=300)
-
-  fig, ax = plt.subplots(figsize=[7, 3.5])
-  ax.set_xlabel("dx")
-  # ax.set_xticks(LListRefLevel[:,11])
-  ax.set_title(dataLabel + " L2 Errors over dx")
-  ax.scatter(LListRefLevel[:,11], LListRefLevel[:,i[1]], label="$L^2$ Error " + dataLabel)
-  ax.set_xscale('log')
-  ax.set_yscale('log')
-  ax.legend()
-  fig.savefig(imgpath + dataName + "_L2_dx" + imgtype, transparent=transparent, dpi=300)
-
-# === CFL ===
-  fig, ax = plt.subplots(figsize=[7, 3.5])
-  ax.set_xlabel("dt")
-  # ax.set_xticks(LListCflRefi[:,10])
-  ax.set_title(dataLabel + f" L1 Errors over dt (refinement level all)")
-  for LListCflRefi, refLevel in zip([LListCflRef3, LListCflRef4, LListCflRef5], ["3", "4", "5"]):
-    ax.scatter(LListCflRefi[:,10], LListCflRefi[:,i[0]], label="$L^1$ Error " + dataLabel + f" Ref{refLevel}")
-  ax.set_xscale('log')
-  ax.set_yscale('log')
-  ax.legend()
-  fig.savefig(imgpath + dataName + f"_L1_dt_refall" + imgtype, transparent=transparent, dpi=300)
-
-  fig, ax = plt.subplots(figsize=[7, 3.5])
-  ax.set_xlabel("dt")
-  # ax.set_xticks(LListCflRefi[:,10])
-  ax.set_title(dataLabel + f" L2 Errors over dt (refinement level all)")
-  for LListCflRefi, refLevel in zip([LListCflRef3, LListCflRef4, LListCflRef5], ["3", "4", "5"]):
-    ax.scatter(LListCflRefi[:,10], LListCflRefi[:,i[0]], label="$L^2$ Error " + dataLabel + f" Ref{refLevel}")
-  ax.set_xscale('log')
-  ax.set_yscale('log')
-  ax.legend()
-  fig.savefig(imgpath + dataName + f"_L2_dt_refall" + imgtype, transparent=transparent, dpi=300)
+  for j, Llevel in zip([0,1], [1,2]):
+    for dataLists, overLabels, k, over in zip([[LListRef], LListCflRefs, LListCflRef0, LListCflRef1, LListCflRef2, LListCflRef3, LListCflRef4, LListCflRef5, LListCflRef6, LListCflRef7, LListCflRef8],
+                                              [[" (CFL 1)"], [f" Ref{refLevel}" for refLevel in range(len(LListCflRefs))], " (Ref0)", " (Ref1)", " (Ref2)", " (Ref3)", " (Ref4)", " (Ref5)", " (Ref6)", " (Ref7)", " (Ref8)"],
+                                              [10,9,9,9,9,9,9,9,9,9,9],
+                                              ["dxCfl1","dtRefAll","dtRef0","dtRef1","dtRef2","dtRef3","dtRef4","dtRef5","dtRef6","dtRef7","dtRef8"]):
+      fig, ax = plt.subplots(figsize=[7, 3.5])
+      ax.set_xlabel(f"{over}")
+      ax.set_title(dataLabel + f" L{Llevel} Errors over {over}")
+      for dataList, overLabel in zip(dataLists, overLabels):
+        ax.scatter(dataList[:,k], dataList[:,i[j]], label=f"$L^{Llevel}$ Error " + dataLabel + overLabel)
+      ax.set_xscale('log')
+      ax.set_yscale('log')
+      ax.legend()
+      fig.savefig(imgpath + dataName + f"_L{Llevel}_{over}" + imgtype, transparent=transparent, dpi=300)
 
   plt.close("all")

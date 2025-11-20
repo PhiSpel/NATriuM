@@ -194,7 +194,7 @@ for jobfolder in glob("/mnt/c/Users/phili/Desktop/sod/*/"):
 
 fs = "failedJobs: "
 for failedJob in failedJobs:
-  ps += " " + failedJob
+  fs += " " + failedJob
 
 LListRefLevel = np.array(LList)
 LListRefLevel = LListRefLevel[LListRefLevel[:,1] == 1e-5]  # viscosity

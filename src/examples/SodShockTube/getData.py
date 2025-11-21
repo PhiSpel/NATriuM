@@ -23,14 +23,13 @@ def getData(jobFolder):
   dt = float([line for line in lines if "::::Actual dt:                " in line][0].removeprefix("::::Actual dt:                ").removesuffix(" s"))
   dx = float([line for line in lines if "::::dx_min:                   " in line][0].removeprefix("::::dx_min:                   "))
   jobid = int(parameters[0])
-  nx = int(parameters[1].removeprefix("nx"))
+  nx = int(1/dx)
   cfl = float(parameters[2].removeprefix("cfl"))
   p = float(parameters[3].removeprefix("p"))
   vtkpath = jobFolder + "output/vtk/"
   lastIteration = str(max([int(pvtuname.removesuffix(".pvtu").split("t_0.")[-1]) for pvtuname in glob(vtkpath + "*.pvtu")]))
   print("::::Last iteration: ", lastIteration)
   pvtuFilePath = vtkpath + f"t_0.{lastIteration}.pvtu"
-  # xiList = np.linspace(0, 1, nx*p).tolist()
   xiList = np.linspace(0, 1, nx).tolist()
 
   reader = vtk.vtkXMLPUnstructuredGridReader()
@@ -52,7 +51,7 @@ def getData(jobFolder):
 
   rhoList = []
   uxList = []
-  uyList = []
+  pList = []
   TList = []
 
   locator = vtk.vtkPointLocator()
@@ -62,9 +61,11 @@ def getData(jobFolder):
   for xi in xiList:
     # point_id_list = vtk.vtkIdList()
     point_id = locator.FindClosestPoint(xi, 1/nx/2, 0)
-    rhoList.append(point_rho.GetValue(point_id))
-    uxList.append(point_ux.GetValue(point_id))
-    uyList.append(point_uy.GetValue(point_id))
-    TList.append(point_T.GetValue(point_id))
+    uxList.append(point_ux.GetValue(point_id)*np.sqrt(3))
+    rho = point_rho.GetValue(point_id)
+    rhoList.append(rho)
+    T = point_T.GetValue(point_id)
+    TList.append(T)
+    pList.append(T*rho)
 
-  return [xiList, rhoList, uxList, uyList, TList], cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration
+  return np.array([xiList, rhoList, uxList, pList, TList]).T, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration

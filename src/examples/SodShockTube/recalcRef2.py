@@ -67,7 +67,7 @@ def SodShockAnalytic(rL, uL, pL, rR, uR, pR, xs, iMid, t, gg):
   v_analytic[0] = xs
   v_analytic[4] = v_analytic[3]/v_analytic[1]  # P=rhoRT, R=1 -> T = P/rho
 
-  return v_analytic
+  return np.array(v_analytic).T
 
 # Physics
 gg=1.4  # gamma = C_v / C_p = 7/5 for ideal gas
@@ -88,12 +88,12 @@ analytic = SodShockAnalytic(rL, uL, pL, rR, uR, pR, xs, iMid, t, gg)
 
 fig, axs = plt.subplots(1,3,figsize=(8,2), layout='constrained')
 axs[0].set_title("Density")
-axs[0].plot(xs,analytic[0].T)
+axs[0].plot(xs,analytic[:,1])
 axs[1].set_title("Velocity")
-axs[1].plot(xs,analytic[1].T)
+axs[1].plot(xs,analytic[:,2])
 axs[1].set_yticks([0.,.2,.4,.6,.8,1.],['','','','','',''])
 axs[2].set_title("Pressure")
-axs[2].plot(xs,analytic[2].T)
+axs[2].plot(xs,analytic[:,3])
 axs[2].set_yticks([0.,.2,.4,.6,.8,1.],['','','','','',''])
 # for i in range(3):
 #   axs[i].set_xlim([0.,1.])

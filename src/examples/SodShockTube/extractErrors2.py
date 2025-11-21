@@ -2,10 +2,8 @@ from glob import glob
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
-import sympy as sp
-from sympy.abc import y
 from getData import getData
-from recalcRef import recalcRef
+from getPyFRData import getPyFRData
 from recalcRef2 import SodShockAnalytic
 
 rc('font', **{'size': 11, 'family': 'sans-serif', 'sans-serif': ['Myriad Pro', 'Arial', 'Tahoma']})
@@ -21,35 +19,36 @@ imgtype = ".png"
 transparent = False
 onlyRho = False
 # refSource =
-refSource = "recalc"  # "highRes"  # "txt"
+refSource = "highRes"  # "PyFR"  # "recalc"  # "txt"
+
+# === Get highest resolution data and calculate analytical inviscous solution ===
+refListHighRes, _, dt, dx, _, _, _, _, nx, lastIteration = getData("/mnt/c/Users/phili/Desktop/sod/10908253_nx6400_cfl1_p4/")
+tmax = float(dt)*int(lastIteration)/np.sqrt(3)  # should be 0.15
+print("Getting ref from iteration", int(lastIteration), "dt=", float(dt), "tmax=", tmax)
+gamma=1.4
+rL, uL, pL = 8, 0, 10
+rR, uR, pR = 1, 0, 1
+Nx = 6400
+X = 1.
+dx = X/(Nx-1)
+xs = np.linspace(0,X,Nx)
+iMid = Nx//2
+refAnalytic = SodShockAnalytic(rL, uL, pL, rR, uR, pR, xs, iMid, tmax, gamma)
+refPyFR = getPyFRData()  # xi, rho, ux, p, T
 
 imgpath = "/mnt/c/Users/phili/Desktop/sodImages/"
 if refSource == "txt":
   imgpath += "RefOld/"
-  ref = np.loadtxt("/mnt/c/Users/phili/Desktop/eval_shocktube_norm/ref14.txt")  # rho, ux, p, T
+  ref = np.loadtxt("/mnt/c/Users/phili/Desktop/eval_shocktube_norm/ref14.txt")
 elif refSource == "highRes":
   imgpath += "RefHighRes/"
-  dataLists, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = getData("/mnt/c/Users/phili/Desktop/sod/10908253_nx6400_cfl1_p4/")
-  ref = np.array(dataLists).T
+  ref = refListHighRes
+elif refSource == "PyFR":
+  imgpath += "PyFR/"
+  ref = refPyFR
 elif refSource == "recalc":
   imgpath += "Recalc/"
-  dataLists, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = getData("/mnt/c/Users/phili/Desktop/sod/10908253_nx6400_cfl1_p4/")
-  tmax = float(dt)*int(lastIteration)/np.sqrt(3)
-  print("Getting ref from iteration", int(lastIteration), "dt=", float(dt), "tmax=", tmax)
-  # Physics
-  gg=1.4  # gamma = C_v / C_p = 7/5 for ideal gas
-  rL, uL, pL =  8.0,  0.0, 10
-  rR, uR, pR = 1, 0.0, 1
-  # Set Disretization
-  Nx = 6400
-  X = 1.
-  dx = X/(Nx-1)
-  xs = np.linspace(0,X,Nx)
-  iMid = Nx//2
-  t = 0.2
-  analytic = SodShockAnalytic(rL, uL, pL, rR, uR, pR, xs, iMid, tmax, gg)
-  # ref = recalcRef()  # should be 0.15
-  ref = analytic.T
+  ref = refAnalytic
 else:
   raise NotImplementedError("No valid reference source")
 yi = 0
@@ -64,40 +63,42 @@ for jobFolder in glob("/mnt/c/Users/phili/Desktop/sod/*nx*/"):
     failedJobs.append(data)
     continue
   else:
-    dataLists, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = data
-  xiList = dataLists[0]
-  rhoList = dataLists[1]
-  uxList = dataLists[2]
-  TList = dataLists[4]
+    datas, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = data
+  xi = datas[:,0]
+  rho = datas[:,1]
+  ux = datas[:,2]
+  T = datas[:,4]
   
   if onlyRho:
     dataIs = [1]
-    dataLists = [rhoList]
+    dataList = [rho]
     dataNames = ["rho"]
   else:
     dataIs = [1,2,4]
-    dataLists = [rhoList, uxList, TList]
+    dataList = [rho, ux, T]
     dataNames = ["rho", "ux", "T"]
-  for dataI, dataList, dataName in zip(dataIs, dataLists, dataNames):
+  for dataI, data, dataName in zip(dataIs, dataList, dataNames):
     fig, ax = plt.subplots(figsize=[7, 3.5])
-    plt.plot(ref[:,0],ref[:,dataI],'b--',label='Reference')
-    ax.scatter(xiList, dataList, marker=sllbm_marker, color=sllbm_color, s=sllbm_size, label="SLLBM")
-    ax.set_title(f"Sod Shock Tube: {dataName} (nx={nx}, p={p}, cfl={cfl})")
+    ax.plot(ref[:,0],ref[:,dataI],'b--',label='Reference')
+    ax.scatter(xi, data, marker=sllbm_marker, color=sllbm_color, s=sllbm_size, label="SLLBM")
+    ax.plot(refPyFR[:,0], refPyFR[:,dataI], label="PyFR")
+    ax.plot(refAnalytic[:,0], refAnalytic[:,dataI], label="Analytic Inviscous")
+    ax.set_title(f"Sod Shock Tube: {dataName} (dx={dx}, dt={dt})")
     ax.legend()
     fig.savefig(imgpath + dataName + "_" + jobName + "_iT" + lastIteration + imgtype, transparent=transparent, dpi=300)
     # plt.show()
 
   plt.close("all")
 
-  rhoRef = np.interp(xiList, ref[:,0], ref[:,1])
-  L1rho = np.mean(np.abs(np.array(rhoList) - rhoRef))
-  L2rho = np.sqrt(np.mean(np.pow(np.array(rhoList) - rhoRef, 2)))
-  uxRef = np.interp(xiList, ref[:,0], ref[:,2])
-  L1ux = np.mean(np.abs(np.array(uxList) - uxRef))
-  L2ux = np.sqrt(np.mean(np.pow(np.array(uxList) - uxRef, 2)))
-  TRef = np.interp(xiList, ref[:,0], ref[:,4])
-  L1T = np.mean(np.abs(np.array(TList) - TRef))
-  L2T = np.sqrt(np.mean(np.pow(np.array(TList) - TRef, 2)))
+  rhoRef = np.interp(xi, ref[:,0], ref[:,1])
+  L1rho = np.mean(np.abs(np.array(rho) - rhoRef))
+  L2rho = np.sqrt(np.mean(np.pow(np.array(rho) - rhoRef, 2)))
+  uxRef = np.interp(xi, ref[:,0], ref[:,2])
+  L1ux = np.mean(np.abs(np.array(ux) - uxRef))
+  L2ux = np.sqrt(np.mean(np.pow(np.array(ux) - uxRef, 2)))
+  TRef = np.interp(xi, ref[:,0], ref[:,4])
+  L1T = np.mean(np.abs(np.array(T) - TRef))
+  L2T = np.sqrt(np.mean(np.pow(np.array(T) - TRef, 2)))
   LList.append([nx, cfl, L1rho, L2rho, L1ux, L2ux, L1T, L2T, p, dt, dx])
 
   print("")
@@ -116,20 +117,19 @@ LListRefCfl2 = LListRef[LListRef[:,1] == 2]  # p
 LListRefCfl4 = LListRef[LListRef[:,1] == 4]  # p
 LListRefCfl8 = LListRef[LListRef[:,1] == 8]  # p
 LListRefCfls = [LListRefCfl8,LListRefCfl4,LListRefCfl2,LListRefCfl1,LListRefCfl05,LListRefCfl025,LListRefCfl0125]
-# LListRef = LListRef[LListRef[:,1] == 1]  # cfl
 
 LListCfl = np.array(LList)
 LListCfl = LListCfl[LListCfl[:,8] == 4]  # p
 
-LListCflRef0 = LListCfl[LListCfl[:,0] == 25]  # nx
-LListCflRef1 = LListCfl[LListCfl[:,0] == 50]  # nx
-LListCflRef2 = LListCfl[LListCfl[:,0] == 100]  # nx
-LListCflRef3 = LListCfl[LListCfl[:,0] == 200]  # nx
-LListCflRef4 = LListCfl[LListCfl[:,0] == 400]  # nx
-LListCflRef5 = LListCfl[LListCfl[:,0] == 800]  # nx
-LListCflRef6 = LListCfl[LListCfl[:,0] == 1600]  # nx
-LListCflRef7 = LListCfl[LListCfl[:,0] == 3200]  # nx
-LListCflRef8 = LListCfl[LListCfl[:,0] == 6400]  # nx
+LListCflRef0 = LListCfl[LListCfl[:,0] == 25]
+LListCflRef1 = LListCfl[LListCfl[:,0] == 50]
+LListCflRef2 = LListCfl[LListCfl[:,0] == 100]
+LListCflRef3 = LListCfl[LListCfl[:,0] == 200]
+LListCflRef4 = LListCfl[LListCfl[:,0] == 400]
+LListCflRef5 = LListCfl[LListCfl[:,0] == 800]
+LListCflRef6 = LListCfl[LListCfl[:,0] == 1600]
+LListCflRef7 = LListCfl[LListCfl[:,0] == 3200]
+LListCflRef8 = LListCfl[LListCfl[:,0] == 6400]
 LListCflRefs = [LListCflRef0, LListCflRef1, LListCflRef2, LListCflRef3, LListCflRef4, LListCflRef5, LListCflRef6, LListCflRef7, LListCflRef8]
 
 if onlyRho:

@@ -16,7 +16,7 @@ plt.rcParams['figure.constrained_layout.use'] = True
 sllbm_marker = 'x'
 sllbm_color = 'red'
 sllbm_size = 1.5*plt.rcParams['lines.markersize']
-imgtype = ".pdf"
+imgtype = ".png"
 transparent = False
 
 # === Get highest resolution data and calculate analytical inviscous solution ===
@@ -34,7 +34,7 @@ suffix = "0.15-dx1.25e-3-dt5e-5"; dtPyFR=5e-5; dxPyFR=1.25e-3
 vtuFilePath = "/home/philipp/PyFR-Test-Cases/2d-viscous-shock-tube/viscous-shock-tube-"+suffix+".vtu"
 refPyFR = getPyFRData(vtuFilePath)  # xi, rho, ux, p, T
 
-imgpath = "/mnt/c/Users/phili/Desktop/sodImagesFinal/"
+imgpath = "/mnt/c/Users/phili/Desktop/sodImagesNu/"
 ref = refAnalytic
 if not os.path.exists(imgpath):
   os.mkdir(imgpath)
@@ -48,7 +48,11 @@ if os.path.exists(LListPath):
   LList = np.load(LListPath)
 else:
   failedJobs = []
-  for jobFolder in glob("/mnt/c/Users/phili/Desktop/sod/*nx*p4/"):
+  for jobFolder in glob("/mnt/c/Users/phili/Desktop/sodNu/*/"):
+    jobName = jobFolder.split("/")[-2]
+    parameters = jobName.split("_")
+    nxIn = float(parameters[1].removeprefix("nx"))
+    nu = float(parameters[4].removeprefix("nu"))
     data = getData(jobFolder)
     if type(data) == str:
       failedJobs.append(data)
@@ -69,11 +73,36 @@ else:
     TRef = np.interp(xi, ref[:,0], ref[:,4])
     L1T = np.mean(np.abs(T - TRef))
     L2T = np.sqrt(np.mean(np.pow(T - TRef, 2)))
-    LList.append([nx, cfl, L1rho, L2rho, L1ux, L2ux, L1T, L2T, p, dt, dx])
+    LList.append([nx, cfl, L1rho, L2rho, L1ux, L2ux, L1T, L2T, p, dt, dx, nu, nxIn])
 
   fs = "failedJobs: "
   for failedJob in failedJobs:
     fs += " " + failedJob
+  
+  allNu = np.unique(LList[:,11])
+  for nu in allNu:
+    dxMax = LList[:,10].max()
+    nxIn = LList[LList[:,10]==dxMax][0,12]
+    folderName = f"/mnt/c/Users/phili/Desktop/sodNu/*nx{nxIn}*nu{nu}/"
+    print(folderName)
+    data, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = getData(folderName)
+
+    fig, axs = plt.subplots(1,2,figsize=[7, 3.5])
+    for nu in allNu:
+      for ax in axs:
+        ax.scatter(data[:,0], data[:,1], color=sllbm_color, linestyle="-", s=sllbm_size, label=f"SLLBM, dt={dt:.2e}, dx={dx:.2e}, nu={nu:.2e}")
+        # ax.plot(data[:,0], data[:,1], color=sllbm_color, label="SLLBM")
+    for ax in axs:
+      ax.plot(refPyFR[:,0], refPyFR[:,1], label="4th-order Runge-Kutta")
+      ax.plot(refAnalytic[:,0], refAnalytic[:,1], linestyle="--", label="Analytic Inviscous")
+    axs[0].add_artist(plt.Rectangle((.6,.5),.25,3.5, linestyle="--", edgecolor=".9", facecolor="none"))
+    axs[0].set_xlabel("$x$")
+    axs[0].set_ylabel(r"$\rho$")
+    axs[1].set_xlabel("$x$")
+    axs[1].set_xlim((.6,.85))
+    axs[1].set_ylim((.5,4))
+    axs[1].legend()
+    fig.savefig(imgpath + "rhoNu_" + jobName + "_iT" + lastIteration + "_both" + imgtype, transparent=transparent, dpi=300)
 
   LList = np.array(LList)
   np.save(LListPath, LList)
@@ -81,35 +110,18 @@ else:
 allDt = np.sort(np.unique(LList[:,9]))
 allCfl = np.sort(np.unique(LList[:,1]))
 
-data, _, _, _, _, _, _, jobName, _, lastIteration = getData("/mnt/c/Users/phili/Desktop/sod/10906738_nx400_cfl1_p4/")
-fig, axs = plt.subplots(1,2,figsize=[7, 3.5])
-for ax in axs:
-  ax.scatter(data[:,0], data[:,1], marker=sllbm_marker, color=sllbm_color, s=sllbm_size, label="SLLBM")
-  # ax.plot(data[:,0], data[:,1], color=sllbm_color, label="SLLBM")
-  ax.plot(refPyFR[:,0], refPyFR[:,1], label="4th-order Runge-Kutta")
-  ax.plot(refAnalytic[:,0], refAnalytic[:,1], linestyle="--", label="Analytic Inviscous")
-axs[0].add_artist(plt.Rectangle((.6,.5),.25,3.5, linestyle="--", edgecolor=".9", facecolor="none"))
-axs[0].set_xlabel("$x$")
-axs[0].set_ylabel(r"$\rho$")
-axs[1].set_xlabel("$x$")
-axs[1].set_xlim((.6,.85))
-axs[1].set_ylim((.5,4))
-axs[1].legend()
-fig.savefig(imgpath + "rho_" + jobName + "_iT" + lastIteration + "_both" + imgtype, transparent=transparent, dpi=300)
-
 i = 3
 dataName = "rho"
 dataLabel = "Density"
 
-xOrder = np.array([1e-4, 1e-3, 1e-2, 1e-1])
+xOrder = np.array([1e-3, 1e-2, 1e-1, 1e-0])
 # PyFR, dx = 1.25e-3, dt = 5e-5: L1rho=0.004344615895270187, L2rho=0.023828144955520027, L1ux=0.0011521760614486276, L2ux=0.01291165214905785, L1T=0.000946764660822277, L2T=0.009211594216603015
 rhoL1pyFR = 0.004344615895270187
 
 
 fig, ax = plt.subplots(figsize=[7, 4])
 ref_m = ['o', 'v', '^', 's', 'p', 'h', 'D']
-ref_c = ['royalblue', 'green', 'grey', 'black', 'cyan', 'magenta']
-ref_c = ['C0', 'C1', 'C2', 'C3', "C4", "C5", "C6"]
+ref_c = [f'C{i}' for i in range(len(allDt))]
 used_dt_indices = set()
 used_cfl_indices = set()
 dxmin = 9e-4
@@ -133,8 +145,8 @@ ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylabel(r"$L^1$ Norm")
 ax.set_xlabel(r"$\partial x$")
-ax.set_ylim((9e-4,7e-2))
-ax.set_xlim((dxmin,3e-2))
+# ax.set_ylim((9e-4,7e-2))
+# ax.set_xlim((dxmin,3e-2))
 ax.set_axisbelow(True)
 ax.grid(which="minor", color="0.9")
 ax.grid(which='major', color=".8")

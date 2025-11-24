@@ -31,7 +31,11 @@ dx = X/(Nx-1)
 xs = np.linspace(0,X,Nx)
 iMid = Nx//2
 refAnalytic = SodShockAnalytic(rL, uL, pL, rR, uR, pR, xs, iMid, tmax, gamma)
-refPyFR = getPyFRData()  # xi, rho, ux, p, T
+# suffix = "0.15"; dtPyFR=1e-6; dxPyFR=3.125e-4
+# suffix = "0.15-dx1.25e-3"; dtPyFR=1e-6; dxPyFR=1.25e-3
+suffix = "0.15-dx1.25e-3-dt5e-5"; dtPyFR=5e-5; dxPyFR=1.25e-3
+vtuFilePath = "/home/philipp/PyFR-Test-Cases/2d-viscous-shock-tube/viscous-shock-tube-"+suffix+".vtu"
+refPyFR = getPyFRData(vtuFilePath)  # xi, rho, ux, p, T
 
 imgpath = "/mnt/c/Users/phili/Desktop/sodImagesFinal/"
 ref = refAnalytic
@@ -78,13 +82,23 @@ else:
   LList = np.array(LList)
   np.save(LListPath, LList)
 
+allDt = np.sort(np.unique(LList[:,9]))
+allCfl = np.sort(np.unique(LList[:,1]))
+print(allDt)
+print(allCfl)
+
+# data, _, _, _, _, _, _, jobName, _, lastIteration = getData("/mnt/c/Users/phili/Desktop/sod/10906738_nx400_cfl1_p4/")
 data, _, _, _, _, _, _, jobName, _, lastIteration = getData("/mnt/c/Users/phili/Desktop/sod/10906738_nx400_cfl1_p4/")
 fig, axs = plt.subplots(1,2,figsize=[7, 3.5])
 for ax in axs:
-  ax.scatter(data[:,0], data[:,1], marker=sllbm_marker, color=sllbm_color, s=sllbm_size, label="SLLBM")
+  # ax.scatter(data[:,0], data[:,1], marker=sllbm_marker, color=sllbm_color, s=sllbm_size, label="SLLBM")
+  ax.plot(data[:,0], data[:,1], color=sllbm_color, label="SLLBM")
   ax.plot(refPyFR[:,0], refPyFR[:,1], label="4th-order Runge-Kutta")
   ax.plot(refAnalytic[:,0], refAnalytic[:,1], linestyle="--", label="Analytic Inviscous")
 axs[0].add_artist(plt.Rectangle((.6,.5),.25,3.5, linestyle="--", edgecolor=".9", facecolor="none"))
+axs[0].set_xlabel("$x$")
+axs[0].set_ylabel(r"$\rho$")
+axs[1].set_xlabel("$x$")
 axs[1].set_xlim((.6,.85))
 axs[1].set_ylim((.5,4))
 axs[1].legend()
@@ -96,7 +110,10 @@ dataLabel = "Density"
 
 xOrder = np.array([1e-4, 1e-3, 1e-2, 1e-1])
 # PyFR: L1rho=0.0017780574527926037, L2rho=0.024598421033779513, L1ux=0.0004679903377780481, L2ux=0.015376405631236352, L1T=0.0006240035547480066, L2T=0.00987562580502276
-rhoL2pyFR = 0.024598421033779513
+# dx = 1.25e-3: L1rho=0.003413544945364635, L2rho=0.02221362581156029, L1ux=0.000991119640439144, L2ux=0.012134864322686335, L1T=0.0008773230356860062, L2T=0.009037047867387809
+# + dt = 5e-5: L1rho=0.004344615895270187, L2rho=0.023828144955520027, L1ux=0.0011521760614486276, L2ux=0.01291165214905785, L1T=0.000946764660822277, L2T=0.009211594216603015
+rhoL2pyFR = 0.023828144955520027
+rhoL1pyFR = 0.004344615895270187
 
 # def doPlot(xlabel, LListI, iOver, titleSuffix, fileSuffix):
 #   xData = LListI[:,iOver]
@@ -121,7 +138,7 @@ rhoL2pyFR = 0.024598421033779513
 #   doPlot("dx", LList[LList[:,9]==dt], 10, f" over dx, dt = {dt}", f"_overDx_dt{dt}")
 # plt.close("all")
 # # for dx in np.unique(LList[:,10]):
-# #   doPlot("dt", LList[LList[:,10]==dx], 9, f" over dt, dx = {dx}", f"_overDt_dx{dx}")
+# #   doPlot("$\delta t$", LList[LList[:,10]==dx], 9, f" over dt, dx = {dx}", f"_overDt_dx{dx}")
 # # plt.close("all")
 # for cfl in np.unique(LList[:,1]):
 #   doPlot("dx", LList[LList[:,1]==cfl], 10, f" over dx, CFL = {cfl}", f"_overDx_CFL{cfl}")
@@ -155,16 +172,16 @@ rhoL2pyFR = 0.024598421033779513
 # plt.close("all")
 
 
-fig, ax = plt.subplots(figsize=[7, 4])
+fig, ax = plt.subplots(figsize=[5, 3.5])
 ax.set_xlabel("dx")
 ref_m = itertools.cycle(('o', 'v', '^', 's', 'p', 'h', 'D'))
 ref_c = itertools.cycle(('royalblue', 'green', 'grey', 'black', 'cyan', 'magenta'))
-allDt = np.unique(LList[:,9])
 for dt in allDt[allDt>3e-5]:
   LListI = LList[LList[:,9]==dt]
-  ax.scatter(LListI[:,10], LListI[:,i], marker=next(ref_m), color=next(ref_c), label=dataLabel + f" $L^2$ Error, dt = {dt}")
-ax.plot(xOrder, xOrder*10, label="Order 1", linestyle='--')
-ax.axhline(rhoL2pyFR, color="red", label="$L^2$ Norm of 4th-order Runge-Kutta", linewidth=1, linestyle='--')
+  cfl = LListI[0,1]
+  ax.scatter(LListI[:,10], LListI[:,3], marker=next(ref_m), color=next(ref_c), label=f"$\delta t$ = {dt:.3e}")
+ax.plot(xOrder, np.sqrt(xOrder), label="Order 1/2", linestyle='--')
+ax.axhline(rhoL2pyFR, color="red", label="4th-order Runge-Kutta", linewidth=1, linestyle='--')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylim((9e-3,2e-1))
@@ -173,5 +190,118 @@ ax.set_axisbelow(True)
 ax.grid(which="minor", color="0.9")
 ax.grid(color="1")
 # ax.set_aspect('equal', 'box')
-ax.legend()
+ax.legend(loc='lower right', framealpha=.9)
 fig.savefig(imgpath + dataName + "_L2_overDxFinal" + imgtype, transparent=transparent, dpi=300)
+
+
+fig, ax = plt.subplots(figsize=[5, 3.5])
+ax.set_xlabel("dx")
+ref_m = itertools.cycle(('o', 'v', '^', 's', 'p', 'h', 'D'))
+ref_c = itertools.cycle(('royalblue', 'green', 'grey', 'black', 'cyan', 'magenta'))
+for dt in allDt[allDt>3e-5]:
+  LListI = LList[LList[:,9]==dt]
+  cfl = LListI[0,1]
+  ax.scatter(LListI[:,10], LListI[:,2], marker=next(ref_m), color=next(ref_c), label=f"$\delta t$ = {dt:.3e}")
+ax.plot(xOrder, xOrder, label="Order 1", linestyle='--')
+ax.axhline(rhoL1pyFR, color="red", label="4th-order Runge-Kutta", linewidth=1, linestyle='--')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylim((6e-4,4e-2))
+ax.set_xlim((8e-4,4e-2))
+ax.set_axisbelow(True)
+ax.grid(color="1")
+ax.grid(which="minor", color="0.9")
+# ax.set_aspect('equal', 'box')
+ax.legend(loc='lower right', framealpha=.9)
+fig.savefig(imgpath + dataName + "_L1_overDxAllDt" + imgtype, transparent=transparent, dpi=300)
+
+
+fig, ax = plt.subplots(figsize=[5, 3.5])
+ax.set_xlabel("dx")
+ref_m = itertools.cycle(('o', 'v', '^', 's', 'p', 'h', 'D'))
+ref_c = itertools.cycle(('royalblue', 'green', 'grey', 'black', 'cyan', 'magenta'))
+for cfl in allCfl[allCfl>0.4]:
+  LListI = LList[LList[:,1]==cfl]
+  ax.scatter(LListI[:,10], LListI[:,2], marker=next(ref_m), color=next(ref_c), label=f"cfl = {cfl}")
+ax.plot(xOrder, xOrder, label="Order 1", linestyle='--')
+ax.axhline(rhoL1pyFR, color="red", label="4th-order Runge-Kutta", linewidth=1, linestyle='--')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylim((6e-4,4e-2))
+ax.set_xlim((8e-4,4e-2))
+ax.set_axisbelow(True)
+ax.grid(color="1")
+ax.grid(which="minor", color="0.9")
+# ax.set_aspect('equal', 'box')
+ax.legend(loc='lower right', framealpha=.9)
+fig.savefig(imgpath + dataName + "_L1_overDxAllCfl" + imgtype, transparent=transparent, dpi=300)
+
+
+fig, ax = plt.subplots(figsize=[7, 4])
+ref_m = ['o', 'v', '^', 's', 'p', 'h', 'D']
+ref_c = ['royalblue', 'green', 'grey', 'black', 'cyan', 'magenta']
+ref_c = ['C0', 'C1', 'C2', 'C3', "C4", "C5", "C6"]
+used_dt_indices = set()
+used_cfl_indices = set()
+dxmin = 9e-4
+LListI = LList[LList[:,10]>dxmin]
+allDt = np.sort(np.unique(LListI[:,9]))
+allDx = np.sort(np.unique(LListI[:,10]))
+print(allDt)
+print(allDx)
+for iDt in range(len(allDt)):
+  dt = allDt[iDt]
+  LListI = LList[LList[:,9]==dt]
+  for iCfl in range(len(allCfl)):
+    cfl = allCfl[iCfl]
+    LListIJ = LListI[LListI[:,1]==cfl]
+    if len(LListIJ[:,0] > 0):
+      for LListIJK in LListIJ[LListIJ[:,10] > dxmin]:
+        ax.scatter(LListIJ[:,10], LListIJ[:,2], marker=ref_m[iCfl], color=ref_c[iDt], label=f"cfl = {cfl}")
+        used_dt_indices.add(iDt)
+        used_cfl_indices.add(iCfl)
+line_order1 = ax.plot(xOrder, xOrder, label="Order 1", linestyle='--', color='.3')[0]
+# line_rk4 = ax.axhline(rhoL1pyFR, color=".3", label="4th-order Runge-Kutta", linewidth=1, linestyle='-.')
+line_rk4 = ax.scatter(dxPyFR, rhoL1pyFR, color=".3", marker='D', label="4th-order Runge-Kutta,")
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylabel(r"$L^1$ Norm")
+ax.set_xlabel(r"$\partial x$")
+ax.set_ylim((9e-4,7e-2))
+ax.set_xlim((dxmin,3e-2))
+ax.set_axisbelow(True)
+ax.grid(which="minor", color="0.9")
+ax.grid(which='major', color=".8")
+# ax.set_aspect('equal', 'box')
+legend_elements = []
+# 1. Add Color entries (representing dt)
+# We use a fixed marker (circle 'o') to display the colors
+# legend_elements.append(plt.Line2D([], [], color='none', label=r'$\bf{Time\ Step\ (dt)}$')) # Header
+for i in sorted(list(used_dt_indices)):
+    legend_elements.append(
+        plt.Line2D([0], [0], marker='', color=ref_c[i], label=f"$\delta t$ = {allDt[i]:.1e}", linestyle='-',
+               markerfacecolor=ref_c[i], markersize=8)
+    )
+dummy_handle = plt.Line2D([0], [0], color='none', label='')
+legend_elements.extend([dummy_handle])
+
+# 2. Add Marker entries (representing cfl)
+# We use a fixed color (black 'k') to display the markers shapes
+# legend_elements.append(plt.Line2D([], [], color='none', label=r'$\bf{CFL\ Number}$')) # Header
+for i in sorted(list(used_cfl_indices)):
+    legend_elements.append(
+        plt.Line2D([0], [0], marker=ref_m[i], color='k', label=f"cfl = {allCfl[i]}", linestyle='',
+               markerfacecolor='k', markeredgecolor='k', markersize=8)
+    )
+
+# 3. Add Reference Lines
+# legend_elements.append(plt.Line2D([], [], color='none', label=r'$\bf{Reference}$')) # Header
+legend_elements.append(line_order1)
+legend_elements.append(line_rk4)
+dummy_handle = plt.Line2D([0], [0], color='none', label=f' $\delta t$ = {dtPyFR:.0e}')
+legend_elements.extend([dummy_handle])
+
+# Create the final legend
+fig.legend(handles=legend_elements, loc='outside upper right', columnspacing=1, framealpha=.9, ncols=4)
+# ax.legend(loc='lower right', framealpha=.9)
+fig.savefig(imgpath + dataName + "_L1_overDxFinal" + imgtype, transparent=transparent, dpi=300)

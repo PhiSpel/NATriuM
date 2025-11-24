@@ -2,8 +2,7 @@ import vtk
 import numpy as np
 import os
 
-def getPyFRData():
-  vtuFilePath = "/home/philipp/PyFR-Test-Cases/2d-viscous-shock-tube/viscous-shock-tube-0.15.vtu"
+def getPyFRData(vtuFilePath):
   if not os.path.exists(vtuFilePath):
     print(f"::::ERROR: File not found at {vtuFilePath}")
     exit()

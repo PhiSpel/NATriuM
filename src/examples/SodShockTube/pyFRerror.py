@@ -29,7 +29,11 @@ dx = X/(Nx-1)
 xs = np.linspace(0,X,Nx)
 iMid = Nx//2
 refAnalytic = SodShockAnalytic(rL, uL, pL, rR, uR, pR, xs, iMid, tmax, gamma)
-refPyFR = getPyFRData()  # xi, rho, ux, p, T
+# suffix = "0.15"
+# suffix = "0.15-dx1.25e-3"
+suffix = "0.15-dx1.25e-3-dt5e-5"
+vtuFilePath = "/home/philipp/PyFR-Test-Cases/2d-viscous-shock-tube/viscous-shock-tube-"+suffix+".vtu"
+refPyFR = getPyFRData(vtuFilePath)  # xi, rho, ux, p, T
 
 imgpath = "/mnt/c/Users/phili/Desktop/sodImages/"
 
@@ -42,7 +46,7 @@ for dataI, dataName in zip([1,2,3,4], ["rho", "ux", "p", "T"]):
   ax.plot(refAnalytic[:,0], refAnalytic[:,dataI], label="Analytic Inviscous")
   ax.set_title(f"Sod Shock Tube: {dataName} PyFRvsAnalytic")
   ax.legend()
-  fig.savefig(imgpath + dataName + "_PyFRvsAnalytic" + imgtype, transparent=transparent, dpi=300)
+  fig.savefig(imgpath + dataName + "_PyFRvsAnalytic" + suffix + imgtype, transparent=transparent, dpi=300)
 plt.close("all")
 
 xi = refPyFR[:,0]

@@ -41,18 +41,23 @@ if not os.path.exists(imgpath):
 yi = 0
 zi = 0
 
-LList = []  # ref nu cfl L1rho L2rho L1ux L2ux L1T L2T
+# List for L-Norms and other info extracted from run folder
+LList = []  # nx cfl L1rho L2rho L1ux L2ux L1T L2T p dt dx nu nxInStr nuStr
+failedJobs = []
 
 LListPath = imgpath + "LList.npy"
+failedJobsPath = imgpath + "failedJobs.npy"
 if os.path.exists(LListPath):
   LList = np.load(LListPath)
+  failedJobs = np.load(failedJobsPath)
 else:
-  failedJobs = []
   for jobFolder in glob("/mnt/c/Users/phili/Desktop/sodNu/*/"):
     jobName = jobFolder.split("/")[-2]
     parameters = jobName.split("_")
-    nxIn = float(parameters[1].removeprefix("nx"))
-    nu = float(parameters[4].removeprefix("nu"))
+    nxInStr = parameters[1].removeprefix("nx")
+    cflStr = parameters[2].removeprefix("cfl")
+    nuStr = parameters[4].removeprefix("nu")
+    nu = float(nuStr)
     data = getData(jobFolder)
     if type(data) == str:
       failedJobs.append(data)
@@ -73,42 +78,71 @@ else:
     TRef = np.interp(xi, ref[:,0], ref[:,4])
     L1T = np.mean(np.abs(T - TRef))
     L2T = np.sqrt(np.mean(np.pow(T - TRef, 2)))
-    LList.append([nx, cfl, L1rho, L2rho, L1ux, L2ux, L1T, L2T, p, dt, dx, nu, nxIn])
+    LList.append([nx, cfl, L1rho, L2rho, L1ux, L2ux, L1T, L2T, p, dt, dx, nu, nxInStr, nuStr, cflStr])
+  LList = np.array(LList)
+  failedJobs = np.array(failedJobs)
 
   fs = "failedJobs: "
   for failedJob in failedJobs:
-    fs += " " + failedJob
-  
-  allNu = np.unique(LList[:,11])
-  for nu in allNu:
-    dxMax = LList[:,10].max()
-    nxIn = LList[LList[:,10]==dxMax][0,12]
-    folderName = f"/mnt/c/Users/phili/Desktop/sodNu/*nx{nxIn}*nu{nu}/"
-    print(folderName)
-    data, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = getData(folderName)
+    fs += "\n:: " + failedJob
+  print(fs)
 
-    fig, axs = plt.subplots(1,2,figsize=[7, 3.5])
-    for nu in allNu:
-      for ax in axs:
-        ax.scatter(data[:,0], data[:,1], color=sllbm_color, linestyle="-", s=sllbm_size, label=f"SLLBM, dt={dt:.2e}, dx={dx:.2e}, nu={nu:.2e}")
-        # ax.plot(data[:,0], data[:,1], color=sllbm_color, label="SLLBM")
-    for ax in axs:
-      ax.plot(refPyFR[:,0], refPyFR[:,1], label="4th-order Runge-Kutta")
-      ax.plot(refAnalytic[:,0], refAnalytic[:,1], linestyle="--", label="Analytic Inviscous")
-    axs[0].add_artist(plt.Rectangle((.6,.5),.25,3.5, linestyle="--", edgecolor=".9", facecolor="none"))
-    axs[0].set_xlabel("$x$")
-    axs[0].set_ylabel(r"$\rho$")
-    axs[1].set_xlabel("$x$")
-    axs[1].set_xlim((.6,.85))
-    axs[1].set_ylim((.5,4))
-    axs[1].legend()
-    fig.savefig(imgpath + "rhoNu_" + jobName + "_iT" + lastIteration + "_both" + imgtype, transparent=transparent, dpi=300)
-
-  LList = np.array(LList)
   np.save(LListPath, LList)
+  np.save(failedJobsPath, failedJobs)
 
+
+allNu = np.unique(LList[:,11])
+allNuStr = np.unique(LList[:,13])
 allDt = np.sort(np.unique(LList[:,9]))
 allCfl = np.sort(np.unique(LList[:,1]))
+
+fig, axs = plt.subplots(1,2,figsize=[10, 5])
+for nuStr in allNuStr:
+  # for each unique nu...
+  LListI = LList[LList[:,13]==nuStr]
+  # ...get the run with the highest dx...
+  dxMax = LListI[:,10].astype(float).max()
+  LListI = LListI[LListI[:,10].astype(float)==dxMax]
+  # ...and the highest cfl...
+  cflMax = LListI[:,1].astype(float).max()
+  LListI = LListI[LListI[:,1].astype(float)==cflMax]
+  # ...and plot rho over x (to compare smoothness)
+  nxInStr = LListI[0,12]
+  cflMaxStr = LListI[0,14]
+  folderStr = f"/mnt/c/Users/phili/Desktop/sodNu/*nx{nxInStr}_cfl{cflMaxStr}*nu{nuStr}/"
+  folderNames = glob(folderStr)
+  if len(folderNames) == 1:
+    folderName = folderNames[0]
+  else:
+    print(f"::::WARNING: glob({folderStr})={folderNames}")
+    if len(folderNames) > 1:
+      for folderName in folderNames:
+        if folderName not in failedJobs:
+          continue
+    else:
+      continue
+  
+  data = getData(folderName)
+  if type(data) != str:  # this check should not be required, since only working jobs are in LList
+    data, cs, dt, dx, jobid, cfl, p, jobName, nx, lastIteration = data
+    for ax in axs:
+      ax.scatter(data[:,0], data[:,1], linestyle="-", s=sllbm_size, label=f"SLLBM, dt={dt:.2e}, dx={dx:.2e}, nu={nuStr}")
+      # ax.plot(data[:,0], data[:,1], color=sllbm_color, label="SLLBM")
+  else:
+    print(f"::WARNING: {folderName} empty/failed")
+for ax in axs:
+  ax.plot(refPyFR[:,0], refPyFR[:,1], label="4th-order Runge-Kutta")
+  ax.plot(refAnalytic[:,0], refAnalytic[:,1], linestyle="--", label="Analytic Inviscous")
+axs[0].add_artist(plt.Rectangle((.6,.5),.25,3.5, linestyle="--", edgecolor=".9", facecolor="none"))
+axs[0].set_xlabel("$x$")
+axs[0].set_ylabel(r"$\rho$")
+axs[1].set_xlabel("$x$")
+axs[1].set_xlim((.6,.85))
+axs[1].set_ylim((.5,4))
+axs[1].legend()
+fig.savefig(imgpath + "rhoNu_" + jobName + "_iT" + lastIteration + "_both" + imgtype, transparent=transparent, dpi=300)
+
+
 
 i = 3
 dataName = "rho"
@@ -125,7 +159,7 @@ ref_c = [f'C{i}' for i in range(len(allDt))]
 used_dt_indices = set()
 used_cfl_indices = set()
 dxmin = 9e-4
-LListI = LList[LList[:,10]>dxmin]
+LListI = LList[LList[:,10].astype(float)>dxmin]
 allDt = np.sort(np.unique(LListI[:,9]))
 allDx = np.sort(np.unique(LListI[:,10]))
 for iDt in range(len(allDt)):
@@ -134,8 +168,8 @@ for iDt in range(len(allDt)):
   for iCfl in range(len(allCfl)):
     cfl = allCfl[iCfl]
     LListIJ = LListI[LListI[:,1]==cfl]
-    if len(LListIJ[:,0] > 0):
-      for LListIJK in LListIJ[LListIJ[:,10] > dxmin]:
+    if len(LListIJ[:,0].astype(float) > 0):
+      for LListIJK in LListIJ[LListIJ[:,10].astype(float) > dxmin]:
         ax.scatter(LListIJ[:,10], LListIJ[:,2], marker=ref_m[iCfl], color=ref_c[iDt], label=f"cfl = {cfl}")
         used_dt_indices.add(iDt)
         used_cfl_indices.add(iCfl)
@@ -154,7 +188,7 @@ legend_elements = []
 # Color entries (representing dt)
 for i in sorted(list(used_dt_indices)):
     legend_elements.append(
-        plt.Line2D([0], [0], marker='', color=ref_c[i], label=f"$\delta t$ = {allDt[i]:.1e}", linestyle='-',
+        plt.Line2D([0], [0], marker='', color=ref_c[i], label=f"$\delta t$ = {allDt[i].astype(float):.1e}", linestyle='-',
                markerfacecolor=ref_c[i], markersize=8)
     )
 # Spacing
@@ -174,3 +208,61 @@ dummy_handle = plt.Line2D([0], [0], color='none', label=f' $\delta t$ = {dtPyFR:
 legend_elements.extend([dummy_handle])
 fig.legend(handles=legend_elements, loc='outside upper center', columnspacing=1, framealpha=.9, ncols=4,handlelength=1)
 fig.savefig(imgpath + dataName + "_L1_overDxFinal" + imgtype, transparent=transparent, dpi=300)
+
+for nu in allNu:
+  fig, ax = plt.subplots(figsize=[7, 4])
+  ref_m = ['o', 'v', '^', 's', 'p', 'h', 'D']
+  ref_c = [f'C{i}' for i in range(len(allDt))]
+  used_dt_indices = set()
+  used_cfl_indices = set()
+  dxmin = 9e-4
+  LListI = LList[LList[:,10].astype(float)>dxmin]
+  LListI = LListI[LListI[:,11].astype(float)==nu]
+  allDt = np.sort(np.unique(LListI[:,9]).astype(float))
+  allDx = np.sort(np.unique(LListI[:,10]).astype(float))
+  for iDt in range(len(allDt)):
+    dt = allDt[iDt]
+    LListI = LList[LList[:,9]==dt]
+    for iCfl in range(len(allCfl)):
+      cfl = allCfl[iCfl]
+      LListIJ = LListI[LListI[:,1]==cfl]
+      if len(LListIJ[:,0] > 0):
+        for LListIJK in LListIJ[LListIJ[:,10] > dxmin]:
+          ax.scatter(LListIJ[:,10], LListIJ[:,2], marker=ref_m[iCfl], color=ref_c[iDt], label=f"cfl = {cfl}")
+          used_dt_indices.add(iDt)
+          used_cfl_indices.add(iCfl)
+  line_order1 = ax.plot(xOrder, xOrder, label="Order 1", linestyle='--', color='.3')[0]
+  line_rk4 = ax.scatter(dxPyFR, rhoL1pyFR, color=".3", marker='D', label="4th-order Runge-Kutta,")
+  ax.set_xscale('log')
+  ax.set_yscale('log')
+  ax.set_ylabel(r"$L^1$ Norm")
+  ax.set_xlabel(r"$\partial x$")
+  # ax.set_ylim((9e-4,7e-2))
+  # ax.set_xlim((dxmin,3e-2))
+  ax.set_axisbelow(True)
+  ax.grid(which="minor", color="0.9")
+  ax.grid(which='major', color=".8")
+  legend_elements = []
+  # Color entries (representing dt)
+  for i in sorted(list(used_dt_indices)):
+      legend_elements.append(
+          plt.Line2D([0], [0], marker='', color=ref_c[i], label=f"$\delta t$ = {allDt[i].astype(float):.1e}", linestyle='-',
+                markerfacecolor=ref_c[i], markersize=8)
+      )
+  # Spacing
+  dummy_handle = plt.Line2D([0], [0], color='none', label='')
+  legend_elements.extend([dummy_handle])
+  # Marker entries (representing cfl)
+  for i in sorted(list(used_cfl_indices)):
+      legend_elements.append(
+          plt.Line2D([0], [0], marker=ref_m[i], color='k', label=f"cfl = {allCfl[i]}", linestyle='',
+                markerfacecolor='k', markeredgecolor='k', markersize=8)
+      )
+  # References
+  legend_elements.append(line_order1)
+  legend_elements.append(line_rk4)
+  # Spacing
+  dummy_handle = plt.Line2D([0], [0], color='none', label=f' $\delta t$ = {dtPyFR:.0e}')
+  legend_elements.extend([dummy_handle])
+  fig.legend(handles=legend_elements, loc='outside upper center', columnspacing=1, framealpha=.9, ncols=4,handlelength=1)
+  fig.savefig(imgpath + dataName + f"_L1_overDxFinalNu{nu}" + imgtype, transparent=transparent, dpi=300)

@@ -18,10 +18,12 @@ for jobFolder in glob("/mnt/c/Users/phili/Desktop/sodNu/*/"):
   logfilename = glob(jobFolder + "*.out")
   if len(logfilename) == 0:
     print("::::ERROR: No logfile found, skipping this job")
+    continue
   logfile = open(logfilename[0], "r")
   lines = logfile.read().splitlines()
   if len(lines) < 50:
     print("::::ERROR: Logfile seems too short, skipping this job")
+    continue
 
   dt = float([line for line in lines if "::::Actual dt:                " in line][0].removeprefix("::::Actual dt:                ").removesuffix(" s"))
   # dxCells = float([line for line in lines if "::::dx_min:                   " in line][0].removeprefix("::::dx_min:                   "))
@@ -47,9 +49,14 @@ for cfl in allCfl:
   for dx in allDx:
     data = stable[stable[:,0]==dx]
     data = data[data[:,1]==cfl]
-    print(f"nuMin(dx={dx:.2e},nxIn={data[0,4]:.0f},cfl={cfl})={min(data[:,3])}")
+    if len(data) > 0:
+      print(f"nuMin(dx={dx:.2e},nxIn={data[0,4]:.0f},cfl={cfl})={min(data[:,3])}")
 
-# nuMin(dx=6.25e-04,nxIn=200,cfl=0.5)=3e-05
+# nuMin(dx=3.91e-05,nxIn=3200,cfl=0.5)=1e-07
+# nuMin(dx=7.81e-05,nxIn=1600,cfl=0.5)=3e-07
+# nuMin(dx=1.56e-04,nxIn=800,cfl=0.5)=1e-06
+# nuMin(dx=3.13e-04,nxIn=400,cfl=0.5)=1e-06
+# nuMin(dx=6.25e-04,nxIn=200,cfl=0.5)=3e-06
 # nuMin(dx=1.25e-03,nxIn=100,cfl=0.5)=3e-05
 # nuMin(dx=2.50e-03,nxIn=50,cfl=0.5)=3e-05
 # nuMin(dx=5.00e-03,nxIn=25,cfl=0.5)=3e-05
@@ -57,7 +64,11 @@ for cfl in allCfl:
 # nuMin(dx=2.08e-02,nxIn=6,cfl=0.5)=3e-05
 # nuMin(dx=4.17e-02,nxIn=3,cfl=0.5)=3e-05
 
-# nuMin(dx=6.25e-04,nxIn=200,cfl=1.0)=3e-05
+# nuMin(dx=3.91e-05,nxIn=3200,cfl=1.0)=3e-07
+# nuMin(dx=7.81e-05,nxIn=1600,cfl=1.0)=1e-06
+# nuMin(dx=1.56e-04,nxIn=800,cfl=1.0)=1e-06
+# nuMin(dx=3.13e-04,nxIn=400,cfl=1.0)=3e-06
+# nuMin(dx=6.25e-04,nxIn=200,cfl=1.0)=1e-05
 # nuMin(dx=1.25e-03,nxIn=100,cfl=1.0)=3e-05
 # nuMin(dx=2.50e-03,nxIn=50,cfl=1.0)=3e-05
 # nuMin(dx=5.00e-03,nxIn=25,cfl=1.0)=3e-05
@@ -65,6 +76,9 @@ for cfl in allCfl:
 # nuMin(dx=2.08e-02,nxIn=6,cfl=1.0)=3e-05
 # nuMin(dx=4.17e-02,nxIn=3,cfl=1.0)=3e-05
 
+# nuMin(dx=3.91e-05,nxIn=3200,cfl=2.0)=3e-06
+# nuMin(dx=7.81e-05,nxIn=1600,cfl=2.0)=1e-05
+# nuMin(dx=1.56e-04,nxIn=800,cfl=2.0)=1e-05
 # nuMin(dx=6.25e-04,nxIn=200,cfl=2.0)=3e-05
 # nuMin(dx=1.25e-03,nxIn=100,cfl=2.0)=0.0001
 # nuMin(dx=2.50e-03,nxIn=50,cfl=2.0)=0.0001

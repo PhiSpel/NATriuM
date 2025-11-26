@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 from getData import getData
 from getPyFRData import getPyFRData
-from recalcRef2 import SodShockAnalytic
+from NATriuM.src.examples.SodShockTube.recalcRef import SodShockAnalytic
 
 rc('font', **{'size': 11, 'family': 'sans-serif', 'sans-serif': ['Myriad Pro', 'Arial', 'Tahoma']})
 plt.rcParams['text.usetex'] = True

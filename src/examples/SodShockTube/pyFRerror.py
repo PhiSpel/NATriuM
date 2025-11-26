@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib import rc
 from getPyFRData import getPyFRData
-from recalcRef2 import SodShockAnalytic
+from recalcRef import SodShockAnalytic
 import itertools
 
 rc('font', **{'size': 11, 'family': 'sans-serif', 'sans-serif': ['Myriad Pro', 'Arial', 'Tahoma']})
